@@ -1,6 +1,6 @@
 # Ajishio
 
-![Ajishio Taro](.github/assets/ajishio_taro.png)
+![Ajishio Taro](/.github/assets/ajishio_taro.png)
 
 Ajishio is a stripped-down [pygame](https://www.pygame.org)-based game engine for creating 2D games. 
 Its API is modelled after old [GameMaker](https://gamemaker.io) versions, think pre-Studio 1.4. The 

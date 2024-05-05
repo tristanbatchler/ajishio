@@ -135,6 +135,7 @@ class Ball(aj.GameObject):
         aj.draw_text((aj.room_width - aj.text_width(speed_text)) / 2, 20, speed_text, color=aj.make_color_hsv(self.color_hue_angle, 1, 1))
 
 def main() -> None:
+    aj.room_set_caption("Pong")
     wall_width: float = 5
     paddle_height: float = 100
     paddle_buffer: float = 100

@@ -79,6 +79,8 @@ class Engine:
             for obj in game_objects_copy.values():
                 obj.handle_input()
 
+            if self.room_speed == 0:
+                continue
             self._last_render_time += delta_time
             room_speed_ms: float = 1000 // self.room_speed
             if self._last_render_time >= room_speed_ms:

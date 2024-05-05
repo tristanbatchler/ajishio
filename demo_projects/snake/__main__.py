@@ -62,6 +62,7 @@ class SnakeHead(GridAlignedObject):
 
     def step(self) -> None:
         super().step()
+
         self.grid_x += self.x_velocity
         self.grid_y += self.y_velocity
         self.update_position()
@@ -73,6 +74,9 @@ class SnakeHead(GridAlignedObject):
             aj.instance_destroy(hit_apple)
             Apple()
 
+        if aj.GameObject.place_meeting(self, self.x, self.y, SnakeTailSegment):
+            global game_over
+            game_over = True
 
 
     def handle_input(self) -> None:
@@ -94,6 +98,10 @@ class SnakeHead(GridAlignedObject):
 
     def draw(self) -> None:
         self.draw_self()
+        if game_over:
+            text: str = "Game Over"
+            aj.draw_text((aj.room_width - aj.text_width(text)) / 2, (aj.room_height - aj.text_height(text)) / 2, text, color=aj.c_white)
+            aj.game_set_speed(0, aj.GameSpeedConstant.FPS)
 
 
 
@@ -118,6 +126,7 @@ class SnakeTailSegment(GridAlignedObject):
 GRID_SIZE: int = 16
 NUM_COLS: int = aj.room_width // GRID_SIZE
 NUM_ROWS: int = aj.room_height // GRID_SIZE
+game_over: bool = False
 
 aj.room_set_caption("Snake")
 aj.room_set_background(aj.c_purple)

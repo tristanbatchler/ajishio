@@ -6,6 +6,7 @@ from enum import Enum
 import pygame as pg
 import math
 import sys
+from typing import BinaryIO
 
 epsilon: float = 0.00001
 
@@ -23,6 +24,7 @@ class Engine:
         self.room_speed: float
         self.room_background_color: pg.Color
         self._screen: pg.Surface
+        self._background_image: pg.Surface | None = None
 
         pg.init()
         self.room_set_size(800, 600)
@@ -55,6 +57,9 @@ class Engine:
     def room_set_height(self, h: int) -> None:
         self.room_set_size(self.room_width, h)
 
+    def room_set_background_image(self, image_file: BinaryIO) -> None:
+        self._background_image = pg.image.load(image_file)
+
     def room_set_background(self, color: pg.Color) -> None:
         self.room_background_color = color
 
@@ -85,7 +90,10 @@ class Engine:
             room_speed_ms: float = 1000 // self.room_speed
             if self._last_render_time >= room_speed_ms:
                 self._last_render_time %= room_speed_ms
+
                 self._screen.fill(self.room_background_color)
+                if self._background_image is not None:
+                    self._screen.blit(self._background_image, (0, 0))
             
                 for obj in game_objects_copy.values():
                     obj.step()
@@ -216,5 +224,6 @@ game_set_speed = _engine.game_set_speed
 room_set_width = _engine.room_set_width
 room_set_height = _engine.room_set_height
 room_set_background = _engine.room_set_background
+room_set_background_image = _engine.room_set_background_image
 game_start = _engine.game_start
 instance_destroy = _engine.instance_destroy

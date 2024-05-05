@@ -21,6 +21,12 @@
             "type": "debugpy",
             "request": "launch",
             "module": "demo_projects.snake"
+        },
+        {
+            "name": "Platformer",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "demo_projects.platformer"
         }
     ]
 }

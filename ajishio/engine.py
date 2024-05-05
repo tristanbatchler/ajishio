@@ -1,6 +1,7 @@
 from __future__ import annotations
 from uuid import uuid4, UUID
 from ajishio.input import _input, QuitInterrupt
+from ajishio.view import _view
 from dataclasses import dataclass
 from enum import Enum
 import pygame as pg
@@ -24,10 +25,11 @@ class Engine:
         self.room_speed: float
         self.room_background_color: pg.Color
         self._screen: pg.Surface
+        self._display: pg.Surface
         self._background_image: pg.Surface | None = None
 
         pg.init()
-        self.room_set_size(800, 600)
+        self.room_set_size(_view.view_wport[_view.view_current], _view.view_hport[_view.view_current])
         self.game_set_speed(60, GameSpeedConstant.FPS)
         self.room_set_background(pg.Color(0, 0, 0))
         room_set_caption("")
@@ -50,6 +52,13 @@ class Engine:
         self.room_width = w
         self.room_height = h
         self._screen = pg.display.set_mode((self.room_width, self.room_height))
+        self._fit_display()
+
+    def _fit_display(self) -> None:
+        self._display = pg.Surface((_view.view_wport[_view.view_current], _view.view_hport[_view.view_current]))
+
+    def _get_display(self) -> pg.Surface:
+        return self._display
 
     def room_set_width(self, w: int) -> None:
         self.room_set_size(w, self.room_height)
@@ -91,15 +100,21 @@ class Engine:
             if self._last_render_time >= room_speed_ms:
                 self._last_render_time %= room_speed_ms
 
-                self._screen.fill(self.room_background_color)
+                self._fit_display()
+
+                self._display.fill(self.room_background_color)
                 if self._background_image is not None:
-                    self._screen.blit(self._background_image, (0, 0))
+                    self._display.blit(self._background_image, _view.offset)
             
                 for obj in game_objects_copy.values():
                     obj.step()
                     obj.draw()
 
-                pg.display.flip()
+                scaled_display: pg.Surface = pg.transform.scale(self._display, self._screen.get_size())
+                self._screen.blit(scaled_display, (0, 0))
+
+
+                pg.display.update()
         
         pg.quit()
         sys.exit()

@@ -61,7 +61,7 @@ class Player(aj.GameObject):
         self.x_velocity: float = 0
         self.y_velocity: float = 0
         self.gravity: float = 0.5
-        self.jump_height: float = -10
+        self.jump_height: float = -7
 
     def step(self):
         x_input: int = aj.keyboard_check(aj.vk_right) - aj.keyboard_check(aj.vk_left)
@@ -83,9 +83,8 @@ class Player(aj.GameObject):
         else:
             self.y += self.y_velocity
 
-        if self.place_meeting(self.x, self.y + 1, Floor):
-            if aj.keyboard_check(aj.vk_space):
-                self.y_velocity = self.jump_height
+        if self.place_meeting(self.x, self.y + 1, Floor) and aj.keyboard_check(aj.vk_space):
+            self.y_velocity = self.jump_height
 
     def draw(self):
         aj.draw_rectangle(self.x, self.y, self.width, self.height, color=aj.c_blue)
@@ -94,6 +93,31 @@ class Player(aj.GameObject):
 player_data: dict[str, Any] = level_info['entities']['Player'][0]
 
 # Create the player
-Player(player_data['x'], player_data['y'], width=player_data['width'], height=player_data['height'], speed=3)
+player_x: float = player_data['x']
+player_y: float = player_data['y']
+player = Player(player_x, player_y, width=player_data['width'], height=player_data['height'], speed=3)
+
+
+# Define the camera
+class Camera(aj.GameObject):
+    def __init__(self, following: aj.GameObject):
+        super().__init__(following.x, following.y)
+        self.following: aj.GameObject = following
+
+    def step(self):
+        self.x = self.following.x
+        self.y = self.following.y
+
+        aj.view_xport[aj.view_current] = self.x - aj.view_wport[aj.view_current] // 2
+        aj.view_yport[aj.view_current] = self.y - aj.view_hport[aj.view_current] // 2
+
+# Create the camera
+Camera(player)
+
+# Set the display size
+aj.view_set_wport(aj.view_current, 400)
+aj.view_set_hport(aj.view_current, 300)
+
+print(aj.view_wport[aj.view_current], aj.view_hport[aj.view_current])
 
 aj.game_start()

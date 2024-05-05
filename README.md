@@ -59,6 +59,16 @@ python -m ajishio.demo_projects.platformer
 
 ## VS Code Integration
 
+Firstly, it is recommended to install the 
+[Python extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python) before 
+editing your game in VS Code. Once it is installed, ensure that the Python interpreter is set to the 
+one in the virtual environment you created earlier. You can do this by opening the command palette 
+(`Ctrl+Shift+P`) and typing `Python: Select Interpreter` and choose `./.venv/bin/python` or 
+`./.venv/Scripts/python.exe` on Windows.
+
+![Select Python Interpreter](/.github/assets/select_python_interpreter.png)
+
+
 If you're using VS Code, you can set up a task to debug your game with F5. To do this, add to the 
 `.vscode/launch.json` file's `"configuration"` array the following:
 ```json
@@ -88,6 +98,7 @@ For example, if your game script relative to the root of the repository is in
 
 Now, if you go to the debug tab in VS Code (`Ctrl+Shift+D`), you should see your project name 
 available to select in the dropdown list up top. Select it and press F5 to run and debug your game.
+![VS Code Debug Tab](/.github/assets/vscode_debug_tab.png)
 
 ## Mypy Integration
 
@@ -106,6 +117,13 @@ ${workspaceFolder}/.venv/Scripts/dmypy.exe
 ```
 
 Now, if you open a Python file in your project, you should see type errors and warnings underlined.
+![Mypy Integration](/.github/assets/mypy_integration.png)
+
+> Note: Mypy requires that you have an `__init__.py` file in your project directory, alongside your 
+> `__main__.py` file. If you are not seeing any type errors, check that at least an empty 
+> `__init__.py` file exists. If you still don't see any errors, try running `mypy .` in your 
+> activated virtual environment and check the output.
+
 
 ## TODO
 

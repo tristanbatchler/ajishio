@@ -66,8 +66,8 @@ class Engine:
     def room_set_height(self, h: int) -> None:
         self.room_set_size(self.room_width, h)
 
-    def room_set_background_image(self, image_file: BinaryIO) -> None:
-        self._background_image = pg.image.load(image_file)
+    def room_set_background_image(self, surface: pg.Surface) -> None:
+        self._background_image = surface
 
     def room_set_background(self, color: pg.Color) -> None:
         self.room_background_color = color
@@ -210,8 +210,6 @@ class GameObject:
         
         else:
             raise TypeError("Invalid type for obj")
-        
-        return None
     
 def check_rectangular_collision(x1: float, y1: float, mask1: CollisionMask, x2: float, y2: float, mask2: CollisionMask) -> bool:
     assert mask1.kind == BBoxKind.RECTANGULAR

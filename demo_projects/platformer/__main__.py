@@ -1,14 +1,12 @@
 import ajishio as aj
 from pathlib import Path
-import csv
-import json
 from typing import Any
 
 aj.room_set_caption("Platformer")
 
 # Define a class for the floor
 class Floor(aj.GameObject):
-    def __init__(self, x: float, y: float):
+    def __init__(self, x: float, y: float, tile_width: int, tile_height: int):
         super().__init__(x, y)
         self.collision_mask: aj.CollisionMask = aj.CollisionMask(
             bbtop=0,
@@ -17,31 +15,15 @@ class Floor(aj.GameObject):
             bbbottom=tile_height
         )
 
-# Load the level
-cwd: Path = Path(__file__).parent
-level_dir: Path = cwd / 'room_data' / 'test' / 'simplified' / 'Level_0'
+level: aj.GameLevel = aj.load_ldtk(Path(__file__).parent / 'room_data' / 'test' / 'simplified' / 'Level_0')
 
-ground_data: list[list[bool]] = []
-with open(level_dir / 'GroundIntLayer.csv', 'r') as f:
-    reader = csv.reader(f)
-    for row in reader:
-        ground_data.append([bool(int(cell)) for cell in row if cell != ''])
-
-level_info: dict[str, Any] = json.loads((level_dir / 'data.json').read_text())
-level_width: int = level_info['width']
-level_height: int = level_info['height']
-
-tile_width: int = level_width // len(ground_data[0])
-tile_height: int = level_height // len(ground_data)
-
-for y, row in enumerate(ground_data):
+for y, row in enumerate(level.tilemap):
     for x, cell in enumerate(row):
         if cell:
-            Floor(x * tile_width, y * tile_height)
+            Floor(x * level.tile_size[0], y * level.tile_size[1], *level.tile_size)
 
 # Draw the level
-with open(level_dir / '_composite.png', 'rb') as f:
-    aj.room_set_background_image(f)
+aj.room_set_background_image(level.background_surface)
 
 # Define the player
 class Player(aj.GameObject):
@@ -61,7 +43,7 @@ class Player(aj.GameObject):
         self.x_velocity: float = 0
         self.y_velocity: float = 0
         self.gravity: float = 0.5
-        self.jump_height: float = -7
+        self.jump_height: float = -8.5
 
     def step(self):
         x_input: int = aj.keyboard_check(aj.vk_right) - aj.keyboard_check(aj.vk_left)
@@ -90,7 +72,7 @@ class Player(aj.GameObject):
         aj.draw_rectangle(self.x, self.y, self.width, self.height, color=aj.c_blue)
 
 # Load the entities (in this case, just the player)
-player_data: dict[str, Any] = level_info['entities']['Player'][0]
+player_data: dict[str, Any] = level.entities['Player'][0]
 
 # Create the player
 player_x: float = player_data['x']

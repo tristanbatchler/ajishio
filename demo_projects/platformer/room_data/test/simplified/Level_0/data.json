@@ -11,5 +11,19 @@
 	"layers": [
 		"GroundIntLayer.png"
 	],
-	"entities" : {}
+	"entities": {
+		"Player": [
+			{
+				"id": "Player",
+				"iid": "3aa1b0e0-fec0-11ee-9d70-e384bf144616",
+				"layer": "Entities",
+				"x": 592,
+				"y": 64,
+				"width": 16,
+				"height": 16,
+				"color": 12470831,
+				"customFields" : {}
+			}
+		]
+	}
 }

@@ -90,7 +90,10 @@ class Player(aj.GameObject):
     def draw(self):
         aj.draw_rectangle(self.x, self.y, self.width, self.height, color=aj.c_blue)
 
+# Load the entities (in this case, just the player)
+player_data: dict[str, Any] = level_info['entities']['Player'][0]
+
 # Create the player
-Player(100, 0, width=16, height=16, speed=3)
+Player(player_data['x'], player_data['y'], width=player_data['width'], height=player_data['height'], speed=3)
 
 aj.game_start()

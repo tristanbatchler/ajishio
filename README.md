@@ -28,7 +28,7 @@ To see more substantial examples, check out the `demo_projects` directory.
 ## TODO
 
 - [ ] Support to load rooms from files
-- [ ] Room editor
+- [x] Room editor (use [LDtk](https://ldtk.io))
 - [ ] Support for multiple rooms in a single game
 - [ ] Support to load and draw sprites from files
 - [ ] Sprite editor to define collision masks and load into the game

@@ -31,7 +31,7 @@ class Engine:
         
         self._screen: pg.Surface
         self._display: pg.Surface
-        self._background_image: pg.Surface | None = None
+        self._background_images: list[pg.Surface] = []
 
         pg.init()
         self.room_set_size(_view.view_wport[_view.view_current], _view.view_hport[_view.view_current])
@@ -64,7 +64,7 @@ class Engine:
         _view.view_set_hport(_view.view_current, self.room_height)
 
         # Draw the level
-        self.room_set_background_image(level.background_surface)
+        self.room_set_background_images(list(level.background_surfaces.values()))
 
         # Load the tilemaps
         for layer, tilemap in level.tilemaps.items():
@@ -131,8 +131,8 @@ class Engine:
     def room_set_height(self, h: int) -> None:
         self.room_set_size(self.room_width, h)
 
-    def room_set_background_image(self, surface: pg.Surface) -> None:
-        self._background_image = surface
+    def room_set_background_images(self, surfaces: list[pg.Surface]) -> None:
+        self._background_images = surfaces
 
     def room_set_background(self, color: pg.Color) -> None:
         self.room_background_color = color
@@ -184,8 +184,8 @@ class Engine:
                 self._fit_display()
 
                 self._display.fill(self.room_background_color)
-                if self._background_image is not None:
-                    self._display.blit(self._background_image, _view.offset)
+                for bg in self._background_images:
+                    self._display.blit(bg, _view.offset)
             
                 for obj in game_objects_copy.values():
                     obj.step()
@@ -339,7 +339,7 @@ game_set_speed = _engine.game_set_speed
 room_set_width = _engine.room_set_width
 room_set_height = _engine.room_set_height
 room_set_background = _engine.room_set_background
-room_set_background_image = _engine.room_set_background_image
+room_set_background_images = _engine.room_set_background_images
 game_start = _engine.game_start
 instance_destroy = _engine.instance_destroy
 instance_exists = _engine.instance_exists

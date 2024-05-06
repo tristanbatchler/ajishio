@@ -9,8 +9,8 @@ from typing import Any
 class GameLevel:
     tilemaps: dict[str, list[list[bool]]]
     tile_sizes: dict[str, tuple[int, int]]
+    background_surfaces: dict[str, pg.Surface]
     level_size: tuple[int, int]
-    background_surface: pg.Surface
     entities: dict[str, Any]
 
 def load_ldtk_levels(ldtk_super_simple_export_simplified_path: Path) -> list[GameLevel]:
@@ -20,20 +20,20 @@ def load_ldtk_levels(ldtk_super_simple_export_simplified_path: Path) -> list[Gam
 def load_ldtk(level_dir: Path) -> GameLevel:
     tilemaps: dict[str, list[list[bool]]] = {}
     tile_sizes: dict[str, tuple[int, int]] = {}
+    background_surfaces: dict[str, pg.Surface] = {}
     level_size: tuple[int, int]
-    background_surface: pg.Surface
 
     level_info: dict[str, Any] = json.loads((level_dir / 'data.json').read_text())
     
     # Get the size of this level
     level_size = (level_info['width'], level_info['height'])
 
-    # Get the background surface for this level
-    with open(level_dir / '_composite.png', 'rb') as f:
-        background_surface = pg.image.load(f)
-
     layers: list[str] = ['.'.join(x.split('.')[:-1]) for x in level_info['layers']]
     for layer in layers:
+        # Get the background surface for this layer
+        with open(level_dir / f'{layer}.png', 'rb') as f:
+            background_surfaces[layer] = pg.image.load(f)
+
         # Get the tilemap data for this layer
         tilemap: list[list[bool]] = []
         with open(level_dir / f'{layer}.csv', 'r') as f:
@@ -46,6 +46,6 @@ def load_ldtk(level_dir: Path) -> GameLevel:
         tile_size = (level_size[0] // len(tilemap[0]), level_size[1] // len(tilemap))
         tile_sizes[layer] = tile_size
 
-    return GameLevel(tilemaps, tile_sizes, level_size, background_surface, level_info['entities'])
+    return GameLevel(tilemaps, tile_sizes, background_surfaces, level_size, level_info['entities'])
 
     

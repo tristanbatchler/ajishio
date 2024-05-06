@@ -42,6 +42,41 @@
 				"color": 1364704,
 				"customFields" : {}
 			}
+		],
+		"Coin": [
+			{
+				"id": "Coin",
+				"iid": "7e0e7a60-fec0-11ee-9b8f-a1bc261efc4f",
+				"layer": "Entities",
+				"x": 368,
+				"y": 96,
+				"width": 16,
+				"height": 16,
+				"color": 16705377,
+				"customFields" : {}
+			},
+			{
+				"id": "Coin",
+				"iid": "7ec5bc70-fec0-11ee-9b8f-87eb3e47f21b",
+				"layer": "Entities",
+				"x": 352,
+				"y": 96,
+				"width": 16,
+				"height": 16,
+				"color": 16705377,
+				"customFields" : {}
+			},
+			{
+				"id": "Coin",
+				"iid": "7f0a6690-fec0-11ee-9b8f-db73db6ecb88",
+				"layer": "Entities",
+				"x": 336,
+				"y": 96,
+				"width": 16,
+				"height": 16,
+				"color": 16705377,
+				"customFields" : {}
+			}
 		]
 	}
 }

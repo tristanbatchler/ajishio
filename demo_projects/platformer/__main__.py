@@ -15,30 +15,16 @@ class Floor(aj.GameObject):
     #     # Debug outline
     #     aj.draw_rectangle(self.x, self.y, self.collision_mask.bbright, self.collision_mask.bbbottom, outline=True, color=aj.c_red)
 
-class Player(aj.GameObject):
+class PhysicsObject(aj.GameObject):
     def __init__(self, x: float, y: float, *args, **kwargs):
         super().__init__(x, y)
-        self.sprite_index = sprites['player']
-        self.image_speed = 10
-        self.speed: float = 3.5
-
-        self.collision_mask: aj.CollisionMask = aj.CollisionMask(
-            bbtop=0,
-            bbleft=0,
-            bbright=self.sprite_width,
-            bbbottom=self.sprite_height
-        )
-
         self.x_velocity: float = 0
         self.y_velocity: float = 0
         self.gravity: float = 0.5
-        self.jump_height: float = -8
 
     def step(self) -> None:
         super().step()
-        x_input: int = aj.keyboard_check(aj.vk_right) - aj.keyboard_check(aj.vk_left)
-        
-        self.x_velocity = x_input * self.speed
+
         self.y_velocity += self.gravity
 
         if self.place_meeting(self.x + self.x_velocity, self.y, Floor):
@@ -55,11 +41,47 @@ class Player(aj.GameObject):
         else:
             self.y += self.y_velocity
 
+class Player(PhysicsObject):
+    def __init__(self, x: float, y: float, *args, **kwargs):
+        super().__init__(x, y)
+        self.sprite_index = sprites['player']
+        self.image_speed = 10
+        self.speed: float = 3.5
+        self.score: int = 0
+
+        self.collision_mask: aj.CollisionMask = aj.CollisionMask(
+            bbtop=2,
+            bbleft=5,
+            bbright=self.sprite_width - 5,
+            bbbottom=self.sprite_height
+        )
+
+        self.jump_height: float = -8
+        self.acceleration: float = 0.7
+
+    def step(self) -> None:
+        super().step()
+        x_input: int = aj.keyboard_check(aj.vk_right) - aj.keyboard_check(aj.vk_left)
+        
+        if x_input != 0:
+            self.x_velocity += x_input * self.acceleration
+        else:
+            self.x_velocity -= aj.sign(self.x_velocity) * self.acceleration
+        
+        if abs(self.x_velocity) < self.acceleration:
+            self.x_velocity = 0
+
+        self.x_velocity = aj.clamp(self.x_velocity, -self.speed, self.speed)
+
         if self.place_meeting(self.x, self.y + 1, Floor) and aj.keyboard_check(aj.vk_space):
             self.y_velocity = self.jump_height
 
         if self.x < -100 or self.x > aj.room_width + 100 or self.y < -100 or self.y > aj.room_height + 100:
             aj.room_goto_next()
+
+    def draw(self) -> None:
+        super().draw()
+        aj.draw_text(aj.view_xport[aj.view_current] + 10, aj.view_yport[aj.view_current] + 10, str(self.score), color=aj.c_yellow)
 
 class Camera(aj.GameObject):
     def __init__(self, *args, **kwargs) -> None:
@@ -89,10 +111,36 @@ class Camera(aj.GameObject):
         if aj.keyboard_check(ord('r')):
             aj.room_restart()
 
-class Enemy(aj.GameObject):
+class Enemy(PhysicsObject):
     def __init__(self, x: float, y: float, *args, **kwargs):
         super().__init__(x, y)
         self.sprite_index = sprites['enemy']
+
+        self.collision_mask: aj.CollisionMask = aj.CollisionMask(
+            bbtop=2,
+            bbleft=2,
+            bbright=self.sprite_width - 2,
+            bbbottom=self.sprite_height
+        )
+
+        self.x_velocity = 1
+
+    def step(self) -> None:
+        super().step()
+
+        if self.place_meeting(self.x + self.x_velocity, self.y, Floor):
+            self.x_velocity *= -1
+
+        if not self.place_meeting(self.x + self.sprite_width * aj.sign(self.x_velocity) + self.x_velocity, self.y + 1, Floor):
+            self.x_velocity *= -1
+
+        if self.place_meeting(self.x, self.y, Player):
+            aj.room_restart()
+
+class Coin(aj.GameObject):
+    def __init__(self, x: float, y: float, *args, **kwargs):
+        super().__init__(x, y)
+        self.sprite_index = sprites['coin']
 
         self.collision_mask: aj.CollisionMask = aj.CollisionMask(
             bbtop=0,
@@ -101,26 +149,26 @@ class Enemy(aj.GameObject):
             bbbottom=self.sprite_height
         )
 
-        self.speed: float = 1
-        self.direction: int = 1
+        self.image_speed = 15
 
     def step(self) -> None:
         super().step()
-        self.x += self.speed * self.direction
-
-        if self.place_meeting(self.x, self.y, Floor):
-            self.direction *= -1
-
-        if self.place_meeting(self.x, self.y, Player):
-            aj.room_restart()
+        player_hit: aj.GameObject | None = self.place_meeting(self.x, self.y, Player)
+        if player_hit is not None:
+            assert isinstance(player_hit, Player)
+            aj.instance_destroy(self)
+            player_hit.score += 1
 
 sprites: dict[str, aj.GameSprite] = aj.load_aseprite_sprites(Path(__file__).parent / 'sprites')
 
 levels: list[aj.GameLevel] = aj.load_ldtk_levels(Path(__file__).parent / 'room_data' / 'test' / 'simplified')
 aj.set_rooms(levels)
-aj.register_objects(Floor, Player, Camera, Enemy)
+aj.register_objects(Floor, Player, Camera, Enemy, Coin)
 
 aj.room_set_caption("Platformer")
 aspect_ratio: float = levels[0].level_size[0] / levels[0].level_size[1]
 aj.window_set_size(960, int(960 / aspect_ratio))
+
+aj.room_set_background(aj.Color(135, 206, 235))
+
 aj.game_start()

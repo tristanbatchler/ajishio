@@ -13,13 +13,17 @@ class GameLevel:
     background_surface: pg.Surface
     entities: dict[str, Any]
 
-def load_ldtk(level_dir: Path) -> GameLevel:
+def load_ldtk_levels(ldtk_super_simple_export_simplified_path: Path, int_grid_layer_name: str) -> list[GameLevel]:
+    alphabetical_level_dirs: list[Path] = sorted(ldtk_super_simple_export_simplified_path.iterdir())
+    return [load_ldtk(level_dir, int_grid_layer_name) for level_dir in alphabetical_level_dirs]
+
+def load_ldtk(level_dir: Path, int_grid_layer_name: str) -> GameLevel:
     tilemap: list[list[bool]] = []
     tile_size: tuple[int, int]
     level_size: tuple[int, int]
     background_surface: pg.Surface
 
-    with open(level_dir / 'GroundIntLayer.csv', 'r') as f:
+    with open(level_dir / f'{int_grid_layer_name}.csv', 'r') as f:
         reader = csv.reader(f)
         for row in reader:
             tilemap.append([bool(int(cell)) for cell in row if cell != ''])

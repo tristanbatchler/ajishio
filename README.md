@@ -143,8 +143,43 @@ them with the same name as it appears in LDtk. Tiles need to accept integer `til
 `tile_height` arguments in their constructor. To make the engine aware of these classes, you need to 
 inject them into the engine's namespace by calling the `aj.register_objects` function.
 
-> Tip: It is recommended to save your LDtk project directly in your project directory, so that you can 
-easily update the rooms without having to copy them over every time.
+> Tip: It is recommended to save your LDtk project directly in your project directory, so that you 
+> can easily update the rooms without having to copy them over every time.
+
+To see an example of this in action, check out the 
+[`platformer`](/demo_projects/platformer/__main__.py) demo project.
+
+# Loading Sprites
+
+Ajishio supports loading sprites from [Aseprite](https://www.aseprite.org) files. First obtain 
+Aseprite and create your (animated) sprite. Export it as both a `.png` sprite sheet and a `.json` 
+data file. It is important that both of these files go into the same directory somewhere in your 
+project.
+
+![Asesprite Export](/.github/assets/aseprite_export.png)
+
+To load the sprite in your game, use the `aj.load_aseprite_sprites` function, passing the path to 
+the directory containing the `.png` and `.json` files as the argument. It will return a dictionary 
+of `aj.Sprite` objects which you can use to define the sprites of objects in your game.
+
+For example, to define a sprite for a player object, you can do the following:
+```python
+class Player(PhysicsObject):
+    def __init__(self, x: float, y: float, *args, **kwargs):
+        super().__init__(x, y)
+        self.sprite_index = sprites['player']
+        self.image_speed = 10
+        ...
+```
+
+Here, `sprites` is the dictionary returned by `aj.load_aseprite_sprites`. The key `'player'` is the 
+name of you saved your sprite as in Aseprite.
+
+Ajishio automatically takes care of animating the sprite, as long as you make sure to set the 
+`image_speed` attribute of your object to the desired animation speed (in frames per second), as 
+shown in the example above. You will also need to make sure you run `super().step()` and 
+`super().draw()` in your object's `step` and `draw` methods respectively, if you have overridden 
+them.
 
 To see an example of this in action, check out the 
 [`platformer`](/demo_projects/platformer/__main__.py) demo project.
@@ -154,6 +189,6 @@ To see an example of this in action, check out the
 - [x] Support to load rooms from files (only support for LDtk at the moment)
 - [x] Room editor (use [LDtk](https://ldtk.io))
 - [x] Support for multiple rooms in a single game
-- [x] Support to load and draw sprites from files
+- [x] Support to load and draw sprites from files (only support for Aseprite at the moment)
 - [ ] Sprite editor to define collision masks and load into the game
 - [x] Sprite editor to define animations and load into the game

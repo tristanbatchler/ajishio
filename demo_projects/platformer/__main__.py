@@ -1,6 +1,5 @@
 import ajishio as aj
 from pathlib import Path
-from typing import Any
 
 class Floor(aj.GameObject):
     def __init__(self, x: float, y: float, tile_width: int, tile_height: int, *args, **kwargs):
@@ -12,9 +11,9 @@ class Floor(aj.GameObject):
             bbbottom=tile_height
         )
 
-    def draw(self):
-        # Debug outline
-        aj.draw_rectangle(self.x, self.y, self.collision_mask.bbright, self.collision_mask.bbbottom, outline=True, color=aj.c_red)
+    # def draw(self):
+    #     # Debug outline
+    #     aj.draw_rectangle(self.x, self.y, self.collision_mask.bbright, self.collision_mask.bbbottom, outline=True, color=aj.c_red)
 
 class Player(aj.GameObject):
     def __init__(self, x: float, y: float, *args, width: float = 16, height: float = 32, speed: float = 5, **kwargs):

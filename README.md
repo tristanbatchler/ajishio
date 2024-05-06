@@ -184,11 +184,31 @@ them.
 To see an example of this in action, check out the 
 [`platformer`](/demo_projects/platformer/__main__.py) demo project.
 
+## Collision masks
+
+Currently only support for rectangular collision masks is implemented. To define a collision mask 
+for an object, alter its `collision_mask` attribute in the object's constructor. One 
+recommended approach is to use the object's `sprite_width` and `sprite_height` properties to define 
+the bounding box, and often times you will want to trim some pixels off the sides of the sprite to 
+enhance the feel of the game.
+
+```python
+class PlatformerPlayer(aj.GameObject):
+    def __init__(self, x: float, y: float, *args, **kwargs):
+        super().__init__(x, y)
+        self.sprite_index = sprites['player']
+        self.collision_mask = aj.CollisionMask(
+            bbtop=3, bbleft=3, bbright=self.sprite_width - 3, bbbottom=self.sprite_height
+        )
+```
+
+The bounding box coordinates are relative to the top-left corner of the sprite, but in future 
+versions of Ajishio, it is planned to support adjusting the center of the bounding box.
+
 ## TODO
 
 - [x] Support to load rooms from files (only support for LDtk at the moment)
 - [x] Room editor (use [LDtk](https://ldtk.io))
 - [x] Support for multiple rooms in a single game
 - [x] Support to load and draw sprites from files (only support for Aseprite at the moment)
-- [ ] Sprite editor to define collision masks and load into the game
 - [x] Sprite editor to define animations and load into the game

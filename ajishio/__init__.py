@@ -5,6 +5,7 @@ from ajishio.rendering import *
 from ajishio.view import _view
 from ajishio.view import *
 from ajishio.level_loader import *
+from ajishio.sprite_loader import *
 
 # Create dynamic references to _engine properties which are accessible at runtime from the outside
 def __getattr__(name: str) -> object:

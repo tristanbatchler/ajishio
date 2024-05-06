@@ -3,11 +3,13 @@ from uuid import uuid4, UUID
 from ajishio.input import _input, QuitInterrupt
 from ajishio.view import _view
 from ajishio.level_loader import GameLevel
+from ajishio.sprite_loader import GameSprite
 from dataclasses import dataclass
 from enum import Enum
 import pygame as pg
 import math
 import sys
+from pathlib import Path
 
 epsilon: float = 0.00001
 
@@ -25,6 +27,7 @@ class Engine:
         self.room_speed: float
         self.room_background_color: pg.Color
         self.room: int = 0
+        self.delta_time: float
         
         self._screen: pg.Surface
         self._display: pg.Surface
@@ -108,6 +111,8 @@ class Engine:
             case _:
                 raise ValueError("Invalid GameSpeedConstant")
             
+        self.delta_time = 1 / self.room_speed
+            
     def room_set_size(self, w: float, h: float) -> None:
         self.room_width = w
         self.room_height = h
@@ -157,7 +162,7 @@ class Engine:
 
         self._game_running = True
         while self._game_running:
-            delta_time = self._clock.tick()
+            self.delta_time = self._clock.tick()
 
             try:
                 _input.poll()
@@ -171,7 +176,7 @@ class Engine:
 
             if self.room_speed == 0:
                 continue
-            self._last_render_time += delta_time
+            self._last_render_time += self.delta_time
             room_speed_ms: float = 1000 // self.room_speed
             if self._last_render_time >= room_speed_ms:
                 self._last_render_time %= room_speed_ms
@@ -240,20 +245,40 @@ class CollisionMask:
     kind: BBoxKind = BBoxKind.RECTANGULAR 
     tolerance: int = 0
 
-
 class GameObject:
-    def __init__(self, x: float = 0, y: float = 0, collision_mask: CollisionMask | None = None, *args, **kwargs) -> None:
+    def __init__(self, x: float = 0, y: float = 0, sprite_index: GameSprite | None = None, collision_mask: CollisionMask | None = None, *args, **kwargs) -> None:
+        self.id: UUID = uuid4()
         self.x: float = x
         self.y: float = y
+        self.sprite_index: GameSprite | None = None
+        self.image_index: int = 0
+        self.image_speed: float = 0
         self.collision_mask: CollisionMask | None = collision_mask
-        self.id: UUID = uuid4()
         _engine.add_object(self)
+        self._last_image_update: float = 0
+
+    @property
+    def sprite_width(self) -> int:
+        if self.sprite_index is None:
+            return 0
+        return self.sprite_index.width
+    
+    @property
+    def sprite_height(self) -> int:
+        if self.sprite_index is None:
+            return 0
+        return self.sprite_index.height
 
     def step(self) -> None:
-        pass
+        if self.sprite_index is not None:
+            self._last_image_update += _engine.delta_time
+            if self.image_speed > 0 and len(self.sprite_index.images) > 1 and self._last_image_update > _engine.room_speed / self.image_speed:
+                self._last_image_update = 0
+                self.image_index = (self.image_index + 1) % len(self.sprite_index.images)
 
     def draw(self) -> None:
-        pass
+        if self.sprite_index is not None:
+            _engine._display.blit(self.sprite_index.images[self.image_index], (self.x + _view.offset[0], self.y + _view.offset[1]))
 
     def handle_input(self) -> None:
         pass

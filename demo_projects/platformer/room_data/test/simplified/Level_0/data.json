@@ -42,6 +42,19 @@
 				"color": 12470831,
 				"customFields" : {}
 			}
+		],
+		"Enemy": [
+			{
+				"id": "Enemy",
+				"iid": "73f133a0-fec0-11ee-9b8f-b9d5b37ea071",
+				"layer": "Entities",
+				"x": 176,
+				"y": 208,
+				"width": 16,
+				"height": 16,
+				"color": 16711748,
+				"customFields" : {}
+			}
 		]
 	}
 }

@@ -16,25 +16,26 @@ class Floor(aj.GameObject):
     #     aj.draw_rectangle(self.x, self.y, self.collision_mask.bbright, self.collision_mask.bbbottom, outline=True, color=aj.c_red)
 
 class Player(aj.GameObject):
-    def __init__(self, x: float, y: float, *args, width: float = 16, height: float = 32, speed: float = 5, **kwargs):
+    def __init__(self, x: float, y: float, *args, **kwargs):
         super().__init__(x, y)
-        self.width: float = width
-        self.height: float = height
-        self.speed: float = speed
+        self.sprite_index = sprites['player']
+        self.image_speed = 10
+        self.speed: float = 3.5
 
         self.collision_mask: aj.CollisionMask = aj.CollisionMask(
             bbtop=0,
             bbleft=0,
-            bbright=width,
-            bbbottom=height
+            bbright=self.sprite_width,
+            bbbottom=self.sprite_height
         )
 
         self.x_velocity: float = 0
         self.y_velocity: float = 0
         self.gravity: float = 0.5
-        self.jump_height: float = -8.5
+        self.jump_height: float = -8
 
     def step(self) -> None:
+        super().step()
         x_input: int = aj.keyboard_check(aj.vk_right) - aj.keyboard_check(aj.vk_left)
         
         self.x_velocity = x_input * self.speed
@@ -59,9 +60,6 @@ class Player(aj.GameObject):
 
         if self.x < -100 or self.x > aj.room_width + 100 or self.y < -100 or self.y > aj.room_height + 100:
             aj.room_goto_next()
-
-    def draw(self):
-        aj.draw_rectangle(self.x, self.y, self.width, self.height, color=aj.c_blue)
 
 class Camera(aj.GameObject):
     def __init__(self, *args, **kwargs) -> None:
@@ -91,9 +89,36 @@ class Camera(aj.GameObject):
         if aj.keyboard_check(ord('r')):
             aj.room_restart()
 
+class Enemy(aj.GameObject):
+    def __init__(self, x: float, y: float, *args, **kwargs):
+        super().__init__(x, y)
+        self.sprite_index = sprites['enemy']
+
+        self.collision_mask: aj.CollisionMask = aj.CollisionMask(
+            bbtop=0,
+            bbleft=0,
+            bbright=self.sprite_width,
+            bbbottom=self.sprite_height
+        )
+
+        self.speed: float = 1
+        self.direction: int = 1
+
+    def step(self) -> None:
+        super().step()
+        self.x += self.speed * self.direction
+
+        if self.place_meeting(self.x, self.y, Floor):
+            self.direction *= -1
+
+        if self.place_meeting(self.x, self.y, Player):
+            aj.room_restart()
+
+sprites: dict[str, aj.GameSprite] = aj.load_aseprite_sprites(Path(__file__).parent / 'sprites')
+
 levels: list[aj.GameLevel] = aj.load_ldtk_levels(Path(__file__).parent / 'room_data' / 'test' / 'simplified')
 aj.set_rooms(levels)
-aj.register_objects(Floor, Player, Camera)
+aj.register_objects(Floor, Player, Camera, Enemy)
 
 aj.room_set_caption("Platformer")
 aspect_ratio: float = levels[0].level_size[0] / levels[0].level_size[1]

@@ -154,6 +154,6 @@ To see an example of this in action, check out the
 - [x] Support to load rooms from files (only support for LDtk at the moment)
 - [x] Room editor (use [LDtk](https://ldtk.io))
 - [x] Support for multiple rooms in a single game
-- [ ] Support to load and draw sprites from files
+- [x] Support to load and draw sprites from files
 - [ ] Sprite editor to define collision masks and load into the game
-- [ ] Sprite editor to define animations and load into the game
+- [x] Sprite editor to define animations and load into the game

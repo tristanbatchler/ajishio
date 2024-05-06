@@ -47,7 +47,6 @@ class Player(PhysicsObject):
         self.sprite_index = sprites['player']
         self.image_speed = 10
         self.speed: float = 3.5
-        self.score: int = 0
 
         self.collision_mask: aj.CollisionMask = aj.CollisionMask(
             bbtop=2,
@@ -81,7 +80,7 @@ class Player(PhysicsObject):
 
     def draw(self) -> None:
         super().draw()
-        aj.draw_text(aj.view_xport[aj.view_current] + 10, aj.view_yport[aj.view_current] + 10, str(self.score), color=aj.c_yellow)
+        aj.draw_text(aj.view_xport[aj.view_current] + 10, aj.view_yport[aj.view_current] + 10, str(score), color=aj.c_yellow)
 
 class Camera(aj.GameObject):
     def __init__(self, *args, **kwargs) -> None:
@@ -153,11 +152,10 @@ class Coin(aj.GameObject):
 
     def step(self) -> None:
         super().step()
-        player_hit: aj.GameObject | None = self.place_meeting(self.x, self.y, Player)
-        if player_hit is not None:
-            assert isinstance(player_hit, Player)
+        if self.place_meeting(self.x, self.y, Player):
             aj.instance_destroy(self)
-            player_hit.score += 1
+            global score
+            score += 1
 
 sprites: dict[str, aj.GameSprite] = aj.load_aseprite_sprites(Path(__file__).parent / 'sprites')
 
@@ -171,4 +169,5 @@ aj.window_set_size(960, int(960 / aspect_ratio))
 
 aj.room_set_background(aj.Color(135, 206, 235))
 
+score: int = 0
 aj.game_start()

@@ -20,8 +20,8 @@ class Engine:
         return cls._instance
 
     def __init__(self) -> None:
-        self.room_width: int
-        self.room_height: int
+        self.room_width: float
+        self.room_height: float
         self.room_speed: float
         self.room_background_color: pg.Color
         self._screen: pg.Surface
@@ -48,7 +48,7 @@ class Engine:
             case _:
                 raise ValueError("Invalid GameSpeedConstant")
             
-    def room_set_size(self, w: int, h: int) -> None:
+    def room_set_size(self, w: float, h: float) -> None:
         self.room_width = w
         self.room_height = h
         self._screen = pg.display.set_mode((self.room_width, self.room_height))

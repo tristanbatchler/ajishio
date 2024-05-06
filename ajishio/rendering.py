@@ -43,7 +43,8 @@ def draw_rectangle(x: float, y: float, room_width: float, room_height: float, ou
     pg.draw.rect(_engine._get_display(), _draw_color if color is None else color, (x, y, room_width, room_height), int(outline))
 
 def draw_line(x1: float, y1: float, x2: float, y2: float, color: Color | None = None) -> None:
-    x, y =_translate_offset(x, y)
+    x1, y1 =_translate_offset(x1, y1)
+    x2, y2 =_translate_offset(x2, y2)
     pg.draw.line(_engine._get_display(), _draw_color if color is None else color, (x1, y1), (x2, y2))
 
 def draw_text(x: float, y: float, string: str, color: Color | None = None) -> None:

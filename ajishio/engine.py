@@ -24,6 +24,8 @@ class Engine:
         self.room_height: float
         self.room_speed: float
         self.room_background_color: pg.Color
+        self.room: int = 0
+        
         self._screen: pg.Surface
         self._display: pg.Surface
         self._background_image: pg.Surface | None = None
@@ -40,7 +42,6 @@ class Engine:
         self._game_running: bool
 
         self._rooms: list[GameLevel] = []
-        self.room: int = 0
 
     def set_rooms(self, rooms: list[GameLevel]) -> None:
         self._rooms = rooms
@@ -306,6 +307,7 @@ room_speed: float
 room_width: int
 room_height: int
 room_background_color: pg.Color
+room: int
         
 # These do not need to be evaluated at runtime, since they are references to methods, so they go here
 game_set_speed = _engine.game_set_speed

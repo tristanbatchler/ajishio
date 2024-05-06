@@ -14,7 +14,7 @@
 	],
 	"customFields" : {},
 	"layers": [
-		"IntGrid.png"
+		"Floor.png"
 	],
 	"entities": {
 		"Player": [
@@ -27,6 +27,19 @@
 				"width": 16,
 				"height": 16,
 				"color": 1364704,
+				"customFields" : {}
+			}
+		],
+		"Camera": [
+			{
+				"id": "Camera",
+				"iid": "fbfc2100-fec0-11ee-bfff-b1357dd48562",
+				"layer": "Entities",
+				"x": 16,
+				"y": 96,
+				"width": 16,
+				"height": 16,
+				"color": 12470831,
 				"customFields" : {}
 			}
 		]

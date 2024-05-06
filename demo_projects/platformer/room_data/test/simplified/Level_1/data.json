@@ -14,16 +14,29 @@
 	],
 	"customFields" : {},
 	"layers": [
-		"IntGrid.png"
+		"Floor.png"
 	],
 	"entities": {
+		"Camera": [
+			{
+				"id": "Camera",
+				"iid": "9441d3d0-fec0-11ee-bfff-73089403993b",
+				"layer": "Entities",
+				"x": 336,
+				"y": 0,
+				"width": 16,
+				"height": 16,
+				"color": 12470831,
+				"customFields" : {}
+			}
+		],
 		"Player": [
 			{
 				"id": "Player",
-				"iid": "674ccfa0-fec0-11ee-bfff-57e58f315474",
+				"iid": "d5a4ece0-fec0-11ee-bfff-2b6e0780aeaf",
 				"layer": "Entities",
 				"x": 352,
-				"y": 16,
+				"y": 0,
 				"width": 16,
 				"height": 16,
 				"color": 1364704,

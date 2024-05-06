@@ -2,12 +2,12 @@ from __future__ import annotations
 from uuid import uuid4, UUID
 from ajishio.input import _input, QuitInterrupt
 from ajishio.view import _view
+from ajishio.level_loader import GameLevel
 from dataclasses import dataclass
 from enum import Enum
 import pygame as pg
 import math
 import sys
-from typing import BinaryIO
 
 epsilon: float = 0.00001
 
@@ -38,6 +38,65 @@ class Engine:
         self._last_render_time: float = 0
         self._game_objects: dict[UUID, GameObject] = {}
         self._game_running: bool
+
+        self._rooms: list[GameLevel]
+        self.room: int = 0
+
+    def set_rooms(self, rooms: list[GameLevel]) -> None:
+        self._rooms = rooms
+
+    def register_objects(self, *objects: type[GameObject]) -> None:
+        for obj in objects:
+            globals()[obj.__name__] = obj
+
+    def room_goto(self, index) -> None:
+        for instance in self._game_objects.copy().values():
+            self.instance_destroy(instance)
+
+        level: GameLevel = self._rooms[index]
+
+        # Draw the level
+        self.room_set_background_image(level.background_surface)
+
+        # Set the display size
+        _view.view_set_wport(_view.view_current, 400)
+        _view.view_set_hport(_view.view_current, 300)
+
+        # Load the tilemaps
+        for layer, tilemap in level.tilemaps.items():
+            tile_size: tuple[int, int] = level.tile_sizes[layer]
+
+            for y, row in enumerate(tilemap):
+                    for x, cell in enumerate(row):
+                        if cell:
+                            try:
+                                tile_cls: type = globals()[layer]
+                            except KeyError:
+                                raise ValueError(f"{layer} object not found in engine namespace. Make sure you have registered it with `aj.register_objects({layer})")
+                            tile_cls(x * tile_size[0], y * tile_size[1], *tile_size)
+                            
+
+        # Load the entities
+        for entity_type, entities in level.entities.items():
+            for entity in entities:
+                try:
+                    entity_cls: type = globals()[entity_type]
+                except KeyError:
+                    raise ValueError(f"{entity_type} object not found in engine namespace. Make sure you have registered it with `aj.register_objects({entity_type})")
+                entity_cls(**entity)
+                
+                
+
+        self.room = index
+
+    def room_goto_next(self) -> None:
+        self.room_goto(self.room + 1)
+
+    def room_goto_previous(self) -> None:
+        self.room_goto(self.room - 1)
+
+    def room_restart(self) -> None:
+        self.room_goto(self.room)
 
     def game_set_speed(self, speed: float, type: GameSpeedConstant) -> None:       
         match type:
@@ -78,7 +137,23 @@ class Engine:
     def instance_destroy(self, obj: GameObject) -> None:
         self._game_objects.pop(obj.id)
 
+    def instance_exists(self, obj: type[GameObject]) -> bool:
+        return self.instance_find(obj) is not None
+    
+    def instance_find(self, obj: type[GameObject], n: int = 0) -> GameObject | None:
+        # If obj is a type, find the nth object of that type
+        count: int = 0
+        for g_o in self._game_objects.values():
+            if issubclass(type(g_o), obj):
+                if count == n:
+                    return g_o
+                count += 1
+        return None
+
     def game_start(self) -> None:
+        if len(self._rooms) > 0:
+            self.room_goto(0)
+
         self._game_running = True
         while self._game_running:
             delta_time = self._clock.tick()
@@ -166,7 +241,7 @@ class CollisionMask:
 
 
 class GameObject:
-    def __init__(self, x: float = 0, y: float = 0, collision_mask: CollisionMask | None = None) -> None:
+    def __init__(self, x: float = 0, y: float = 0, collision_mask: CollisionMask | None = None, *args, **kwargs) -> None:
         self.x: float = x
         self.y: float = y
         self.collision_mask: CollisionMask | None = collision_mask
@@ -240,3 +315,11 @@ room_set_background = _engine.room_set_background
 room_set_background_image = _engine.room_set_background_image
 game_start = _engine.game_start
 instance_destroy = _engine.instance_destroy
+instance_exists = _engine.instance_exists
+instance_find = _engine.instance_find
+set_rooms = _engine.set_rooms
+register_objects = _engine.register_objects
+room_goto = _engine.room_goto
+room_goto_next = _engine.room_goto_next
+room_goto_previous = _engine.room_goto_previous
+room_restart = _engine.room_restart

@@ -212,3 +212,5 @@ versions of Ajishio, it is planned to support adjusting the center of the boundi
 - [x] Support for multiple rooms in a single game
 - [x] Support to load and draw sprites from files (only support for Aseprite at the moment)
 - [x] Sprite editor to define animations and load into the game
+- [ ] Load and play sounds
+- [ ] Load and play music

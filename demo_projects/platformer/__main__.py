@@ -67,6 +67,10 @@ class Camera(aj.GameObject):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
+        # Set the display size
+        aj.view_set_wport(aj.view_current, aj.room_width / 1.5)
+        aj.view_set_hport(aj.view_current, aj.room_height / 1.5)
+
     def step(self) -> None:
         player: aj.GameObject | None = aj.instance_find(Player)
         if player is None:
@@ -75,13 +79,23 @@ class Camera(aj.GameObject):
         self.x = player.x
         self.y = player.y
 
-        aj.view_xport[aj.view_current] = self.x - aj.view_wport[aj.view_current] // 2
-        aj.view_yport[aj.view_current] = self.y - aj.view_hport[aj.view_current] // 2
-    
+        half_width: float = aj.view_wport[aj.view_current] // 2
+        half_height: float = aj.view_hport[aj.view_current] // 2
+
+        self.x = aj.clamp(self.x, half_width, aj.room_width - half_width)
+        self.y = aj.clamp(self.y, half_height, aj.room_height - half_height)
+
+        aj.view_xport[aj.view_current] = self.x - half_width
+        aj.view_yport[aj.view_current] = self.y - half_height
+
+        if aj.keyboard_check(ord('r')):
+            aj.room_restart()
 
 levels: list[aj.GameLevel] = aj.load_ldtk_levels(Path(__file__).parent / 'room_data' / 'test' / 'simplified')
 aj.set_rooms(levels)
 aj.register_objects(Floor, Player, Camera)
 
 aj.room_set_caption("Platformer")
+aspect_ratio: float = levels[0].level_size[0] / levels[0].level_size[1]
+aj.window_set_size(960, int(960 / aspect_ratio))
 aj.game_start()

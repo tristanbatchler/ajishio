@@ -56,12 +56,12 @@ class Engine:
 
         level: GameLevel = self._rooms[index]
 
+        self.room_set_size(*level.level_size)
+        _view.view_set_wport(_view.view_current, self.room_width)
+        _view.view_set_hport(_view.view_current, self.room_height)
+
         # Draw the level
         self.room_set_background_image(level.background_surface)
-
-        # Set the display size
-        _view.view_set_wport(_view.view_current, 400)
-        _view.view_set_hport(_view.view_current, 300)
 
         # Load the tilemaps
         for layer, tilemap in level.tilemaps.items():
@@ -111,7 +111,7 @@ class Engine:
     def room_set_size(self, w: float, h: float) -> None:
         self.room_width = w
         self.room_height = h
-        self._screen = pg.display.set_mode((self.room_width, self.room_height))
+        self._screen = pg.display.set_mode((_view.window_width, _view.window_height))
         self._fit_display()
 
     def _fit_display(self) -> None:

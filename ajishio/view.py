@@ -9,10 +9,12 @@ class View:
     
     def __init__(self) -> None:
         self.view_current: int = 0
+        self.window_width: int = 800
+        self.window_height: int = 600
         self.view_xport: dict[int, float] = {self.view_current: 0}
         self.view_yport: dict[int, float] = {self.view_current: 0}
-        self.view_wport: dict[int, float] = {self.view_current: 800}
-        self.view_hport: dict[int, float] = {self.view_current: 600}
+        self.view_wport: dict[int, float] = {self.view_current: self.window_width}
+        self.view_hport: dict[int, float] = {self.view_current: self.window_height}
 
     def view_set_wport(self, view: int, w: float) -> None:
         self.view_wport[view] = w
@@ -26,6 +28,10 @@ class View:
     def view_set_yport(self, view: int, y: float) -> None:
         self.view_yport[view] = y
 
+    def window_set_size(self, w: int, h: int) -> None:
+        self.window_width = w
+        self.window_height = h
+
     @property
     def offset(self) -> tuple[float, float]:
         return (-self.view_xport[self.view_current], -self.view_yport[self.view_current])
@@ -36,6 +42,8 @@ _view: View = View()
 # Put exposed instance variables here to help with code completion, but they are actually evaluated 
 # at runtime by the __getattr__ method in ajishio.__init__.py
 view_current: int
+window_width: int
+window_height: int
 view_xport: dict[int, float]
 view_yport: dict[int, float]
 view_wport: dict[int, float]
@@ -46,3 +54,4 @@ view_set_wport = _view.view_set_wport
 view_set_hport = _view.view_set_hport
 view_set_xport = _view.view_set_xport
 view_set_yport = _view.view_set_yport
+window_set_size = _view.window_set_size

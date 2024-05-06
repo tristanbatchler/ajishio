@@ -50,7 +50,7 @@ To run the game, execute the following command from the root of the repository:
 python -m ajishio <your_project_directory>
 ```
 
-To see more substantial examples, check out the [`demo_projects`](/demo_project/) directory. You can 
+To see more substantial examples, check out the [`demo_projects`](/demo_projects/) directory. You can 
 also run these in the same way, e.g. running the following command from the root of the repository 
 will bring up a pre-made platformer game:
 ```bash

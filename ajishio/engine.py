@@ -39,7 +39,7 @@ class Engine:
         self._game_objects: dict[UUID, GameObject] = {}
         self._game_running: bool
 
-        self._rooms: list[GameLevel]
+        self._rooms: list[GameLevel] = []
         self.room: int = 0
 
     def set_rooms(self, rooms: list[GameLevel]) -> None:

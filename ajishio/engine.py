@@ -118,9 +118,9 @@ class Engine:
     def room_set_background(self, color: pg.Color) -> None:
         self.room_background_color = color
 
-    def audio_play_sound(self, index: GameSound, loop: bool = False) -> None:
+    def audio_play_sound(self, index: GameSound, loop: bool = False, gain: float = 1) -> None:
         self._audio_playing.append(index)
-        index._play(loop)
+        index._play(loop=loop, gain=gain)
 
     def audio_is_playing(self, index: GameSound) -> bool:
         return index in self._audio_playing

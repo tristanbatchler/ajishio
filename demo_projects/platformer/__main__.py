@@ -60,7 +60,7 @@ class Player(PhysicsObject):
 
         bg_music: aj.GameSound = sounds['8_bit_ice_cave_lofi']
         if not aj.audio_is_playing(bg_music):
-            aj.audio_play_sound(bg_music)
+            aj.audio_play_sound(bg_music, loop=True)
 
     def step(self) -> None:
         super().step()
@@ -77,7 +77,7 @@ class Player(PhysicsObject):
         self.x_velocity = aj.clamp(self.x_velocity, -self.speed, self.speed)
 
         if self.place_meeting(self.x, self.y + 1, Floor) and aj.keyboard_check(aj.vk_space):
-            aj.audio_play_sound(sounds['jump'])
+            aj.audio_play_sound(sounds['jump'], gain=0.4)
             self.y_velocity = self.jump_height
 
         if self.x < -100 or self.x > aj.room_width + 100 or self.y < -100 or self.y > aj.room_height + 100:

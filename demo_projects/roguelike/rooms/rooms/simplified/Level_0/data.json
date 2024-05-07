@@ -36,7 +36,13 @@
 				"height": 128,
 				"color": 12470831,
 				"customFields": {
-					"to_room": 1
+					"to_room": 1,
+					"to_doorway": {
+						"entityIid": "2fc4c280-fec0-11ee-8c8f-b347ae1b004c",
+						"layerIid": "12932850-fec0-11ee-8c8f-a57d7d5ccfe7",
+						"levelIid": "a70b14d0-fec0-11ee-8c8f-abd3a12afa8a",
+						"worldIid": "f0cb7a51-fec0-11ee-8c8f-69a125bb1994"
+					}
 				}
 			}
 		],

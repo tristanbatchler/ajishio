@@ -51,8 +51,10 @@ class Engine:
             globals()[obj.__name__] = obj
 
     def room_goto(self, index) -> None:
+        # Remove just the non-persistent instances
         for instance in self._game_objects.copy().values():
-            self.instance_destroy(instance)
+            if not instance.persistent:
+                self.instance_destroy(instance)
 
         level: GameLevel = self._rooms[index]
 
@@ -74,7 +76,7 @@ class Engine:
                             tile_cls: type = globals()[layer]
                         except KeyError:
                             raise ValueError(f"{layer} object not found in engine namespace. Make sure you have registered it with `aj.register_objects({layer})")
-                        tile_cls(x * tile_size[0], y * tile_size[1], *tile_size)
+                        tile_cls(x * tile_size[0], y * tile_size[1], width=tile_size[0], height=tile_size[1])
                         
 
         # Load the entities
@@ -85,8 +87,6 @@ class Engine:
                 except KeyError:
                     raise ValueError(f"{entity_type} object not found in engine namespace. Make sure you have registered it with `aj.register_objects({entity_type})")
                 entity_cls(**entity)
-                
-                
 
         self.room = index
 
@@ -134,7 +134,14 @@ class Engine:
     def instance_exists(self, obj: type[GameObject]) -> bool:
         return self.instance_find(obj) is not None
     
-    def instance_find(self, obj: type[GameObject], n: int = 0) -> GameObject | None:
+    def instance_find(self, obj: type[GameObject] | str, n: int = 0) -> GameObject | None:
+        # If obj is a IID, find the object with that IID (it is unique)
+        if isinstance(obj, str):
+            for g_o in self._game_objects.values():
+                if g_o.iid == obj:
+                    return g_o
+            return None
+
         # If obj is a type, find the nth object of that type
         count: int = 0
         for g_o in self._game_objects.values():

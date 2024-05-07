@@ -36,7 +36,13 @@
 				"height": 32,
 				"color": 12470831,
 				"customFields": {
-					"to_room": 2
+					"to_room": 2,
+					"to_doorway": {
+						"entityIid": "2aa36f90-fec0-11ee-8c8f-65255547b5aa",
+						"layerIid": "12932851-fec0-11ee-8c8f-e708d33d4c50",
+						"levelIid": "bae5c8b0-fec0-11ee-8c8f-7b1ab90b7567",
+						"worldIid": "f0cb7a51-fec0-11ee-8c8f-69a125bb1994"
+					}
 				}
 			},
 			{
@@ -49,7 +55,13 @@
 				"height": 128,
 				"color": 12470831,
 				"customFields": {
-					"to_room": 0
+					"to_room": 0,
+					"to_doorway": {
+						"entityIid": "31702890-fec0-11ee-8c8f-7fcc73db98b0",
+						"layerIid": "12930140-fec0-11ee-8c8f-379c768ce757",
+						"levelIid": "f0cc1690-fec0-11ee-8c8f-053e9a2d50ca",
+						"worldIid": "f0cb7a51-fec0-11ee-8c8f-69a125bb1994"
+					}
 				}
 			}
 		]

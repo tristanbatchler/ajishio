@@ -5,6 +5,7 @@ from ajishio.rendering import _renderer
 from ajishio.sprite_loader import GameSprite
 from dataclasses import dataclass
 from uuid import uuid4, UUID
+from typing import Any
 
 @dataclass
 class CollisionMask:
@@ -22,8 +23,15 @@ class GameObject:
         self.image_index: int = 0
         self.image_speed: float = 0
         self.collision_mask: CollisionMask | None = collision_mask
-        _engine.add_object(self)
         self._last_image_update: float = 0
+        self.persistent: bool = False
+        
+        self.iid: str = kwargs.get("iid", None)
+        self.width: float = kwargs.get("width", 0)
+        self.height: float = kwargs.get("height", 0)
+        self.custom_fields: dict[str, Any] = kwargs.get("customFields", {})
+
+        _engine.add_object(self)
 
     @property
     def sprite_width(self) -> int:

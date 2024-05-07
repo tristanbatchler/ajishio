@@ -1,6 +1,7 @@
 from __future__ import annotations
 from ajishio.view import _view
 from ajishio.engine import _engine
+from ajishio.rendering import _renderer
 from ajishio.sprite_loader import GameSprite
 from dataclasses import dataclass
 from uuid import uuid4, UUID
@@ -45,7 +46,7 @@ class GameObject:
 
     def draw(self) -> None:
         if self.sprite_index is not None:
-            _engine._display.blit(self.sprite_index.images[self.image_index], (self.x + _view.offset[0], self.y + _view.offset[1]))
+            _renderer.draw_sprite(self.x, self.y, self.sprite_index, self.image_index)
 
     def handle_input(self) -> None:
         pass

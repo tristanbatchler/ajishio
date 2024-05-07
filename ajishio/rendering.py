@@ -1,7 +1,52 @@
+from __future__ import annotations
 import colorsys
 import pygame as pg
-from ajishio.engine import _engine
 from ajishio.view import _view
+from ajishio.sprite_loader import GameSprite
+
+
+class Renderer:
+    _instance: Renderer | None = None
+
+    def __new__(cls) -> Renderer:
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+    def __init__(self) -> None:
+        self._screen: pg.Surface
+        self.set_screen_size(_view.view_wport[_view.view_current], _view.view_hport[_view.view_current])
+        self._display: pg.Surface
+        self._background_images: list[pg.Surface] = []
+
+        self.draw_color: pg.Color = pg.Color(255, 255, 255)
+        self.draw_font: pg.font.Font = pg.font.Font(None, 32)
+
+    def set_screen_size(self, w: float, h: float) -> None:
+        self._screen = pg.display.set_mode((w, h))
+
+    def draw_display(self) -> None:
+        scaled_display: pg.Surface = pg.transform.scale(self._display, self._screen.get_size())
+        self._screen.blit(scaled_display, (0, 0))
+
+    def fit_display(self) -> None:
+        self._display = pg.Surface((_view.view_wport[_view.view_current], _view.view_hport[_view.view_current]))
+
+    def fill_background_color(self, color: pg.Color) -> None:
+        self._display.fill(color)
+
+    def set_background_images(self, surfaces: list[pg.Surface]) -> None:
+        self._background_images = surfaces
+
+    def draw_background_images(self) -> None:
+        for bg in self._background_images:
+            self._display.blit(bg, _view.offset)
+
+    def draw_sprite(self, x: float, y: float, sprite_index: GameSprite, image_index: int) -> None:
+        self._display.blit(sprite_index.images[image_index], (x + _view.offset[0], y + _view.offset[1]))
+
+
+_renderer: Renderer = Renderer()
 
 Color = pg.Color
 
@@ -25,9 +70,6 @@ c_teal: Color = Color(0, 128, 128)
 c_white: Color = Color(255, 255, 255)
 c_yellow: Color = Color(255, 255, 0)
 
-_draw_color: Color = Color(255, 255, 255)
-_draw_font: pg.font.Font = pg.font.Font(None, 32)
-
 def _translate_offset(x: float, y: float) -> tuple[float, float]:
     return (x + _view.offset[0], y + _view.offset[1])
 
@@ -36,24 +78,25 @@ def make_color_hsv(hue: float, sat: float, val: float) -> Color:
 
 def draw_circle(x: float, y: float, radius: float, color: Color | None = None) -> None:
     x, y =_translate_offset(x, y)
-    pg.draw.circle(_engine._get_display(), _draw_color if color is None else color, (x, y), radius)
+    pg.draw.circle(_renderer._display, _renderer.draw_color if color is None else color, (x, y), radius)
 
 def draw_rectangle(x: float, y: float, room_width: float, room_height: float, outline: bool = False, color: Color | None = None) -> None:
     x, y = _translate_offset(x, y)
-    pg.draw.rect(_engine._get_display(), _draw_color if color is None else color, (x, y, room_width, room_height), int(outline))
+    pg.draw.rect(_renderer._display, _renderer.draw_color if color is None else color, (x, y, room_width, room_height), int(outline))
 
 def draw_line(x1: float, y1: float, x2: float, y2: float, color: Color | None = None) -> None:
     x1, y1 =_translate_offset(x1, y1)
     x2, y2 =_translate_offset(x2, y2)
-    pg.draw.line(_engine._get_display(), _draw_color if color is None else color, (x1, y1), (x2, y2))
+    pg.draw.line(_renderer._display, _renderer.draw_color if color is None else color, (x1, y1), (x2, y2))
 
 def draw_text(x: float, y: float, string: str, color: Color | None = None) -> None:
     x, y =_translate_offset(x, y)
-    text = _draw_font.render(string, True, _draw_color if color is None else color)
-    _engine._get_display().blit(text, (x, y))
+    text = _renderer.draw_font.render(string, True, _renderer.draw_color if color is None else color)
+    _renderer._display.blit(text, (x, y))
 
 def text_width(string: str) -> int:
-    return _draw_font.size(string)[0]
+    return _renderer.draw_font.size(string)[0]
 
 def text_height(string: str) -> int:
-    return _draw_font.size(string)[1]
+    return _renderer.draw_font.size(string)[1]
+

@@ -1,3 +1,8 @@
+# Initialise pygame first as the rest of our modules may depend on it
+from pygame import init as pg_init
+pg_init()
+
+# Now import all of our modules
 from ajishio.engine import _engine
 from ajishio.engine import *
 from ajishio.input import *

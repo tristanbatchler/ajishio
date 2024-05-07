@@ -2,6 +2,7 @@ from __future__ import annotations
 from uuid import UUID
 from ajishio.input import _input, QuitInterrupt
 from ajishio.view import _view
+from ajishio.rendering import _renderer
 from ajishio.level_loader import GameLevel
 import pygame as pg
 import sys
@@ -29,11 +30,6 @@ class Engine:
         self.room: int = 0
         self.delta_time: float
         
-        self._screen: pg.Surface
-        self._display: pg.Surface
-        self._background_images: list[pg.Surface] = []
-
-        pg.init()
         self.room_set_size(_view.view_wport[_view.view_current], _view.view_hport[_view.view_current])
         self.game_set_speed(60)
         self.room_set_background(pg.Color(0, 0, 0))
@@ -63,7 +59,7 @@ class Engine:
         _view.view_set_hport(_view.view_current, self.room_height)
 
         # Draw the level
-        self.room_set_background_images(list(level.background_surfaces.values()))
+        _renderer.set_background_images(list(level.background_surfaces.values()))
 
         # Load the tilemaps
         for layer, tilemap in level.tilemaps.items():
@@ -108,23 +104,14 @@ class Engine:
     def room_set_size(self, w: float, h: float) -> None:
         self.room_width = w
         self.room_height = h
-        self._screen = pg.display.set_mode((_view.window_width, _view.window_height))
-        self._fit_display()
-
-    def _fit_display(self) -> None:
-        self._display = pg.Surface((_view.view_wport[_view.view_current], _view.view_hport[_view.view_current]))
-
-    def _get_display(self) -> pg.Surface:
-        return self._display
+        _renderer.set_screen_size(_view.window_width, _view.window_height)
+        _renderer.fit_display()
 
     def room_set_width(self, w: int) -> None:
         self.room_set_size(w, self.room_height)
 
     def room_set_height(self, h: int) -> None:
         self.room_set_size(self.room_width, h)
-
-    def room_set_background_images(self, surfaces: list[pg.Surface]) -> None:
-        self._background_images = surfaces
 
     def room_set_background(self, color: pg.Color) -> None:
         self.room_background_color = color
@@ -154,6 +141,7 @@ class Engine:
 
         self._game_running = True
         while self._game_running:
+
             self.delta_time = self._clock.tick()
 
             try:
@@ -172,21 +160,15 @@ class Engine:
             room_speed_ms: float = 1000 // self.room_speed
             if self._last_render_time >= room_speed_ms:
                 self._last_render_time %= room_speed_ms
-
-                self._fit_display()
-
-                self._display.fill(self.room_background_color)
-                for bg in self._background_images:
-                    self._display.blit(bg, _view.offset)
+                _renderer.fit_display()
+                _renderer.fill_background_color(self.room_background_color)
+                _renderer.draw_background_images()
             
                 for obj in game_objects_copy.values():
                     obj.step()
                     obj.draw()
 
-                scaled_display: pg.Surface = pg.transform.scale(self._display, self._screen.get_size())
-                self._screen.blit(scaled_display, (0, 0))
-
-
+                _renderer.draw_display()
                 pg.display.update()
         
         pg.quit()
@@ -207,7 +189,6 @@ game_set_speed = _engine.game_set_speed
 room_set_width = _engine.room_set_width
 room_set_height = _engine.room_set_height
 room_set_background = _engine.room_set_background
-room_set_background_images = _engine.room_set_background_images
 game_start = _engine.game_start
 instance_destroy = _engine.instance_destroy
 instance_exists = _engine.instance_exists

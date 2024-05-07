@@ -7,10 +7,11 @@ from ajishio.level_loader import GameLevel
 import pygame as pg
 import sys
 
-# Import GameObject class only for type hinting, must avoid circular imports
+# Import classes only for type hinting, must avoid circular imports
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from ajishio.game_object import GameObject
+    from ajishio.sound_loader import GameSound
 
 epsilon: float = 0.00001
 
@@ -40,6 +41,7 @@ class Engine:
         self._game_running: bool
 
         self._rooms: list[GameLevel] = []
+        self._audio_playing: list[GameSound] = []
 
     def set_rooms(self, rooms: list[GameLevel]) -> None:
         self._rooms = rooms
@@ -116,6 +118,13 @@ class Engine:
     def room_set_background(self, color: pg.Color) -> None:
         self.room_background_color = color
 
+    def audio_play_sound(self, index: GameSound, loop: bool = False) -> None:
+        self._audio_playing.append(index)
+        index._play(loop)
+
+    def audio_is_playing(self, index: GameSound) -> bool:
+        return index in self._audio_playing
+
     def add_object(self, obj: GameObject) -> None:
         self._game_objects[obj.id] = obj
 
@@ -170,7 +179,12 @@ class Engine:
 
                 _renderer.draw_display()
                 pg.display.update()
-        
+                
+
+            for audio in self._audio_playing:
+                if audio._is_finished():
+                    self._audio_playing.remove(audio)
+
         pg.quit()
         sys.exit()
 
@@ -199,3 +213,5 @@ room_goto = _engine.room_goto
 room_goto_next = _engine.room_goto_next
 room_goto_previous = _engine.room_goto_previous
 room_restart = _engine.room_restart
+audio_play_sound = _engine.audio_play_sound
+audio_is_playing = _engine.audio_is_playing

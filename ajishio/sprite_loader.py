@@ -1,4 +1,3 @@
-import csv
 import json
 import pygame as pg
 from dataclasses import dataclass

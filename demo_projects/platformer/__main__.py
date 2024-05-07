@@ -58,6 +58,10 @@ class Player(PhysicsObject):
         self.jump_height: float = -8
         self.acceleration: float = 0.7
 
+        bg_music: aj.GameSound = sounds['8_bit_ice_cave_lofi']
+        if not aj.audio_is_playing(bg_music):
+            aj.audio_play_sound(bg_music)
+
     def step(self) -> None:
         super().step()
         x_input: int = aj.keyboard_check(aj.vk_right) - aj.keyboard_check(aj.vk_left)
@@ -73,6 +77,7 @@ class Player(PhysicsObject):
         self.x_velocity = aj.clamp(self.x_velocity, -self.speed, self.speed)
 
         if self.place_meeting(self.x, self.y + 1, Floor) and aj.keyboard_check(aj.vk_space):
+            aj.audio_play_sound(sounds['jump'])
             self.y_velocity = self.jump_height
 
         if self.x < -100 or self.x > aj.room_width + 100 or self.y < -100 or self.y > aj.room_height + 100:
@@ -134,6 +139,7 @@ class Enemy(PhysicsObject):
             self.x_velocity *= -1
 
         if self.place_meeting(self.x, self.y, Player):
+            aj.audio_play_sound(sounds['die'])
             aj.room_restart()
 
 class Coin(aj.GameObject):
@@ -156,10 +162,13 @@ class Coin(aj.GameObject):
             aj.instance_destroy(self)
             global score
             score += 1
+            aj.audio_play_sound(sounds['coin'])
 
-sprites: dict[str, aj.GameSprite] = aj.load_aseprite_sprites(Path(__file__).parent / 'sprites')
+project_dir: Path = Path(__file__).parent
+sprites: dict[str, aj.GameSprite] = aj.load_aseprite_sprites(project_dir / 'sprites')
+levels: list[aj.GameLevel] = aj.load_ldtk_levels(project_dir / 'room_data' / 'test' / 'simplified')
+sounds: dict[str, aj.GameSound] = aj.load_sounds(project_dir / 'sounds')
 
-levels: list[aj.GameLevel] = aj.load_ldtk_levels(Path(__file__).parent / 'room_data' / 'test' / 'simplified')
 aj.set_rooms(levels)
 aj.register_objects(Floor, Player, Camera, Enemy, Coin)
 

@@ -1,6 +1,8 @@
 import pygame as pg
 import math
 
+def _remove_ext(filename: str) -> str:
+    return filename[:filename.rfind('.')]
 
 def room_set_caption(caption: str) -> None:
     pg.display.set_caption(caption)

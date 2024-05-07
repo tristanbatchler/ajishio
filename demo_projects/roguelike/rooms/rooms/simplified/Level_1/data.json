@@ -1,0 +1,57 @@
+{
+	"identifier": "Level_1",
+	"uniqueIdentifer": "a70b14d0-fec0-11ee-8c8f-abd3a12afa8a",
+	"x": 512,
+	"y": 0,
+	"width": 512,
+	"height": 512,
+	"bgColor": "#696A79",
+	"neighbourLevels": [
+		{
+			"levelIid": "f0cc1690-fec0-11ee-8c8f-053e9a2d50ca",
+			"dir": "w"
+		},
+		{
+			"levelIid": "bae5c8b0-fec0-11ee-8c8f-7b1ab90b7567",
+			"dir": "s"
+		},
+		{
+			"levelIid": "d4ecfdf0-fec0-11ee-8c8f-83512d180c18",
+			"dir": "sw"
+		}
+	],
+	"customFields" : {},
+	"layers": [
+		"Wall.png"
+	],
+	"entities": {
+		"Doorway": [
+			{
+				"id": "Doorway",
+				"iid": "2dfa89d0-fec0-11ee-8c8f-8f1467c5cac8",
+				"layer": "Entities",
+				"x": 192,
+				"y": 480,
+				"width": 128,
+				"height": 32,
+				"color": 12470831,
+				"customFields": {
+					"to_room": 2
+				}
+			},
+			{
+				"id": "Doorway",
+				"iid": "2fc4c280-fec0-11ee-8c8f-b347ae1b004c",
+				"layer": "Entities",
+				"x": 0,
+				"y": 192,
+				"width": 32,
+				"height": 128,
+				"color": 12470831,
+				"customFields": {
+					"to_room": 0
+				}
+			}
+		]
+	}
+}

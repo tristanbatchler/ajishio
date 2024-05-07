@@ -1,0 +1,57 @@
+{
+	"identifier": "Level_0",
+	"uniqueIdentifer": "f0cc1690-fec0-11ee-8c8f-053e9a2d50ca",
+	"x": 0,
+	"y": 0,
+	"width": 512,
+	"height": 512,
+	"bgColor": "#696A79",
+	"neighbourLevels": [
+		{
+			"levelIid": "a70b14d0-fec0-11ee-8c8f-abd3a12afa8a",
+			"dir": "e"
+		},
+		{
+			"levelIid": "bae5c8b0-fec0-11ee-8c8f-7b1ab90b7567",
+			"dir": "se"
+		},
+		{
+			"levelIid": "d4ecfdf0-fec0-11ee-8c8f-83512d180c18",
+			"dir": "s"
+		}
+	],
+	"customFields" : {},
+	"layers": [
+		"Wall.png"
+	],
+	"entities": {
+		"Doorway": [
+			{
+				"id": "Doorway",
+				"iid": "31702890-fec0-11ee-8c8f-7fcc73db98b0",
+				"layer": "Entities",
+				"x": 480,
+				"y": 192,
+				"width": 32,
+				"height": 128,
+				"color": 12470831,
+				"customFields": {
+					"to_room": 1
+				}
+			}
+		],
+		"Player": [
+			{
+				"id": "Player",
+				"iid": "7f3d4640-fec0-11ee-8c8f-4507a1ce64a6",
+				"layer": "Entities",
+				"x": 224,
+				"y": 224,
+				"width": 32,
+				"height": 32,
+				"color": 4682184,
+				"customFields" : {}
+			}
+		]
+	}
+}

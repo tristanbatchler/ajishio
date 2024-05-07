@@ -66,14 +66,14 @@ class Engine:
             tile_size: tuple[int, int] = level.tile_sizes[layer]
 
             for y, row in enumerate(tilemap):
-                    for x, cell in enumerate(row):
-                        if cell:
-                            try:
-                                tile_cls: type = globals()[layer]
-                            except KeyError:
-                                raise ValueError(f"{layer} object not found in engine namespace. Make sure you have registered it with `aj.register_objects({layer})")
-                            tile_cls(x * tile_size[0], y * tile_size[1], *tile_size)
-                            
+                for x, cell in enumerate(row):
+                    if cell:
+                        try:
+                            tile_cls: type = globals()[layer]
+                        except KeyError:
+                            raise ValueError(f"{layer} object not found in engine namespace. Make sure you have registered it with `aj.register_objects({layer})")
+                        tile_cls(x * tile_size[0], y * tile_size[1], *tile_size)
+                        
 
         # Load the entities
         for entity_type, entities in level.entities.items():

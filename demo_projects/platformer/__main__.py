@@ -79,7 +79,7 @@ class Player(PhysicsObject):
         )
 
         self.jump_height: float = -8
-        self.acceleration: float = 0.7
+        self.acceleration: float = 0.6
 
         bg_music: aj.GameSound = sounds['8_bit_ice_cave_lofi']
         if not aj.audio_is_playing(bg_music):
@@ -127,13 +127,13 @@ class Player(PhysicsObject):
                         
                         # If we are stepping through the doorway...
                         if exit_dir_x != 0:
-                            self.x = to_doorway.x + exit_dir_x * to_doorway.width
-                            self.y = to_doorway.y + (player_percentage_to_bottom_doorway + exit_dir_y) * to_doorway.height
+                            self.x = to_doorway.x
+                            self.y = to_doorway.y + player_percentage_to_bottom_doorway * to_doorway.height + exit_dir_y
 
                         # If we are jumping or falling through the doorway...
                         elif exit_dir_y != 0:
-                            self.x = to_doorway.x + (player_percentage_to_right_doorway + exit_dir_x) * to_doorway.width
-                            self.y = to_doorway.y + exit_dir_y * to_doorway.height
+                            self.x = to_doorway.x + player_percentage_to_right_doorway * to_doorway.width + exit_dir_x
+                            self.y = to_doorway.y
 
                         self.room_start_x = self.x
                         self.room_start_y = self.y
@@ -211,11 +211,12 @@ class Coin(aj.GameObject):
 
         self.sprite_index = sprites['coin']
 
+        # Give generous collision mask to make it easier to collect
         self.collision_mask: aj.CollisionMask = aj.CollisionMask(
-            bbtop=0,
-            bbleft=0,
-            bbright=self.sprite_width,
-            bbbottom=self.sprite_height
+            bbtop=-5,
+            bbleft=-5,
+            bbright=self.sprite_width + 5,
+            bbbottom=self.sprite_height + 5
         )
 
         self.image_speed = 15
@@ -228,8 +229,6 @@ class Coin(aj.GameObject):
             player_hit.score += 1
             aj.audio_play_sound(sounds['coin'])
             coins_collected.add(self.iid)
-
-
 
 project_dir: Path = Path(__file__).parent
 sprites: dict[str, aj.GameSprite] = aj.load_aseprite_sprites(project_dir / 'sprites')

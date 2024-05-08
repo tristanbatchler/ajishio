@@ -214,4 +214,4 @@ versions of Ajishio, it is planned to support adjusting the center of the boundi
 - [x] Sprite editor to define animations and load into the game
 - [x] Load and play sounds
 - [x] Load and play music
-- [ ] Support persistant objects
+- [x] Support persistant objects

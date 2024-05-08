@@ -1,23 +1,41 @@
 import ajishio as aj
 from pathlib import Path
+from typing import Any
 
 class Floor(aj.GameObject):
-    def __init__(self, x: float, y: float, tile_width: int, tile_height: int, *args, **kwargs):
-        super().__init__(x, y)
+    def __init__(self, x: float, y: float, *args, **kwargs):
+        super().__init__(x, y, *args, **kwargs)
         self.collision_mask: aj.CollisionMask = aj.CollisionMask(
             bbtop=0,
             bbleft=0,
-            bbright=tile_width,
-            bbbottom=tile_height
+            bbright=self.width,
+            bbbottom=self.height
         )
 
     # def draw(self):
     #     # Debug outline
     #     aj.draw_rectangle(self.x, self.y, self.collision_mask.bbright, self.collision_mask.bbbottom, outline=True, color=aj.c_red)
 
+class Doorway(aj.GameObject):
+    def __init__(self, x: float, y: float, *args, **kwargs):
+        super().__init__(x, y, *args, **kwargs)
+            
+        self.collision_mask = aj.CollisionMask(bbleft=0, bbtop=0, bbright=self.width, bbbottom=self.height)
+
+        self.to_room: int = self.custom_fields.get("to_room", 0)
+        self.to_doorway_iid: str | None = self.custom_fields.get("to_doorway", {}).get("entityIid", None)
+        
+        exit_direction_str: str = self.custom_fields["exit_direction"]
+        self.exit_direction: tuple[int, int] = {
+            "TOP": (0, -1),
+            "BOTTOM": (0, 1),
+            "LEFT": (-1, 0),
+            "RIGHT": (1, 0)
+        }[exit_direction_str]
+
 class PhysicsObject(aj.GameObject):
     def __init__(self, x: float, y: float, *args, **kwargs):
-        super().__init__(x, y)
+        super().__init__(x, y, *args, **kwargs)
         self.x_velocity: float = 0
         self.y_velocity: float = 0
         self.gravity: float = 0.5
@@ -42,11 +60,13 @@ class PhysicsObject(aj.GameObject):
             self.y += self.y_velocity
 
 class Player(PhysicsObject):
+    persistent: bool = True
     def __init__(self, x: float, y: float, *args, **kwargs):
-        super().__init__(x, y)
+        super().__init__(x, y, *args, **kwargs)
         self.sprite_index = sprites['player']
         self.image_speed = 10
         self.speed: float = 3.5
+        self.score: int = 0
 
         self.collision_mask: aj.CollisionMask = aj.CollisionMask(
             bbtop=2,
@@ -62,6 +82,9 @@ class Player(PhysicsObject):
         if not aj.audio_is_playing(bg_music):
             aj.audio_play_sound(bg_music, loop=True)
 
+        self.room_start_x: float = x
+        self.room_start_y: float = y
+
     def step(self) -> None:
         super().step()
         x_input: int = aj.keyboard_check(aj.vk_right) - aj.keyboard_check(aj.vk_left)
@@ -76,18 +99,49 @@ class Player(PhysicsObject):
 
         self.x_velocity = aj.clamp(self.x_velocity, -self.speed, self.speed)
 
-        if self.place_meeting(self.x, self.y + 1, Floor) and aj.keyboard_check(aj.vk_space):
+        if self.place_meeting(self.x, self.y + 1, Floor) and aj.keyboard_check_pressed(aj.vk_space):
             aj.audio_play_sound(sounds['jump'], gain=0.4)
             self.y_velocity = self.jump_height
 
-        if self.x < -100 or self.x > aj.room_width + 100 or self.y < -100 or self.y > aj.room_height + 100:
-            aj.room_goto_next()
+        doorway_hit: aj.GameObject | None = self.place_meeting(self.x, self.y, Doorway)
+        if doorway_hit and isinstance(doorway_hit, Doorway):
+            aj.room_goto(doorway_hit.to_room)
+            if doorway_hit.to_doorway_iid:
+                to_doorway: aj.GameObject | None = aj.instance_find(doorway_hit.to_doorway_iid)
+                if to_doorway and isinstance(to_doorway, Doorway):
+                    player_percentage_to_bottom_doorway: float = (self.y - doorway_hit.y) / doorway_hit.height
+                    player_percentage_to_right_doorway: float = (self.x - doorway_hit.x) / doorway_hit.width
+
+                    # Take us to the corresponding position on the other side of the doorway
+                    exit_dir_x, exit_dir_y = to_doorway.exit_direction
+                    
+                    if exit_dir_x != 0:
+                        # We are stepping through the doorway
+                        self.x = to_doorway.x + exit_dir_x * to_doorway.width
+                        self.y = to_doorway.y + (player_percentage_to_bottom_doorway + exit_dir_y) * to_doorway.height
+                    elif exit_dir_y != 0:
+                        # We are jumping or falling through the doorway
+                        self.x = to_doorway.x + (player_percentage_to_right_doorway + exit_dir_x) * to_doorway.width
+                        self.y = to_doorway.y + exit_dir_y * to_doorway.height
+
+                    self.room_start_x = self.x
+                    self.room_start_y = self.y
+
+        if self.place_meeting(self.x, self.y, Enemy):
+            aj.audio_play_sound(sounds['die'])
+            aj.game_restart()
+
+        if aj.keyboard_check_released(ord('r')):
+            aj.room_restart()
+            self.x = self.room_start_x
+            self.y = self.room_start_y
 
     def draw(self) -> None:
         super().draw()
-        aj.draw_text(aj.view_xport[aj.view_current] + 10, aj.view_yport[aj.view_current] + 10, str(score), color=aj.c_yellow)
+        aj.draw_text(aj.view_xport[aj.view_current] + 10, aj.view_yport[aj.view_current] + 10, str(self.score), color=aj.c_yellow)
 
 class Camera(aj.GameObject):
+    persistent: bool = True
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
@@ -99,7 +153,7 @@ class Camera(aj.GameObject):
         player: aj.GameObject | None = aj.instance_find(Player)
         if player is None:
             return
-        
+  
         self.x = player.x
         self.y = player.y
 
@@ -112,12 +166,9 @@ class Camera(aj.GameObject):
         aj.view_xport[aj.view_current] = self.x - half_width
         aj.view_yport[aj.view_current] = self.y - half_height
 
-        if aj.keyboard_check(ord('r')):
-            aj.room_restart()
-
 class Enemy(PhysicsObject):
     def __init__(self, x: float, y: float, *args, **kwargs):
-        super().__init__(x, y)
+        super().__init__(x, y, *args, **kwargs)
         self.sprite_index = sprites['enemy']
 
         self.collision_mask: aj.CollisionMask = aj.CollisionMask(
@@ -138,13 +189,9 @@ class Enemy(PhysicsObject):
         if not self.place_meeting(self.x + self.sprite_width * aj.sign(self.x_velocity) + self.x_velocity, self.y + 1, Floor):
             self.x_velocity *= -1
 
-        if self.place_meeting(self.x, self.y, Player):
-            aj.audio_play_sound(sounds['die'])
-            aj.room_restart()
-
 class Coin(aj.GameObject):
     def __init__(self, x: float, y: float, *args, **kwargs):
-        super().__init__(x, y)
+        super().__init__(x, y, *args, **kwargs)
         self.sprite_index = sprites['coin']
 
         self.collision_mask: aj.CollisionMask = aj.CollisionMask(
@@ -158,19 +205,19 @@ class Coin(aj.GameObject):
 
     def step(self) -> None:
         super().step()
-        if self.place_meeting(self.x, self.y, Player):
+        player_hit: aj.GameObject | None = self.place_meeting(self.x, self.y, Player)
+        if player_hit and isinstance(player_hit, Player):
             aj.instance_destroy(self)
-            global score
-            score += 1
+            player_hit.score += 1
             aj.audio_play_sound(sounds['coin'])
 
 project_dir: Path = Path(__file__).parent
 sprites: dict[str, aj.GameSprite] = aj.load_aseprite_sprites(project_dir / 'sprites')
-levels: list[aj.GameLevel] = aj.load_ldtk_levels(project_dir / 'room_data' / 'test' / 'simplified')
+levels: list[aj.GameLevel] = aj.load_ldtk_levels(project_dir / 'room_data' / 'world' / 'simplified')
 sounds: dict[str, aj.GameSound] = aj.load_sounds(project_dir / 'sounds')
 
 aj.set_rooms(levels)
-aj.register_objects(Floor, Player, Camera, Enemy, Coin)
+aj.register_objects(Floor, Player, Camera, Enemy, Coin, Doorway)
 
 aj.room_set_caption("Platformer")
 aspect_ratio: float = levels[0].level_size[0] / levels[0].level_size[1]
@@ -178,5 +225,4 @@ aj.window_set_size(960, int(960 / aspect_ratio))
 
 aj.room_set_background(aj.Color(135, 206, 235))
 
-score: int = 0
 aj.game_start()

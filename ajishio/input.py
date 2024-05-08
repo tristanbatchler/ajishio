@@ -1,5 +1,4 @@
 from __future__ import annotations
-from typing import Callable
 import pygame as pg
 
 class QuitInterrupt(Exception):
@@ -14,41 +13,23 @@ class Input:
         return cls._instance
     
     def __init__(self) -> None:
-        self._keys_pressed: set[int] = set()
-        self._keys_held: set[int] = set()
-        self._keys_released: set[int] = set()
-
-    def poll(self) -> None:
-        self._keys_pressed = set()
-        self._keys_released = set()
-
-        for event in pg.event.get():
-            match event.type:
-                case pg.QUIT:
-                    raise QuitInterrupt
-                case pg.KEYDOWN:
-                    self._keys_pressed.add(event.key)
-                    self._keys_held.add(event.key)
-                case pg.KEYUP:
-                    self._keys_held.discard(event.key)
-                    self._keys_released.add(event.key)
-                case _:
-                    pass
-    
-    def keyboard_check_pressed(self, key: int) -> bool:
-        return key in self._keys_pressed
-    
-    def keyboard_check(self, key: int) -> bool:
-        return key in self._keys_held
-    
-    def keyboard_check_released(self, key: int) -> bool:
-        return key in self._keys_released
+        self.prev_events: list[pg.event.Event] | None = None
+        self.events: list[pg.event.Event] = []
 
 _input: Input = Input()
-keyboard_check_pressed: Callable[[int], bool] = _input.keyboard_check_pressed
-keyboard_check: Callable[[int], bool] = _input.keyboard_check
-keyboard_check_released: Callable[[int], bool] = _input.keyboard_check_released
 
+def keyboard_check_pressed(key: int) -> bool:
+    pressed_now: bool = any(event.type == pg.KEYDOWN and event.key == key for event in _input.events)
+    if _input.prev_events is None:
+        return pressed_now
+    pressed_before: bool = any(event.type == pg.KEYDOWN and event.key == key for event in _input.prev_events)
+    return pressed_now and not pressed_before
+
+def keyboard_check_released(key: int) -> bool:
+    return any(event.type == pg.KEYUP and event.key == key for event in _input.events)
+
+def keyboard_check(key: int) -> bool:
+    return pg.key.get_pressed()[key]
 
 vk_left: int = pg.K_LEFT
 vk_right: int = pg.K_RIGHT

@@ -5,7 +5,8 @@ from ajishio.rendering import _renderer
 from ajishio.sprite_loader import GameSprite
 from dataclasses import dataclass
 from uuid import uuid4, UUID
-from typing import Any
+from typing import Any, Callable
+import pygame as pg
 
 @dataclass
 class CollisionMask:
@@ -15,6 +16,8 @@ class CollisionMask:
     bbbottom: float = 0
 
 class GameObject:
+    persistent: bool = False
+
     def __init__(self, x: float = 0, y: float = 0, sprite_index: GameSprite | None = None, collision_mask: CollisionMask | None = None, *args, **kwargs) -> None:
         self.id: UUID = uuid4()
         self.x: float = x
@@ -24,7 +27,6 @@ class GameObject:
         self.image_speed: float = 0
         self.collision_mask: CollisionMask | None = collision_mask
         self._last_image_update: float = 0
-        self.persistent: bool = False
         
         self.iid: str = kwargs.get("iid", None)
         self.width: float = kwargs.get("width", 0)
@@ -55,9 +57,6 @@ class GameObject:
     def draw(self) -> None:
         if self.sprite_index is not None:
             _renderer.draw_sprite(self.x, self.y, self.sprite_index, self.image_index)
-
-    def handle_input(self) -> None:
-        pass
 
     def place_meeting(self, x: float, y: float, obj: GameObject | type[GameObject] | UUID) -> GameObject | None:
         if isinstance(obj, GameObject):

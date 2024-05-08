@@ -59,8 +59,6 @@ class Engine:
         level: GameLevel = self._rooms[index]
 
         self.room_set_size(*level.level_size)
-        _view.view_set_wport(_view.view_current, self.room_width)
-        _view.view_set_hport(_view.view_current, self.room_height)
 
         # Draw the level
         _renderer.set_background_images(list(level.background_surfaces.values()))
@@ -83,10 +81,12 @@ class Engine:
         for entity_type, entities in level.entities.items():
             for entity in entities:
                 try:
-                    entity_cls: type = globals()[entity_type]
+                    entity_cls: type[GameObject] = globals()[entity_type]
                 except KeyError:
                     raise ValueError(f"{entity_type} object not found in engine namespace. Make sure you have registered it with `aj.register_objects({entity_type})")
-                entity_cls(**entity)
+                
+                if not (self.instance_exists(entity_cls) and entity_cls.persistent):
+                    entity_cls(**entity)
 
         self.room = index
 
@@ -99,9 +99,15 @@ class Engine:
     def room_restart(self) -> None:
         self.room_goto(self.room)
 
+    def game_restart(self) -> None:
+        for obj in self._game_objects.copy().values():
+            self.instance_destroy(obj)
+        self.room_goto(0)
+
     def game_set_speed(self, speed: float) -> None:       
         self.room_speed = speed
-        self.delta_time = 1 / self.room_speed
+        if speed != 0:
+            self.delta_time = 1 / self.room_speed
             
     def room_set_size(self, w: float, h: float) -> None:
         self.room_width = w
@@ -129,7 +135,10 @@ class Engine:
         self._game_objects[obj.id] = obj
 
     def instance_destroy(self, obj: GameObject) -> None:
-        self._game_objects.pop(obj.id)
+        try:
+            self._game_objects.pop(obj.id)
+        except KeyError:
+            pass
 
     def instance_exists(self, obj: type[GameObject]) -> bool:
         return self.instance_find(obj) is not None
@@ -158,17 +167,14 @@ class Engine:
         self._game_running = True
         while self._game_running:
 
-            self.delta_time = self._clock.tick()
+            _input.events += pg.event.get()
 
-            try:
-                _input.poll()
-            except QuitInterrupt:
+            if any(event.type == pg.QUIT for event in _input.events):
                 self._game_running = False
 
-            game_objects_copy = self._game_objects.copy()
+            self.delta_time = self._clock.tick()
 
-            for obj in game_objects_copy.values():
-                obj.handle_input()
+            game_objects_copy = self._game_objects.copy()
 
             if self.room_speed == 0:
                 continue
@@ -179,10 +185,14 @@ class Engine:
                 _renderer.fit_display()
                 _renderer.fill_background_color(self.room_background_color)
                 _renderer.draw_background_images()
-            
+                
                 for obj in game_objects_copy.values():
                     obj.step()
                     obj.draw()
+
+                # Only clear the input after all objects have had a chance to process it
+                _input.prev_events = _input.events.copy()
+                _input.events.clear()
 
                 _renderer.draw_display()
                 pg.display.update()
@@ -220,5 +230,6 @@ room_goto = _engine.room_goto
 room_goto_next = _engine.room_goto_next
 room_goto_previous = _engine.room_goto_previous
 room_restart = _engine.room_restart
+game_restart = _engine.game_restart
 audio_play_sound = _engine.audio_play_sound
 audio_is_playing = _engine.audio_is_playing

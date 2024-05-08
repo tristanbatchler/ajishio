@@ -63,23 +63,6 @@ class SnakeHead(GridAlignedObject):
     def step(self) -> None:
         super().step()
 
-        self.grid_x += self.x_velocity
-        self.grid_y += self.y_velocity
-        self.update_position()
-
-        hit_apple: aj.GameObject | None = self.place_meeting(self.x, self.y, Apple)
-        if hit_apple:
-            aj.game_set_speed(aj.room_speed * 1.05)
-            self.tail_segments.append(SnakeTailSegment(self, len(self.tail_segments)))
-            aj.instance_destroy(hit_apple)
-            Apple()
-
-        if aj.GameObject.place_meeting(self, self.x, self.y, SnakeTailSegment):
-            global game_over
-            game_over = True
-
-
-    def handle_input(self) -> None:
         if self.y_velocity == 0:
             if aj.keyboard_check_pressed(aj.vk_up):
                     self.x_velocity = 0
@@ -95,6 +78,21 @@ class SnakeHead(GridAlignedObject):
             elif aj.keyboard_check_pressed(aj.vk_right):
                 self.x_velocity = 1
                 self.y_velocity = 0
+
+        self.grid_x += self.x_velocity
+        self.grid_y += self.y_velocity
+        self.update_position()
+
+        hit_apple: aj.GameObject | None = self.place_meeting(self.x, self.y, Apple)
+        if hit_apple:
+            aj.game_set_speed(aj.room_speed * 1.05)
+            self.tail_segments.append(SnakeTailSegment(self, len(self.tail_segments)))
+            aj.instance_destroy(hit_apple)
+            Apple()
+
+        if aj.GameObject.place_meeting(self, self.x, self.y, SnakeTailSegment):
+            global game_over
+            game_over = True
 
     def draw(self) -> None:
         self.draw_self()
@@ -132,5 +130,7 @@ aj.room_set_caption("Snake")
 aj.room_set_background(aj.c_purple)
 SnakeHead()
 Apple()
+
+# Note: setting the game speed like this is not recommended, as it can lead to inconsistent input handling
 aj.game_set_speed(5)
 aj.game_start()

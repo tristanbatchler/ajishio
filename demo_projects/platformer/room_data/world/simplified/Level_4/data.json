@@ -1,0 +1,143 @@
+{
+	"identifier": "Level_4",
+	"uniqueIdentifer": "8e1aed10-fec0-11ee-be3a-99c2e2529f19",
+	"x": 0,
+	"y": 320,
+	"width": 640,
+	"height": 320,
+	"bgColor": "#696A79",
+	"neighbourLevels": [
+		{
+			"levelIid": "53525970-fec0-11ee-b5a6-735f3df1ae2b",
+			"dir": "n"
+		},
+		{
+			"levelIid": "d6fc91b0-fec0-11ee-be3a-ddd878fcf8d0",
+			"dir": "ne"
+		},
+		{
+			"levelIid": "00757b60-fec0-11ee-be3a-61bab09611fd",
+			"dir": "e"
+		},
+		{
+			"levelIid": "72384ba0-fec0-11ee-be3a-61fefb91b47f",
+			"dir": "se"
+		}
+	],
+	"customFields" : {},
+	"layers": [
+		"Floor.png"
+	],
+	"entities": {
+		"Doorway": [
+			{
+				"id": "Doorway",
+				"iid": "ef754240-fec0-11ee-be3a-5de10fdc0190",
+				"layer": "Entities",
+				"x": 112,
+				"y": 0,
+				"width": 48,
+				"height": 16,
+				"color": 14120515,
+				"customFields": {
+					"to_room": 0,
+					"to_doorway": {
+						"entityIid": "e3b52420-fec0-11ee-be3a-ef98bf9b94b4",
+						"layerIid": "53528080-fec0-11ee-b5a6-d7d0cbceaae9",
+						"levelIid": "53525970-fec0-11ee-b5a6-735f3df1ae2b",
+						"worldIid": "ae0899f1-fec0-11ee-980c-fbeba3fb0f42"
+					},
+					"exit_direction": "BOTTOM"
+				}
+			},
+			{
+				"id": "Doorway",
+				"iid": "f32fb230-fec0-11ee-be3a-cf279c7422f3",
+				"layer": "Entities",
+				"x": 624,
+				"y": 64,
+				"width": 16,
+				"height": 224,
+				"color": 14120515,
+				"customFields": {
+					"to_room": 2,
+					"to_doorway": {
+						"entityIid": "f69dd6e0-fec0-11ee-be3a-d9f2cfc27dfd",
+						"layerIid": "00757b61-fec0-11ee-be3a-7b81645e9e53",
+						"levelIid": "00757b60-fec0-11ee-be3a-61bab09611fd",
+						"worldIid": "ae0899f1-fec0-11ee-980c-fbeba3fb0f42"
+					},
+					"exit_direction": "LEFT"
+				}
+			}
+		],
+		"Coin": [
+			{
+				"id": "Coin",
+				"iid": "9fd0f9f0-fec0-11ee-be3a-11f591dcb1af",
+				"layer": "Entities",
+				"x": 480,
+				"y": 288,
+				"width": 16,
+				"height": 16,
+				"color": 16705377,
+				"customFields" : {}
+			},
+			{
+				"id": "Coin",
+				"iid": "a02f1f80-fec0-11ee-be3a-5f32d6378d6e",
+				"layer": "Entities",
+				"x": 288,
+				"y": 272,
+				"width": 16,
+				"height": 16,
+				"color": 16705377,
+				"customFields" : {}
+			},
+			{
+				"id": "Coin",
+				"iid": "a078f9c0-fec0-11ee-be3a-7bf409beaca6",
+				"layer": "Entities",
+				"x": 240,
+				"y": 272,
+				"width": 16,
+				"height": 16,
+				"color": 16705377,
+				"customFields" : {}
+			},
+			{
+				"id": "Coin",
+				"iid": "a158f980-fec0-11ee-be3a-9d6db9704bb3",
+				"layer": "Entities",
+				"x": 192,
+				"y": 272,
+				"width": 16,
+				"height": 16,
+				"color": 16705377,
+				"customFields" : {}
+			},
+			{
+				"id": "Coin",
+				"iid": "a5189990-fec0-11ee-be3a-a7b713c0d202",
+				"layer": "Entities",
+				"x": 416,
+				"y": 112,
+				"width": 16,
+				"height": 16,
+				"color": 16705377,
+				"customFields" : {}
+			},
+			{
+				"id": "Coin",
+				"iid": "a7671d70-fec0-11ee-be3a-9544e8fdd898",
+				"layer": "Entities",
+				"x": 320,
+				"y": 80,
+				"width": 16,
+				"height": 16,
+				"color": 16705377,
+				"customFields" : {}
+			}
+		]
+	}
+}

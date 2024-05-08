@@ -1,0 +1,143 @@
+{
+	"identifier": "Level_1",
+	"uniqueIdentifer": "d6fc91b0-fec0-11ee-be3a-ddd878fcf8d0",
+	"x": 640,
+	"y": 0,
+	"width": 640,
+	"height": 320,
+	"bgColor": "#696A79",
+	"neighbourLevels": [
+		{
+			"levelIid": "53525970-fec0-11ee-b5a6-735f3df1ae2b",
+			"dir": "w"
+		},
+		{
+			"levelIid": "00757b60-fec0-11ee-be3a-61bab09611fd",
+			"dir": "s"
+		},
+		{
+			"levelIid": "5fe9f990-fec0-11ee-be3a-0dd9ab52290c",
+			"dir": "se"
+		},
+		{
+			"levelIid": "8e1aed10-fec0-11ee-be3a-99c2e2529f19",
+			"dir": "sw"
+		}
+	],
+	"customFields" : {},
+	"layers": [
+		"Floor.png"
+	],
+	"entities": {
+		"Doorway": [
+			{
+				"id": "Doorway",
+				"iid": "0b814830-fec0-11ee-be3a-e5f10b2ff19a",
+				"layer": "Entities",
+				"x": 224,
+				"y": 304,
+				"width": 80,
+				"height": 16,
+				"color": 14120515,
+				"customFields": {
+					"to_room": 2,
+					"to_doorway": {
+						"entityIid": "093ab390-fec0-11ee-be3a-895574cb3d1f",
+						"layerIid": "00757b61-fec0-11ee-be3a-7b81645e9e53",
+						"levelIid": "00757b60-fec0-11ee-be3a-61bab09611fd",
+						"worldIid": "ae0899f1-fec0-11ee-980c-fbeba3fb0f42"
+					},
+					"exit_direction": "TOP"
+				}
+			},
+			{
+				"id": "Doorway",
+				"iid": "0cb05250-fec0-11ee-be3a-157deb20f8a0",
+				"layer": "Entities",
+				"x": 416,
+				"y": 304,
+				"width": 80,
+				"height": 16,
+				"color": 14120515,
+				"customFields": {
+					"to_room": 2,
+					"to_doorway": {
+						"entityIid": "0751cf50-fec0-11ee-be3a-951ddb80b0ab",
+						"layerIid": "00757b61-fec0-11ee-be3a-7b81645e9e53",
+						"levelIid": "00757b60-fec0-11ee-be3a-61bab09611fd",
+						"worldIid": "ae0899f1-fec0-11ee-980c-fbeba3fb0f42"
+					},
+					"exit_direction": "TOP"
+				}
+			},
+			{
+				"id": "Doorway",
+				"iid": "0e596e70-fec0-11ee-be3a-15c58fb554f8",
+				"layer": "Entities",
+				"x": 0,
+				"y": 80,
+				"width": 16,
+				"height": 208,
+				"color": 14120515,
+				"customFields": {
+					"to_room": 0,
+					"to_doorway": {
+						"entityIid": "1025f110-fec0-11ee-be3a-cbe85912536e",
+						"layerIid": "53528080-fec0-11ee-b5a6-d7d0cbceaae9",
+						"levelIid": "53525970-fec0-11ee-b5a6-735f3df1ae2b",
+						"worldIid": "ae0899f1-fec0-11ee-980c-fbeba3fb0f42"
+					},
+					"exit_direction": "RIGHT"
+				}
+			}
+		],
+		"Coin": [
+			{
+				"id": "Coin",
+				"iid": "8cc1ac60-fec0-11ee-be3a-a1b574e63158",
+				"layer": "Entities",
+				"x": 256,
+				"y": 240,
+				"width": 16,
+				"height": 16,
+				"color": 16705377,
+				"customFields" : {}
+			},
+			{
+				"id": "Coin",
+				"iid": "8d397470-fec0-11ee-be3a-37900c5c937a",
+				"layer": "Entities",
+				"x": 448,
+				"y": 240,
+				"width": 16,
+				"height": 16,
+				"color": 16705377,
+				"customFields" : {}
+			}
+		],
+		"Enemy": [
+			{
+				"id": "Enemy",
+				"iid": "c5939260-fec0-11ee-be3a-398d2a9d9f9b",
+				"layer": "Entities",
+				"x": 352,
+				"y": 272,
+				"width": 16,
+				"height": 16,
+				"color": 16711748,
+				"customFields" : {}
+			},
+			{
+				"id": "Enemy",
+				"iid": "c6c02b80-fec0-11ee-be3a-91107c232631",
+				"layer": "Entities",
+				"x": 560,
+				"y": 272,
+				"width": 16,
+				"height": 16,
+				"color": 16711748,
+				"customFields" : {}
+			}
+		]
+	}
+}

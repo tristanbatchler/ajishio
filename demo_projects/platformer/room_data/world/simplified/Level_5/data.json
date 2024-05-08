@@ -1,0 +1,97 @@
+{
+	"identifier": "Level_5",
+	"uniqueIdentifer": "72384ba0-fec0-11ee-be3a-61fefb91b47f",
+	"x": 640,
+	"y": 640,
+	"width": 640,
+	"height": 320,
+	"bgColor": "#696A79",
+	"neighbourLevels": [
+		{
+			"levelIid": "00757b60-fec0-11ee-be3a-61bab09611fd",
+			"dir": "n"
+		},
+		{
+			"levelIid": "5fe9f990-fec0-11ee-be3a-0dd9ab52290c",
+			"dir": "ne"
+		},
+		{
+			"levelIid": "8e1aed10-fec0-11ee-be3a-99c2e2529f19",
+			"dir": "nw"
+		}
+	],
+	"customFields" : {},
+	"layers": [
+		"Floor.png"
+	],
+	"entities": {
+		"Doorway": [
+			{
+				"id": "Doorway",
+				"iid": "b3e2e740-fec0-11ee-be3a-7fb450c51752",
+				"layer": "Entities",
+				"x": 224,
+				"y": 0,
+				"width": 80,
+				"height": 16,
+				"color": 14120515,
+				"customFields": {
+					"to_room": 2,
+					"to_doorway": {
+						"entityIid": "e8a119c0-fec0-11ee-be3a-53eb3bf77501",
+						"layerIid": "00757b61-fec0-11ee-be3a-7b81645e9e53",
+						"levelIid": "00757b60-fec0-11ee-be3a-61bab09611fd",
+						"worldIid": "ae0899f1-fec0-11ee-980c-fbeba3fb0f42"
+					},
+					"exit_direction": "BOTTOM"
+				}
+			},
+			{
+				"id": "Doorway",
+				"iid": "bc5dec80-fec0-11ee-be3a-5b641da0abff",
+				"layer": "Entities",
+				"x": 416,
+				"y": 0,
+				"width": 80,
+				"height": 16,
+				"color": 14120515,
+				"customFields": {
+					"to_room": 2,
+					"to_doorway": {
+						"entityIid": "d06e0840-fec0-11ee-be3a-1329a98313f9",
+						"layerIid": "00757b61-fec0-11ee-be3a-7b81645e9e53",
+						"levelIid": "00757b60-fec0-11ee-be3a-61bab09611fd",
+						"worldIid": "ae0899f1-fec0-11ee-980c-fbeba3fb0f42"
+					},
+					"exit_direction": "BOTTOM"
+				}
+			}
+		],
+		"Coin": [
+			{
+				"id": "Coin",
+				"iid": "be8eb260-fec0-11ee-be3a-efd212fd01ec",
+				"layer": "Entities",
+				"x": 64,
+				"y": 64,
+				"width": 16,
+				"height": 16,
+				"color": 16705377,
+				"customFields" : {}
+			}
+		],
+		"Enemy": [
+			{
+				"id": "Enemy",
+				"iid": "d28a82d0-fec0-11ee-be3a-c1ac669e6822",
+				"layer": "Entities",
+				"x": 288,
+				"y": 176,
+				"width": 16,
+				"height": 16,
+				"color": 16711748,
+				"customFields" : {}
+			}
+		]
+	}
+}

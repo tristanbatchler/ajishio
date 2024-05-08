@@ -80,9 +80,9 @@ def draw_circle(x: float, y: float, radius: float, color: Color | None = None) -
     x, y =_translate_offset(x, y)
     pg.draw.circle(_renderer._display, _renderer.draw_color if color is None else color, (x, y), radius)
 
-def draw_rectangle(x: float, y: float, room_width: float, room_height: float, outline: bool = False, color: Color | None = None) -> None:
+def draw_rectangle(x: float, y: float, width: float, height: float, outline: bool = False, color: Color | None = None) -> None:
     x, y = _translate_offset(x, y)
-    pg.draw.rect(_renderer._display, _renderer.draw_color if color is None else color, (x, y, room_width, room_height), int(outline))
+    pg.draw.rect(_renderer._display, _renderer.draw_color if color is None else color, (x, y, width, height), int(outline))
 
 def draw_line(x1: float, y1: float, x2: float, y2: float, color: Color | None = None) -> None:
     x1, y1 =_translate_offset(x1, y1)

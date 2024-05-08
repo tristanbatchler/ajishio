@@ -12,26 +12,28 @@ class Floor(aj.GameObject):
             bbbottom=self.height
         )
 
-    # def draw(self):
-    #     # Debug outline
-    #     aj.draw_rectangle(self.x, self.y, self.collision_mask.bbright, self.collision_mask.bbbottom, outline=True, color=aj.c_red)
-
 class Doorway(aj.GameObject):
     def __init__(self, x: float, y: float, *args, **kwargs):
         super().__init__(x, y, *args, **kwargs)
-            
-        self.collision_mask = aj.CollisionMask(bbleft=0, bbtop=0, bbright=self.width, bbbottom=self.height)
 
         self.to_room: int = self.custom_fields.get("to_room", 0)
         self.to_doorway_iid: str | None = self.custom_fields.get("to_doorway", {}).get("entityIid", None)
         
-        exit_direction_str: str = self.custom_fields["exit_direction"]
-        self.exit_direction: tuple[int, int] = {
+        entrance_direction_str: str = self.custom_fields["entrance_direction"]
+        self.entrance_direction: tuple[int, int] = {
             "TOP": (0, -1),
             "BOTTOM": (0, 1),
             "LEFT": (-1, 0),
             "RIGHT": (1, 0)
-        }[exit_direction_str]
+        }[entrance_direction_str]
+
+        # Modify the collision mask to be a single pixel wide in the direction of the entrance
+        self.collision_mask = aj.CollisionMask(
+            bbleft=(self.width - 1) if self.entrance_direction[0] == -1 else 0,
+            bbtop=(self.height - 1) if self.entrance_direction[1] == -1 else 0,
+            bbright=(1 if self.entrance_direction[0] == 1 else self.width),
+            bbbottom=(1 if self.entrance_direction[1] == 1 else self.height)
+        )
 
 class PhysicsObject(aj.GameObject):
     def __init__(self, x: float, y: float, *args, **kwargs):
@@ -39,11 +41,12 @@ class PhysicsObject(aj.GameObject):
         self.x_velocity: float = 0
         self.y_velocity: float = 0
         self.gravity: float = 0.5
+        self.max_fall_speed: float = 10
 
     def step(self) -> None:
         super().step()
 
-        self.y_velocity += self.gravity
+        self.y_velocity = aj.clamp(self.y_velocity + self.gravity, -self.max_fall_speed, self.max_fall_speed)
 
         if self.place_meeting(self.x + self.x_velocity, self.y, Floor):
             while not self.place_meeting(self.x + aj.sign(self.x_velocity), self.y, Floor):
@@ -58,6 +61,7 @@ class PhysicsObject(aj.GameObject):
             self.y_velocity = 0
         else:
             self.y += self.y_velocity
+            
 
 class Player(PhysicsObject):
     persistent: bool = True
@@ -105,27 +109,35 @@ class Player(PhysicsObject):
 
         doorway_hit: aj.GameObject | None = self.place_meeting(self.x, self.y, Doorway)
         if doorway_hit and isinstance(doorway_hit, Doorway):
-            aj.room_goto(doorway_hit.to_room)
-            if doorway_hit.to_doorway_iid:
-                to_doorway: aj.GameObject | None = aj.instance_find(doorway_hit.to_doorway_iid)
-                if to_doorway and isinstance(to_doorway, Doorway):
-                    player_percentage_to_bottom_doorway: float = (self.y - doorway_hit.y) / doorway_hit.height
-                    player_percentage_to_right_doorway: float = (self.x - doorway_hit.x) / doorway_hit.width
 
-                    # Take us to the corresponding position on the other side of the doorway
-                    exit_dir_x, exit_dir_y = to_doorway.exit_direction
-                    
-                    if exit_dir_x != 0:
-                        # We are stepping through the doorway
-                        self.x = to_doorway.x + exit_dir_x * to_doorway.width
-                        self.y = to_doorway.y + (player_percentage_to_bottom_doorway + exit_dir_y) * to_doorway.height
-                    elif exit_dir_y != 0:
-                        # We are jumping or falling through the doorway
-                        self.x = to_doorway.x + (player_percentage_to_right_doorway + exit_dir_x) * to_doorway.width
-                        self.y = to_doorway.y + exit_dir_y * to_doorway.height
+            entrance_dir_x, entrance_dir_y = doorway_hit.entrance_direction
+            if (entrance_dir_x == 0 and entrance_dir_y == -aj.sign(self.y_velocity)) or (entrance_dir_y == 0 and entrance_dir_x == -aj.sign(self.x_velocity)):
+                # We are moving in the same direction as the doorway, so we can pass through
+                aj.room_goto(doorway_hit.to_room)
+                
+                # Move the player to the corresponding doorway on the other side
+                if doorway_hit.to_doorway_iid:
+                    to_doorway: aj.GameObject | None = aj.instance_find(doorway_hit.to_doorway_iid)
+                    if to_doorway and isinstance(to_doorway, Doorway):
 
-                    self.room_start_x = self.x
-                    self.room_start_y = self.y
+                        exit_dir_x, exit_dir_y = to_doorway.entrance_direction
+
+                        # Take us to the corresponding position
+                        player_percentage_to_bottom_doorway: float = (self.y - doorway_hit.y) / doorway_hit.height
+                        player_percentage_to_right_doorway: float = (self.x - doorway_hit.x) / doorway_hit.width
+                        
+                        # If we are stepping through the doorway...
+                        if exit_dir_x != 0:
+                            self.x = to_doorway.x + exit_dir_x * to_doorway.width
+                            self.y = to_doorway.y + (player_percentage_to_bottom_doorway + exit_dir_y) * to_doorway.height
+
+                        # If we are jumping or falling through the doorway...
+                        elif exit_dir_y != 0:
+                            self.x = to_doorway.x + (player_percentage_to_right_doorway + exit_dir_x) * to_doorway.width
+                            self.y = to_doorway.y + exit_dir_y * to_doorway.height
+
+                        self.room_start_x = self.x
+                        self.room_start_y = self.y
 
         if self.place_meeting(self.x, self.y, Enemy):
             aj.audio_play_sound(sounds['die'])

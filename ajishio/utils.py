@@ -21,3 +21,6 @@ def map_value(value: float, min: float, max: float, new_min: float, new_max: flo
 
 def sign(value: float) -> int:
     return 1 if value > 0 else -1 if value < 0 else 0
+
+def lerp(start: float, end: float, t: float) -> float:
+    return start + (end - start) * t

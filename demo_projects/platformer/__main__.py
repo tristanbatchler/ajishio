@@ -62,7 +62,6 @@ class PhysicsObject(aj.GameObject):
         else:
             self.y += self.y_velocity
             
-
 class Player(PhysicsObject):
     persistent: bool = True
     def __init__(self, x: float, y: float, *args, **kwargs):
@@ -166,8 +165,8 @@ class Camera(aj.GameObject):
         if player is None:
             return
   
-        self.x = player.x
-        self.y = player.y
+        self.x = aj.lerp(self.x, player.x, 0.1)
+        self.y = aj.lerp(self.y, player.y, 0.1)
 
         half_width: float = aj.view_wport[aj.view_current] // 2
         half_height: float = aj.view_hport[aj.view_current] // 2

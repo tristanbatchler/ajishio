@@ -78,7 +78,7 @@ class Player(PhysicsObject):
             bbbottom=self.sprite_height
         )
 
-        self.jump_height: float = -8
+        self.jump_height: float = -9
         self.acceleration: float = 0.6
 
         bg_music: aj.GameSound = sounds['8_bit_ice_cave_lofi']
@@ -102,41 +102,23 @@ class Player(PhysicsObject):
 
         self.x_velocity = aj.clamp(self.x_velocity, -self.speed, self.speed)
 
+        # Initiate jump
         if self.place_meeting(self.x, self.y + 1, Floor) and aj.keyboard_check_pressed(aj.vk_space):
             aj.audio_play_sound(sounds['jump'], gain=0.4)
             self.y_velocity = self.jump_height
 
+        # Decrease jump height if player releases jump key
+        if not self.place_meeting(self.x, self.y + 1, Floor) and self.y_velocity < 0 and not aj.keyboard_check(aj.vk_space):
+            self.y_velocity /= 1.5
+
+        # Move between rooms
         doorway_hit: aj.GameObject | None = self.place_meeting(self.x, self.y, Doorway)
         if doorway_hit and isinstance(doorway_hit, Doorway):
 
             entrance_dir_x, entrance_dir_y = doorway_hit.entrance_direction
             if (entrance_dir_x == 0 and entrance_dir_y == -aj.sign(self.y_velocity)) or (entrance_dir_y == 0 and entrance_dir_x == -aj.sign(self.x_velocity)):
                 # We are moving in the same direction as the doorway, so we can pass through
-                aj.room_goto(doorway_hit.to_room)
-                
-                # Move the player to the corresponding doorway on the other side
-                if doorway_hit.to_doorway_iid:
-                    to_doorway: aj.GameObject | None = aj.instance_find(doorway_hit.to_doorway_iid)
-                    if to_doorway and isinstance(to_doorway, Doorway):
-
-                        exit_dir_x, exit_dir_y = to_doorway.entrance_direction
-
-                        # Take us to the corresponding position
-                        player_percentage_to_bottom_doorway: float = (self.y - doorway_hit.y) / doorway_hit.height
-                        player_percentage_to_right_doorway: float = (self.x - doorway_hit.x) / doorway_hit.width
-                        
-                        # If we are stepping through the doorway...
-                        if exit_dir_x != 0:
-                            self.x = to_doorway.x
-                            self.y = to_doorway.y + player_percentage_to_bottom_doorway * to_doorway.height + exit_dir_y
-
-                        # If we are jumping or falling through the doorway...
-                        elif exit_dir_y != 0:
-                            self.x = to_doorway.x + player_percentage_to_right_doorway * to_doorway.width + exit_dir_x
-                            self.y = to_doorway.y
-
-                        self.room_start_x = self.x
-                        self.room_start_y = self.y
+                self.move_through_doorway(doorway_hit)
 
         if self.place_meeting(self.x, self.y, Enemy):
             aj.audio_play_sound(sounds['die'])
@@ -147,6 +129,38 @@ class Player(PhysicsObject):
             aj.room_restart()
             self.x = self.room_start_x
             self.y = self.room_start_y
+
+    def move_through_doorway(self, doorway: Doorway) -> None:
+        if doorway.to_doorway_iid is None:
+            return
+        
+        aj.room_goto(doorway.to_room)
+
+        # Move the player to the corresponding doorway on the other side
+        to_doorway: aj.GameObject | None = aj.instance_find(doorway.to_doorway_iid)
+        if to_doorway is None:
+            raise ValueError(f"Doorway with iid {doorway.to_doorway_iid} not found in room {doorway.to_room}")
+
+        assert isinstance(to_doorway, Doorway)
+
+        exit_dir_x, exit_dir_y = to_doorway.entrance_direction
+
+        # Take us to the corresponding position
+        player_percentage_to_bottom_doorway: float = (self.y - doorway.y) / doorway.height
+        player_percentage_to_right_doorway: float = (self.x - doorway.x) / doorway.width
+        
+        # If we are stepping through the doorway...
+        if exit_dir_x != 0:
+            self.x = to_doorway.x
+            self.y = to_doorway.y + player_percentage_to_bottom_doorway * to_doorway.height + exit_dir_y
+
+        # If we are jumping or falling through the doorway...
+        elif exit_dir_y != 0:
+            self.x = to_doorway.x + player_percentage_to_right_doorway * to_doorway.width + exit_dir_x
+            self.y = to_doorway.y
+
+        self.room_start_x = self.x
+        self.room_start_y = self.y
 
     def draw(self) -> None:
         super().draw()

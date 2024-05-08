@@ -5,8 +5,7 @@ from ajishio.rendering import _renderer
 from ajishio.sprite_loader import GameSprite
 from dataclasses import dataclass
 from uuid import uuid4, UUID
-from typing import Any, Callable
-import pygame as pg
+from typing import Any
 
 @dataclass
 class CollisionMask:

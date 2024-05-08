@@ -140,6 +140,7 @@ class Player(PhysicsObject):
 
         if self.place_meeting(self.x, self.y, Enemy):
             aj.audio_play_sound(sounds['die'])
+            coins_collected.clear()
             aj.game_restart()
 
         if aj.keyboard_check_released(ord('r')):
@@ -203,6 +204,11 @@ class Enemy(PhysicsObject):
 class Coin(aj.GameObject):
     def __init__(self, x: float, y: float, *args, **kwargs):
         super().__init__(x, y, *args, **kwargs)
+
+        if self.iid in coins_collected:
+            aj.instance_destroy(self)
+            return
+
         self.sprite_index = sprites['coin']
 
         self.collision_mask: aj.CollisionMask = aj.CollisionMask(
@@ -221,11 +227,16 @@ class Coin(aj.GameObject):
             aj.instance_destroy(self)
             player_hit.score += 1
             aj.audio_play_sound(sounds['coin'])
+            coins_collected.add(self.iid)
+
+
 
 project_dir: Path = Path(__file__).parent
 sprites: dict[str, aj.GameSprite] = aj.load_aseprite_sprites(project_dir / 'sprites')
 levels: list[aj.GameLevel] = aj.load_ldtk_levels(project_dir / 'room_data' / 'world' / 'simplified')
 sounds: dict[str, aj.GameSound] = aj.load_sounds(project_dir / 'sounds')
+
+coins_collected: set[str] = set()
 
 aj.set_rooms(levels)
 aj.register_objects(Floor, Player, Camera, Enemy, Coin, Doorway)

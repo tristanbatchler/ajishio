@@ -43,7 +43,7 @@
 						"levelIid": "00757b60-fec0-11ee-be3a-61bab09611fd",
 						"worldIid": "ae0899f1-fec0-11ee-980c-fbeba3fb0f42"
 					},
-					"exit_direction": "BOTTOM"
+					"entrance_direction": "BOTTOM"
 				}
 			},
 			{
@@ -63,7 +63,7 @@
 						"levelIid": "00757b60-fec0-11ee-be3a-61bab09611fd",
 						"worldIid": "ae0899f1-fec0-11ee-980c-fbeba3fb0f42"
 					},
-					"exit_direction": "BOTTOM"
+					"entrance_direction": "BOTTOM"
 				}
 			}
 		],

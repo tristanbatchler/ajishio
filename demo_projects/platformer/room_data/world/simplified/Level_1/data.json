@@ -47,7 +47,7 @@
 						"levelIid": "00757b60-fec0-11ee-be3a-61bab09611fd",
 						"worldIid": "ae0899f1-fec0-11ee-980c-fbeba3fb0f42"
 					},
-					"exit_direction": "TOP"
+					"entrance_direction": "TOP"
 				}
 			},
 			{
@@ -67,7 +67,7 @@
 						"levelIid": "00757b60-fec0-11ee-be3a-61bab09611fd",
 						"worldIid": "ae0899f1-fec0-11ee-980c-fbeba3fb0f42"
 					},
-					"exit_direction": "TOP"
+					"entrance_direction": "TOP"
 				}
 			},
 			{
@@ -87,7 +87,7 @@
 						"levelIid": "53525970-fec0-11ee-b5a6-735f3df1ae2b",
 						"worldIid": "ae0899f1-fec0-11ee-980c-fbeba3fb0f42"
 					},
-					"exit_direction": "RIGHT"
+					"entrance_direction": "RIGHT"
 				}
 			}
 		],

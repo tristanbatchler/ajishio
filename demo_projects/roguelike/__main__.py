@@ -1,7 +1,5 @@
 import ajishio as aj
 from pathlib import Path
-from typing import Any
-import pygame as pg
 
 GRID_SIZE = 32
 
@@ -35,27 +33,29 @@ class Player(aj.GameObject):
         self.last_x_direction: int = 0
         self.last_y_direction: int = 0
 
-    def step(self) -> None:
-        super().step()
-        self.x = self.grid_x * GRID_SIZE
-        self.y = self.grid_y * GRID_SIZE
+    def move(self, dx: int, dy: int) -> None:      
+        self.target_grid_x += dx
+        self.target_grid_y += dy
+        self.last_x_direction = dx
+        self.last_y_direction = dy
 
-        if aj.keyboard_check_pressed(aj.vk_up):
-            self.target_grid_y -= 1
-            self.last_x_direction = 0
-            self.last_y_direction = -1
-        elif aj.keyboard_check_pressed(aj.vk_down):
-            self.target_grid_y += 1
-            self.last_x_direction = 0
-            self.last_y_direction = 1
-        elif aj.keyboard_check_pressed(aj.vk_left):
-            self.target_grid_x -= 1
-            self.last_x_direction = -1
-            self.last_y_direction = 0
-        if aj.keyboard_check_pressed(aj.vk_right):
-            self.target_grid_x += 1
-            self.last_x_direction = 1
-            self.last_y_direction = 0
+        doorway_hit: aj.GameObject | None = self.place_meeting(self.x, self.y, Doorway)
+        if doorway_hit and isinstance(doorway_hit, Doorway):
+            aj.room_goto(doorway_hit.to_room)
+            if doorway_hit.to_doorway_iid:
+                to_doorway: aj.GameObject | None = aj.instance_find(doorway_hit.to_doorway_iid)
+                if to_doorway and isinstance(to_doorway, Doorway):
+                    to_door_grid_x = int(to_doorway.x / GRID_SIZE)
+                    to_door_grid_y = int(to_doorway.y / GRID_SIZE)
+
+                    percentage_to_door_right = (self.x - doorway_hit.x) / doorway_hit.width
+                    tiles_to_door_right = int(to_doorway.width / GRID_SIZE * percentage_to_door_right)
+
+                    percentage_to_door_down = (self.y - doorway_hit.y) / doorway_hit.height
+                    tiles_to_door_down = int(to_doorway.height / GRID_SIZE * percentage_to_door_down)
+                    
+                    self.target_grid_x = to_door_grid_x + self.last_x_direction + tiles_to_door_right
+                    self.target_grid_y = to_door_grid_y + self.last_y_direction + tiles_to_door_down
 
         if not self.place_meeting(self.target_grid_x * GRID_SIZE, self.target_grid_y * GRID_SIZE, Wall):
             self.grid_x = self.target_grid_x
@@ -64,15 +64,20 @@ class Player(aj.GameObject):
             self.target_grid_x = self.grid_x
             self.target_grid_y = self.grid_y
 
-        doorway_hit: aj.GameObject | None = self.place_meeting(self.x, self.y, Doorway)
-        if doorway_hit and isinstance(doorway_hit, Doorway):
-            aj.room_goto(doorway_hit.to_room)
-            if doorway_hit.to_doorway_iid:
-                to_doorway: aj.GameObject | None = aj.instance_find(doorway_hit.to_doorway_iid)
-                if to_doorway and isinstance(to_doorway, Doorway):
-                    self.grid_x = int(to_doorway.x / GRID_SIZE) + self.last_x_direction
-                    self.grid_y = int(to_doorway.y / GRID_SIZE) + self.last_y_direction
+        self.x = self.grid_x * GRID_SIZE
+        self.y = self.grid_y * GRID_SIZE
 
+    def step(self) -> None:
+        super().step()
+
+        dx = int(aj.keyboard_check_pressed(aj.vk_right)) - int(aj.keyboard_check_pressed(aj.vk_left))
+        dy = int(aj.keyboard_check_pressed(aj.vk_down)) - int(aj.keyboard_check_pressed(aj.vk_up))
+
+        # Move in two stages to avoid moving through walls diagonally
+        if dx != 0:
+            self.move(dx, 0)
+        if dy != 0:
+            self.move(0, dy)
 
 
 project_dir = Path(__file__).parent
@@ -86,8 +91,12 @@ aj.register_objects(Wall, Doorway, Player)
 sprites: dict[str, aj.GameSprite] = aj.load_aseprite_sprites(project_dir / "sprites")
 
 aj.room_set_caption("Roguelike")
-aspect_ratio: float = rooms[0].level_size[0] / rooms[0].level_size[1]
+
+room_w, room_h = rooms[0].level_size
+aspect_ratio: float = room_w / room_h
 aj.window_set_size(960, int(960 / aspect_ratio))
+aj.view_set_wport(0, room_w)
+aj.view_set_hport(0, room_h)
 
 aj.room_set_background(aj.Color(20, 20, 20))
 

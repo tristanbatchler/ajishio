@@ -33,6 +33,18 @@
             "type": "debugpy",
             "request": "launch",
             "module": "demo_projects.roguelike"
+        },
+        {
+            "name": "Multiplayer Server",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/demo_projects/multiplayer/server.py"
+        },
+        {
+            "name": "Multiplayer Client",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "demo_projects.multiplayer"
         }
     ]
 }

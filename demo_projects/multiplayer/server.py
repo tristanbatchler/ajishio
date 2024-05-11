@@ -3,6 +3,7 @@ from uuid import UUID, uuid4
 import socket
 import threading
 import packet as pck
+
  
 def threaded(server_socket: socket.socket, address: tuple) -> None:
     print(f"Player connected")
@@ -18,11 +19,16 @@ def threaded(server_socket: socket.socket, address: tuple) -> None:
             data, _ = server_socket.recvfrom(1024)
         except socket.timeout:
             continue
+        except KeyboardInterrupt:
+            break
 
         packet: pck.Packet = pck.unpack(data)
         
         if isinstance(packet, pck.PlayerInputPacket):
             print(f"Player {packet.player_id} input: {packet.x}, {packet.y}")
+            x += packet.x
+            y += packet.y
+            server_socket.sendto(pck.PlayerPositionPacket(x, y).pack(), address)
 
  
 def main() -> None:
@@ -44,7 +50,7 @@ def main() -> None:
                 print('Connection from: ', address[0], ':', address[1])
     
                 # Start a new thread to handle the request
-                threading.Thread(target=threaded, args=(server_socket, address)).start()
+                threading.Thread(target=threaded, args=(server_socket, address), daemon=True).start()
     
         except socket.timeout:
             pass

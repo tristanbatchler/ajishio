@@ -10,7 +10,7 @@ class NetworkClient(aj.GameObject):
         super().__init__()
         self.players: dict[UUID, go.Player] = {}
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.receive_thread = threading.Thread(target=self.receive)
+        self.receive_thread = threading.Thread(target=self.receive, daemon=True)
         self.receive_thread.start()
 
         self.player_id: UUID | None = None
@@ -25,14 +25,25 @@ class NetworkClient(aj.GameObject):
         self.socket.bind(("localhost", 0))
         self.send(pck.ConnectionRequestPacket())
         while True:
-            data = self.socket.recv(1024)
+            try:
+                data = self.socket.recv(1024)
+            except ConnectionResetError:
+                print("Connection reset")
+                aj.game_end()
+                break
+
             packet = pck.unpack(data)
     
             if isinstance(packet, pck.PlayerIdPacket):
                 self.player_id = packet.player_id
             elif isinstance(packet, pck.PlayerPositionPacket):
+                print(f"Player position: {packet.x}, {packet.y}")
                 self.player_x = packet.x
                 self.player_y = packet.y
+            
+                if self.player is not None:
+                    self.player.x = self.player_x
+                    self.player.y = self.player_y
 
             if self.player is None and self.player_id is not None and self.player_x is not None and self.player_y is not None:
                 self.player = go.Player(self.player_id, self.player_x, self.player_y)
@@ -44,9 +55,10 @@ class NetworkClient(aj.GameObject):
         y_input: int = aj.keyboard_check(aj.vk_down) - aj.keyboard_check(aj.vk_up)
 
         if self.player is not None and abs(x_input) + abs(y_input) > 0:
-            self.player.move(x_input, y_input)
+            # self.player.move(x_input, y_input)
             self.send(pck.PlayerInputPacket(self.player_id, x_input, y_input))
 
 aj.room_set_caption("Multiplayer")
 NetworkClient()
 aj.game_start()
+exit()

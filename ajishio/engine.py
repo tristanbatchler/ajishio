@@ -104,6 +104,9 @@ class Engine:
             self.instance_destroy(obj)
         self.room_goto(0)
 
+    def game_end(self) -> None:
+        self._game_running = False
+
     def game_set_speed(self, speed: float) -> None:       
         self.room_speed = speed
         if speed != 0:
@@ -166,41 +169,45 @@ class Engine:
 
         self._game_running = True
         while self._game_running:
+            
+            try:
+                _input.events += pg.event.get()
 
-            _input.events += pg.event.get()
+                if any(event.type == pg.QUIT for event in _input.events):
+                    self._game_running = False
 
-            if any(event.type == pg.QUIT for event in _input.events):
+                self.delta_time = self._clock.tick()
+
+                game_objects_copy = self._game_objects.copy()
+
+                if self.room_speed == 0:
+                    continue
+                self._last_render_time += self.delta_time
+                room_speed_ms: float = 1000 // self.room_speed
+                if self._last_render_time >= room_speed_ms:
+                    self._last_render_time %= room_speed_ms
+                    _renderer.fit_display()
+                    _renderer.fill_background_color(self.room_background_color)
+                    _renderer.draw_background_images()
+                    
+                    for obj in game_objects_copy.values():
+                        obj.step()
+                        obj.draw()
+
+                    # Only clear the input after all objects have had a chance to process it
+                    _input.prev_events = _input.events.copy()
+                    _input.events.clear()
+
+                    _renderer.draw_display()
+                    pg.display.update()
+                    
+
+                for audio in self._audio_playing:
+                    if audio._is_finished():
+                        self._audio_playing.remove(audio)
+                        
+            except KeyboardInterrupt:
                 self._game_running = False
-
-            self.delta_time = self._clock.tick()
-
-            game_objects_copy = self._game_objects.copy()
-
-            if self.room_speed == 0:
-                continue
-            self._last_render_time += self.delta_time
-            room_speed_ms: float = 1000 // self.room_speed
-            if self._last_render_time >= room_speed_ms:
-                self._last_render_time %= room_speed_ms
-                _renderer.fit_display()
-                _renderer.fill_background_color(self.room_background_color)
-                _renderer.draw_background_images()
-                
-                for obj in game_objects_copy.values():
-                    obj.step()
-                    obj.draw()
-
-                # Only clear the input after all objects have had a chance to process it
-                _input.prev_events = _input.events.copy()
-                _input.events.clear()
-
-                _renderer.draw_display()
-                pg.display.update()
-                
-
-            for audio in self._audio_playing:
-                if audio._is_finished():
-                    self._audio_playing.remove(audio)
 
         pg.quit()
         sys.exit()
@@ -231,5 +238,6 @@ room_goto_next = _engine.room_goto_next
 room_goto_previous = _engine.room_goto_previous
 room_restart = _engine.room_restart
 game_restart = _engine.game_restart
+game_end = _engine.game_end
 audio_play_sound = _engine.audio_play_sound
 audio_is_playing = _engine.audio_is_playing

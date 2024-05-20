@@ -33,6 +33,9 @@ class GameServer(aj.GameObject):
         self.listen_thread.start()
 
         self.running = True
+
+        self.sync_timer: float = 0
+        self.sync_timeout: float = 1
  
     def broadcast(self, packet: pck.Packet, exclude: UUID) -> None:
         for player_id, player in self.players_netstates.items():
@@ -57,6 +60,11 @@ class GameServer(aj.GameObject):
             self.process_packets()
         except KeyboardInterrupt:
             self.stop()
+
+        self.sync_timer += aj.delta_time
+        if self.sync_timer >= self.sync_timeout:
+            self.sync_timer = self.sync_timer % self.sync_timeout
+            self.sync_positions()
             
 
     def stop(self) -> None:
@@ -65,6 +73,11 @@ class GameServer(aj.GameObject):
         self.listen_thread.join()
         self.socket.close()
 
+    def sync_positions(self) -> None:
+        for player_id, player in self.players_netstates.items():
+            send_packet(pck.PlayerPositionPacket(player.obj.x, player.obj.y), self.socket, player.address)
+
+            self.broadcast(pck.OtherPlayerPositionPacket(player_id, player.obj.x, player.obj.y), exclude=player_id)
 
     def process_packets(self):
         while not self.packet_queue.empty():
@@ -124,5 +137,6 @@ if __name__ == '__main__':
     aj.register_objects(go.Floor, GameServer, go.PlayerSpawner)
     aj.room_set_caption("Multiplayer Server")
     aj.window_set_size(960, 640)
+    aj.room_set_background(aj.Color(155, 207, 239))
     aj.game_start()
     exit()

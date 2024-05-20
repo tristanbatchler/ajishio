@@ -72,11 +72,14 @@ class NetworkClient(aj.GameObject):
 
         self.last_input_x = x_input
 
+    def draw(self) -> None:
+        if self.player is None:
+            return
+        aj.draw_text(10, 10, f"({self.player.x}, {self.player.y})", aj.Color(0, 0, 0))
+
     def process_packets(self) -> None:
         while not self.packet_queue.empty():
             packet = self.packet_queue.get()
-            print(f"Received packet: {packet}")
-
             self.handle_packet(packet)
 
     def handle_packet(self, packet: pck.Packet) -> None:
@@ -97,19 +100,18 @@ class NetworkClient(aj.GameObject):
         self.player_id = packet.player_id
 
     def handle_player_position_packet(self, packet: pck.PlayerPositionPacket) -> None:
-        print(f"Player position: {packet.x}, {packet.y}")
         if self.player is not None:
-            self.player.x = packet.y
-            self.player.y = packet.x
+            self.player.x = packet.x
+            self.player.y = packet.y
         else:
             self.player = go.Player(packet.x, packet.y)
 
     def handle_other_player_position_packet(self, packet: pck.OtherPlayerPositionPacket) -> None:
-        if packet.player_id not in self.others:
-            self.others[packet.player_id] = go.Player(packet.x, packet.y)
-        else:
+        if packet.player_id in self.others:
             self.others[packet.player_id].x = packet.x
             self.others[packet.player_id].y = packet.y
+        else:
+            self.others[packet.player_id] = go.Player(packet.x, packet.y)
 
     def handle_player_x_input_packet(self, packet: pck.PlayerXInputPacket) -> None:
         other_player: go.Player | None = self.others.get(packet.player_id)

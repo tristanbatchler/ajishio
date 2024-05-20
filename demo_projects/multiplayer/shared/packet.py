@@ -11,21 +11,27 @@ def unpack(data: bytes) -> Packet:
             return PlayerPositionPacket.unpack(body)
         case MessageType.PLAYER_ID:
             return PlayerIdPacket.unpack(body)
-        case MessageType.PLAYER_INPUT:
-            return PlayerInputPacket.unpack(body)
+        case MessageType.PLAYER_X_INPUT:
+            return PlayerXInputPacket.unpack(body)
+        case MessageType.PLAYER_JUMP:
+            return PlayerJumpPacket.unpack(body)
         case MessageType.OTHER_PLAYER_POSITION:
             return OtherPlayerPositionPacket.unpack(body)
         case MessageType.CONNECTION_REQUEST:
             return ConnectionRequestPacket.unpack(body)
+        case MessageType.PLAYER_DISCONNECT:
+            return PlayerDisconnectPacket.unpack(body)
         case _:
             raise ValueError("Invalid packet type")
 
 class MessageType(enum.Enum):
     PLAYER_POSITION = 0
     PLAYER_ID = 1
-    PLAYER_INPUT = 2
-    OTHER_PLAYER_POSITION = 3
-    CONNECTION_REQUEST = 4
+    PLAYER_X_INPUT = 2
+    PLAYER_JUMP = 3
+    OTHER_PLAYER_POSITION = 4
+    CONNECTION_REQUEST = 5
+    PLAYER_DISCONNECT = 6
 
 class Packet(ABC):
     def __init__(self, message_type: MessageType) -> None:
@@ -78,20 +84,32 @@ class OtherPlayerPositionPacket(Packet):
         player_id, x, y = struct.unpack('!16sff', data)
         return OtherPlayerPositionPacket(UUID(bytes=player_id), x, y)
     
-class PlayerInputPacket(Packet):
-    def __init__(self, player_id: UUID, x: int, y: int) -> None:
-        super().__init__(MessageType.PLAYER_INPUT)
+class PlayerXInputPacket(Packet):
+    def __init__(self, player_id: UUID, x_input: int) -> None:
+        super().__init__(MessageType.PLAYER_X_INPUT)
         self.player_id = player_id
-        self.x = x
-        self.y = y
+        self.x_input = x_input
         
     def pack(self) -> bytes:
-        return self.header + struct.pack('!16sbb', self.player_id.bytes, self.x, self.y)
+        return self.header + struct.pack('!16sb', self.player_id.bytes, self.x_input)
     
     @staticmethod
-    def unpack(data: bytes) -> PlayerInputPacket:
-        player_id, x, y = struct.unpack('!16sbb', data)
-        return PlayerInputPacket(UUID(bytes=player_id), x, y)
+    def unpack(data: bytes) -> PlayerXInputPacket:
+        player_id, x_input = struct.unpack('!16sb', data)
+        return PlayerXInputPacket(UUID(bytes=player_id), x_input)
+
+class PlayerJumpPacket(Packet):
+    def __init__(self, player_id: UUID) -> None:
+        super().__init__(MessageType.PLAYER_JUMP)
+        self.player_id = player_id
+        
+    def pack(self) -> bytes:
+        return self.header + struct.pack('!16s', self.player_id.bytes)
+    
+    @staticmethod
+    def unpack(data: bytes) -> PlayerJumpPacket:
+        player_id = struct.unpack('!16s', data)[0]
+        return PlayerJumpPacket(UUID(bytes=player_id))
 
 class ConnectionRequestPacket(Packet):
     def __init__(self) -> None:
@@ -103,3 +121,16 @@ class ConnectionRequestPacket(Packet):
     @staticmethod
     def unpack(_) -> ConnectionRequestPacket:
         return ConnectionRequestPacket()
+    
+class PlayerDisconnectPacket(Packet):
+    def __init__(self, player_id: UUID) -> None:
+        super().__init__(MessageType.PLAYER_DISCONNECT)
+        self.player_id = player_id
+        
+    def pack(self) -> bytes:
+        return self.header + struct.pack('!16s', self.player_id.bytes)
+    
+    @staticmethod
+    def unpack(data: bytes) -> PlayerDisconnectPacket:
+        player_id = struct.unpack('!16s', data)[0]
+        return PlayerDisconnectPacket(UUID(bytes=player_id))

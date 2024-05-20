@@ -6,6 +6,7 @@ from ajishio.rendering import _renderer
 from ajishio.level_loader import GameLevel
 import pygame as pg
 import sys
+import logging
 
 # Import classes only for type hinting, must avoid circular imports
 from typing import TYPE_CHECKING
@@ -42,6 +43,9 @@ class Engine:
 
         self._rooms: list[GameLevel] = []
         self._audio_playing: list[GameSound] = []
+
+        self._logger = logging.getLogger(__name__)
+        logging.basicConfig(level=logging.DEBUG)
 
     def set_rooms(self, rooms: list[GameLevel]) -> None:
         self._rooms = rooms
@@ -83,8 +87,9 @@ class Engine:
                 try:
                     entity_cls: type[GameObject] = globals()[entity_type]
                 except KeyError:
-                    raise ValueError(f"{entity_type} object not found in engine namespace. Make sure you have registered it with `aj.register_objects({entity_type})")
-                
+                    self._logger.warning(f"{entity_type} object not found in engine namespace. Make sure you have registered it with `aj.register_objects({entity_type})")
+                    continue
+
                 if not (self.instance_exists(entity_cls) and entity_cls.persistent):
                     entity_cls(**entity)
 
@@ -106,11 +111,13 @@ class Engine:
 
     def game_end(self) -> None:
         self._game_running = False
+        for obj in self._game_objects.copy().values():
+            obj.on_game_end()
 
     def game_set_speed(self, speed: float) -> None:       
         self.room_speed = speed
         if speed != 0:
-            self.delta_time = 1 / self.room_speed
+            self.delta_time = 1 / self.room_speed # seconds
             
     def room_set_size(self, w: float, h: float) -> None:
         self.room_width = w
@@ -143,9 +150,16 @@ class Engine:
         except KeyError:
             pass
 
+    def instance_count(self, obj: type[GameObject]) -> int:
+        count: int = 0
+        for g_o in self._game_objects.values():
+            if issubclass(type(g_o), obj):
+                count += 1
+        return count
+
     def instance_exists(self, obj: type[GameObject]) -> bool:
-        return self.instance_find(obj) is not None
-    
+        return self.instance_count(obj) > 0
+
     def instance_find(self, obj: type[GameObject] | str, n: int = 0) -> GameObject | None:
         # If obj is a IID, find the object with that IID (it is unique)
         if isinstance(obj, str):
@@ -174,23 +188,20 @@ class Engine:
                 _input.events += pg.event.get()
 
                 if any(event.type == pg.QUIT for event in _input.events):
-                    self._game_running = False
+                    self.game_end()
 
-                self.delta_time = self._clock.tick()
-
-                game_objects_copy = self._game_objects.copy()
+                self.delta_time = self._clock.tick() / 1000 # milliseconds to seconds
 
                 if self.room_speed == 0:
                     continue
                 self._last_render_time += self.delta_time
-                room_speed_ms: float = 1000 // self.room_speed
-                if self._last_render_time >= room_speed_ms:
-                    self._last_render_time %= room_speed_ms
+                if self._last_render_time >= 1 / self.room_speed:
+                    self._last_render_time %= self.room_speed
                     _renderer.fit_display()
                     _renderer.fill_background_color(self.room_background_color)
                     _renderer.draw_background_images()
                     
-                    for obj in game_objects_copy.values():
+                    for obj in self._game_objects.copy().values():
                         obj.step()
                         obj.draw()
 
@@ -221,6 +232,7 @@ room_width: int
 room_height: int
 room_background_color: pg.Color
 room: int
+delta_time: float
         
 # These do not need to be evaluated at runtime, since they are references to methods, so they go here
 game_set_speed = _engine.game_set_speed
@@ -229,6 +241,7 @@ room_set_height = _engine.room_set_height
 room_set_background = _engine.room_set_background
 game_start = _engine.game_start
 instance_destroy = _engine.instance_destroy
+instance_count = _engine.instance_count
 instance_exists = _engine.instance_exists
 instance_find = _engine.instance_find
 set_rooms = _engine.set_rooms

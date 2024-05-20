@@ -57,6 +57,9 @@ class GameObject:
         if self.sprite_index is not None:
             _renderer.draw_sprite(self.x, self.y, self.sprite_index, self.image_index)
 
+    def on_game_end(self) -> None:
+        pass
+
     def place_meeting(self, x: float, y: float, obj: GameObject | type[GameObject] | UUID) -> GameObject | None:
         if isinstance(obj, GameObject):
             o: GameObject = obj

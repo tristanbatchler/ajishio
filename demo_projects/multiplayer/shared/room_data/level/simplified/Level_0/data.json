@@ -1,0 +1,143 @@
+{
+	"identifier": "Level_0",
+	"uniqueIdentifer": "3a770dc0-fec0-11ee-a398-e1da12222831",
+	"x": 0,
+	"y": 0,
+	"width": 960,
+	"height": 640,
+	"bgColor": "#9BCFEF",
+	"neighbourLevels": [],
+	"customFields" : {},
+	"layers": [
+		"Floor.png"
+	],
+	"entities": {
+		"NetworkClient": [
+			{
+				"id": "NetworkClient",
+				"iid": "cbb5f280-fec0-11ee-a398-11b81d5c962a",
+				"layer": "Entities",
+				"x": 0,
+				"y": 0,
+				"width": 16,
+				"height": 16,
+				"color": 12470831,
+				"customFields" : {}
+			}
+		],
+		"GameServer": [
+			{
+				"id": "GameServer",
+				"iid": "7a5d71e0-fec0-11ee-a398-3f31729ff8e0",
+				"layer": "Entities",
+				"x": 16,
+				"y": 0,
+				"width": 16,
+				"height": 16,
+				"color": 3757931,
+				"customFields" : {}
+			}
+		],
+		"PlayerSpawner": [
+			{
+				"id": "PlayerSpawner",
+				"iid": "926b67d0-fec0-11ee-a398-fbee2a7ba0c2",
+				"layer": "Entities",
+				"x": 256,
+				"y": 288,
+				"width": 16,
+				"height": 16,
+				"color": 4446057,
+				"customFields" : {}
+			},
+			{
+				"id": "PlayerSpawner",
+				"iid": "92e579d0-fec0-11ee-a398-b9651cb4e658",
+				"layer": "Entities",
+				"x": 464,
+				"y": 288,
+				"width": 16,
+				"height": 16,
+				"color": 4446057,
+				"customFields" : {}
+			},
+			{
+				"id": "PlayerSpawner",
+				"iid": "950106d0-fec0-11ee-a398-6f2ef8d79709",
+				"layer": "Entities",
+				"x": 656,
+				"y": 336,
+				"width": 16,
+				"height": 16,
+				"color": 4446057,
+				"customFields" : {}
+			},
+			{
+				"id": "PlayerSpawner",
+				"iid": "99b78a00-fec0-11ee-a398-c3fd787f6ca6",
+				"layer": "Entities",
+				"x": 80,
+				"y": 368,
+				"width": 16,
+				"height": 16,
+				"color": 4446057,
+				"customFields" : {}
+			},
+			{
+				"id": "PlayerSpawner",
+				"iid": "9a7b7640-fec0-11ee-a398-d5a0dc6a57a2",
+				"layer": "Entities",
+				"x": 400,
+				"y": 528,
+				"width": 16,
+				"height": 16,
+				"color": 4446057,
+				"customFields" : {}
+			},
+			{
+				"id": "PlayerSpawner",
+				"iid": "9b499bb0-fec0-11ee-a398-812a28cf552f",
+				"layer": "Entities",
+				"x": 736,
+				"y": 576,
+				"width": 16,
+				"height": 16,
+				"color": 4446057,
+				"customFields" : {}
+			},
+			{
+				"id": "PlayerSpawner",
+				"iid": "9bdfc130-fec0-11ee-a398-db6d879b42fd",
+				"layer": "Entities",
+				"x": 704,
+				"y": 416,
+				"width": 16,
+				"height": 16,
+				"color": 4446057,
+				"customFields" : {}
+			},
+			{
+				"id": "PlayerSpawner",
+				"iid": "9d3761f0-fec0-11ee-a398-ff845417aaeb",
+				"layer": "Entities",
+				"x": 368,
+				"y": 112,
+				"width": 16,
+				"height": 16,
+				"color": 4446057,
+				"customFields" : {}
+			},
+			{
+				"id": "PlayerSpawner",
+				"iid": "9e876190-fec0-11ee-a398-ef44e6d3a8d1",
+				"layer": "Entities",
+				"x": 64,
+				"y": 480,
+				"width": 16,
+				"height": 16,
+				"color": 4446057,
+				"customFields" : {}
+			}
+		]
+	}
+}

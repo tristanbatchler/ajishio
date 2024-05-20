@@ -38,13 +38,13 @@
             "name": "Multiplayer Server",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/demo_projects/multiplayer/server.py"
+            "module": "demo_projects.multiplayer.server"
         },
         {
             "name": "Multiplayer Client",
             "type": "debugpy",
             "request": "launch",
-            "module": "demo_projects.multiplayer"
+            "module": "demo_projects.multiplayer.client"
         }
     ]
 }

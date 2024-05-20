@@ -4,7 +4,7 @@ import socket
 import threading
 import demo_projects.multiplayer.shared.game_objects as go
 import demo_projects.multiplayer.shared.packet as pck
-from demo_projects.multiplayer.shared import rooms
+import demo_projects.multiplayer.shared as shared
 from queue import Queue
 
 class NetworkClient(aj.GameObject):
@@ -72,11 +72,6 @@ class NetworkClient(aj.GameObject):
 
         self.last_input_x = x_input
 
-    def draw(self) -> None:
-        if self.player is None:
-            return
-        aj.draw_text(10, 10, f"({self.player.x}, {self.player.y})", aj.Color(0, 0, 0))
-
     def process_packets(self) -> None:
         while not self.packet_queue.empty():
             packet = self.packet_queue.get()
@@ -105,6 +100,9 @@ class NetworkClient(aj.GameObject):
             self.player.y = packet.y
         else:
             self.player = go.Player(packet.x, packet.y)
+            if self.player_id is not None:
+                self.player.name = self.player_id.hex[:4]
+
 
     def handle_other_player_position_packet(self, packet: pck.OtherPlayerPositionPacket) -> None:
         if packet.player_id in self.others:
@@ -112,6 +110,7 @@ class NetworkClient(aj.GameObject):
             self.others[packet.player_id].y = packet.y
         else:
             self.others[packet.player_id] = go.Player(packet.x, packet.y)
+            self.others[packet.player_id].name = packet.player_id.hex[:4]
 
     def handle_player_x_input_packet(self, packet: pck.PlayerXInputPacket) -> None:
         other_player: go.Player | None = self.others.get(packet.player_id)
@@ -134,10 +133,14 @@ class NetworkClient(aj.GameObject):
         self.socket.close()
 
 if __name__ == '__main__':
-    aj.set_rooms(rooms)
+    aj.set_rooms(shared.rooms)
     aj.register_objects(go.Floor, NetworkClient)
     aj.room_set_caption("Multiplayer Client")
-    aj.window_set_size(960, 640)
-    aj.room_set_background(aj.Color(155, 207, 239))
+    aj.room_width = shared.room_width
+    aj.room_height = shared.room_height
+    aj.window_set_size(aj.room_width * 2, aj.room_height * 2)
+    aj.view_set_wport(aj.view_current, aj.room_width)
+    aj.view_set_hport(aj.view_current, aj.room_height)
+    aj.room_set_background(shared.room_background_color)
     aj.game_start()
     exit()

@@ -6,7 +6,7 @@ from dataclasses import dataclass
 import threading
 from queue import Queue
 import ajishio as aj
-from demo_projects.multiplayer.shared import rooms
+import demo_projects.multiplayer.shared as shared
 import demo_projects.multiplayer.shared.game_objects as go
 
 
@@ -54,6 +54,7 @@ class GameServer(aj.GameObject):
 
     def step(self) -> None:
         super().step()
+
         if not self.running:
             return
         try:
@@ -82,6 +83,9 @@ class GameServer(aj.GameObject):
     def process_packets(self):
         while not self.packet_queue.empty():
             packet, address = self.packet_queue.get()
+
+            print("Received packet from", address)
+
             if isinstance(packet, pck.ConnectionRequestPacket):
                 self.handle_connection_request_packet(address)
             elif isinstance(packet, pck.PlayerXInputPacket):
@@ -133,10 +137,14 @@ class GameServer(aj.GameObject):
             aj.instance_destroy(player_disconnecting.obj)
 
 if __name__ == '__main__':
-    aj.set_rooms(rooms)
+    aj.set_rooms(shared.rooms)
     aj.register_objects(go.Floor, GameServer, go.PlayerSpawner)
     aj.room_set_caption("Multiplayer Server")
-    aj.window_set_size(960, 640)
-    aj.room_set_background(aj.Color(155, 207, 239))
+    aj.room_width = shared.room_width
+    aj.room_height = shared.room_height
+    aj.window_set_size(aj.room_width * 2, aj.room_height * 2)
+    aj.view_set_wport(aj.view_current, aj.room_width)
+    aj.view_set_hport(aj.view_current, aj.room_height)
+    aj.room_set_background(shared.room_background_color)
     aj.game_start()
     exit()

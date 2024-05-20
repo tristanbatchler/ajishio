@@ -37,10 +37,12 @@ class Player(aj.GameObject):
         self.max_fall_speed: float = 12 * aj.room_speed
 
         self.gravity: float = 0.75 * aj.room_speed**2
-        self.acceleration: float = 1.25 * aj.room_speed**2
+        self.acceleration: float = 0.8 * aj.room_speed**2
 
         # Max delta_time allowed, to avoid large gaps in the physics simulation
         self.max_delta_time = 0.05
+
+        self.name = ""
 
     def jump(self) -> None:
         if self.place_meeting(self.x, self.y + 1, Floor):
@@ -98,3 +100,8 @@ class Player(aj.GameObject):
                 self.y = target_y
                 remaining_time -= step_time
 
+    def draw(self) -> None:
+        super().draw()
+        h = aj.text_height(self.name)
+        w = aj.text_width(self.name)
+        aj.draw_text(self.x + (self.sprite_width - w) / 2, self.y - 10 - h, self.name, aj.Color(240, 240, 16))

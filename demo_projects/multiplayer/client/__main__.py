@@ -20,7 +20,10 @@ class NetworkClient(aj.GameObject):
 
         self.player_id: UUID | None = None
         self.player: go.Player | None = None
+
         self.others: dict[UUID, go.Player] = {}
+
+        self.kicked = False
 
         self.last_input_x: int = 0
 
@@ -28,7 +31,11 @@ class NetworkClient(aj.GameObject):
         self.send(pck.ConnectionRequestPacket())
 
     def send(self, packet: pck.Packet) -> None:
-        self.socket.sendto(packet.pack(), ("localhost", 12345))
+        try:
+            self.socket.sendto(packet.pack(), ("localhost", 12345))
+        except OSError as e:
+            print("Got an error:", e)
+            return
 
     def listen(self) -> None:
         while True:
@@ -90,6 +97,8 @@ class NetworkClient(aj.GameObject):
             self.handle_player_jump_packet(packet)
         elif isinstance(packet, pck.PlayerDisconnectPacket):
             self.handle_player_disconnect_packet(packet)
+        elif isinstance(packet, pck.PositionSyncRequestPacket):
+            self.handle_position_sync_request_packet()
 
     def handle_player_id_packet(self, packet: pck.PlayerIdPacket) -> None:
         self.player_id = packet.player_id
@@ -100,6 +109,7 @@ class NetworkClient(aj.GameObject):
             self.player.y = packet.y
         else:
             self.player = go.Player(packet.x, packet.y)
+
             if self.player_id is not None:
                 self.player.name = self.player_id.hex[:4]
 
@@ -123,12 +133,22 @@ class NetworkClient(aj.GameObject):
             other_player.jump()
 
     def handle_player_disconnect_packet(self, packet: pck.PlayerDisconnectPacket) -> None:
+        print("Received player disconnect packet")
+        if packet.player_id == self.player_id:
+            self.kicked = True
+            aj.game_end()
+            return
+
         other_player: go.Player | None = self.others.pop(packet.player_id, None)
         if other_player is not None:
             aj.instance_destroy(other_player)
 
+    def handle_position_sync_request_packet(self) -> None:
+        if self.player is not None and self.player_id is not None:
+            self.send(pck.PositionSyncResponsePacket(self.player_id, self.player.x, self.player.y))
+
     def on_game_end(self) -> None:
-        if self.player_id is not None:
+        if not self.kicked and self.player_id is not None:
             self.send(pck.PlayerDisconnectPacket(self.player_id))
         self.socket.close()
 

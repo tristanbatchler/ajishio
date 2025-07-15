@@ -190,7 +190,7 @@ class Engine:
                 if any(event.type == pg.QUIT for event in _input.events):
                     self.game_end()
 
-                self.delta_time = self._clock.tick() / 1000 # milliseconds to seconds
+                self.delta_time = self._clock.tick(self.room_speed) / 1000 # milliseconds to seconds
 
                 if self.room_speed == 0:
                     continue

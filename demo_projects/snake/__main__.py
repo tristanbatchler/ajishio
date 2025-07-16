@@ -5,7 +5,7 @@ class GridAlignedObject(aj.GameObject):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
-        self.collision_mask: aj.CollisionMask = aj.CollisionMask(
+        self.collision_mask = aj.CollisionMask(
             bbtop=0, bbleft=0, bbright=GRID_SIZE, bbbottom=GRID_SIZE
         )
 

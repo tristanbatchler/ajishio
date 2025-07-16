@@ -20,7 +20,7 @@ class Player(aj.GameObject):
         super().__init__(x, y, *args, **kwargs)
         self.sprite_index = sprites["player"]
         self.image_speed = 10
-        self.collision_mask: aj.CollisionMask = aj.CollisionMask(
+        self.collision_mask = aj.CollisionMask(
             bbtop=2,
             bbleft=5,
             bbright=self.sprite_width - 5,

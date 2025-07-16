@@ -5,7 +5,7 @@ from typing import Any
 class Floor(aj.GameObject):
     def __init__(self, x: float, y: float, *args, **kwargs):
         super().__init__(x, y, *args, **kwargs)
-        self.collision_mask: aj.CollisionMask = aj.CollisionMask(
+        self.collision_mask = aj.CollisionMask(
             bbtop=0,
             bbleft=0,
             bbright=self.width,
@@ -71,7 +71,7 @@ class Player(PhysicsObject):
         self.speed: float = 3.5
         self.score: int = 0
 
-        self.collision_mask: aj.CollisionMask = aj.CollisionMask(
+        self.collision_mask = aj.CollisionMask(
             bbtop=2,
             bbleft=5,
             bbright=self.sprite_width - 5,
@@ -197,7 +197,7 @@ class Enemy(PhysicsObject):
         super().__init__(x, y, *args, **kwargs)
         self.sprite_index = sprites['enemy']
 
-        self.collision_mask: aj.CollisionMask = aj.CollisionMask(
+        self.collision_mask = aj.CollisionMask(
             bbtop=2,
             bbleft=2,
             bbright=self.sprite_width - 2,
@@ -226,7 +226,7 @@ class Coin(aj.GameObject):
         self.sprite_index = sprites['coin']
 
         # Give generous collision mask to make it easier to collect
-        self.collision_mask: aj.CollisionMask = aj.CollisionMask(
+        self.collision_mask = aj.CollisionMask(
             bbtop=-5,
             bbleft=-5,
             bbright=self.sprite_width + 5,
@@ -242,6 +242,7 @@ class Coin(aj.GameObject):
             aj.instance_destroy(self)
             player_hit.score += 1
             aj.audio_play_sound(sounds['coin'])
+            assert self.iid is not None, f"Coin at ({self.x}, {self.y}) has no instance ID"
             coins_collected.add(self.iid)
 
 project_dir: Path = Path(__file__).parent

@@ -6,7 +6,7 @@ import ajishio as aj
 class Wall(aj.GameObject):
     def __init__(self, width: float, height: float, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.collision_mask: aj.CollisionMask = aj.CollisionMask(
+        self.collision_mask = aj.CollisionMask(
             bbtop=0,
             bbleft=0,
             bbright=width,
@@ -50,7 +50,7 @@ class Ball(aj.GameObject):
         super().__init__(*args, **kwargs)
         self.radius: float = radius
 
-        self.collision_mask: aj.CollisionMask = aj.CollisionMask(
+        self.collision_mask = aj.CollisionMask(
             bbleft=-self.radius,
             bbtop=-self.radius,
             bbright=self.radius,

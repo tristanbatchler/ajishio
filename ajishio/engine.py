@@ -1,6 +1,6 @@
 from __future__ import annotations
 from uuid import UUID
-from ajishio.input import _input, QuitInterrupt
+from ajishio.input import _input
 from ajishio.view import _view
 from ajishio.rendering import _renderer
 from ajishio.level_loader import GameLevel

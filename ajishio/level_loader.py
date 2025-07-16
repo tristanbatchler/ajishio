@@ -4,7 +4,7 @@ import pygame as pg
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
-from ajishio.utils import _remove_ext
+from ajishio.utils import remove_ext
 
 @dataclass
 class GameLevel:
@@ -29,7 +29,7 @@ def load_ldtk(level_dir: Path) -> GameLevel:
     # Get the size of this level
     level_size = (level_info['width'], level_info['height'])
 
-    layers: list[str] = [_remove_ext(x) for x in level_info['layers']]
+    layers: list[str] = [remove_ext(x) for x in level_info['layers']]
     for layer in layers:
         # Get the background surface for this layer
         with open(level_dir / f'{layer}.png', 'rb') as f:

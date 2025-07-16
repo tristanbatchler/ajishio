@@ -1,5 +1,4 @@
 from __future__ import annotations
-from ajishio.view import _view
 from ajishio.engine import _engine
 from ajishio.rendering import _renderer
 from ajishio.sprite_loader import GameSprite
@@ -17,17 +16,17 @@ class CollisionMask:
 class GameObject:
     persistent: bool = False
 
-    def __init__(self, x: float = 0, y: float = 0, sprite_index: GameSprite | None = None, collision_mask: CollisionMask | None = None, *args, **kwargs) -> None:
+    def __init__(self, x: float = 0, y: float = 0, sprite_index: GameSprite | None = None, collision_mask: CollisionMask | None = None, **kwargs) -> None:
         self.id: UUID = uuid4()
         self.x: float = x
         self.y: float = y
-        self.sprite_index: GameSprite | None = None
+        self.sprite_index: GameSprite | None = sprite_index
         self.image_index: int = 0
         self.image_speed: float = 0
         self.collision_mask: CollisionMask | None = collision_mask
         self._last_image_update: float = 0
         
-        self.iid: str = kwargs.get("iid", None)
+        self.iid: str | None = kwargs.get("iid", None)
         self.width: float = kwargs.get("width", 0)
         self.height: float = kwargs.get("height", 0)
         self.custom_fields: dict[str, Any] = kwargs.get("customFields", {})
@@ -86,6 +85,4 @@ class GameObject:
                     if self.place_meeting(x, y, g_o):
                         return g_o
             return None
-        
-        else:
-            raise TypeError("Invalid type for obj")
+

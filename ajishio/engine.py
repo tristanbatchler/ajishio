@@ -43,6 +43,8 @@ class Engine:
         self._clock: pg.time.Clock = pg.time.Clock()
         self._last_render_time: float = 0
         self._game_objects: dict[UUID, GameObject] = {}
+        self._game_objects_to_destroy: set[GameObject] = set()
+        self._game_objects_to_add: list[GameObject] = []
         self._game_running: bool
 
         self._rooms: list[GameLevel] = []
@@ -60,7 +62,7 @@ class Engine:
 
     def room_goto(self, index) -> None:
         # Remove just the non-persistent instances
-        for instance in self._game_objects.copy().values():
+        for instance in self._game_objects.values():
             if not instance.persistent:
                 self.instance_destroy(instance)
 
@@ -119,13 +121,13 @@ class Engine:
         self.room_goto(self.room)
 
     def game_restart(self) -> None:
-        for obj in self._game_objects.copy().values():
+        for obj in self._game_objects.values():
             self.instance_destroy(obj)
         self.room_goto(0)
 
     def game_end(self) -> None:
         self._game_running = False
-        for obj in self._game_objects.copy().values():
+        for obj in self._game_objects.values():
             obj.on_game_end()
 
     def game_set_speed(self, speed: float) -> None:
@@ -156,13 +158,10 @@ class Engine:
         return index in self._audio_playing
 
     def add_object(self, obj: GameObject) -> None:
-        self._game_objects[obj.id] = obj
+        self._game_objects_to_add.append(obj)
 
     def instance_destroy(self, obj: GameObject) -> None:
-        try:
-            self._game_objects.pop(obj.id)
-        except KeyError:
-            pass
+        self._game_objects_to_destroy.add(obj)
 
     def instance_count(self, obj: type[GameObject]) -> int:
         count: int = 0
@@ -177,7 +176,8 @@ class Engine:
     def instance_find(self, obj: type[GameObject] | str, n: int = 0) -> GameObject | None:
         # If obj is a IID, find the object with that IID (it is unique)
         if isinstance(obj, str):
-            for g_o in self._game_objects.values():
+            all_objects = list(self._game_objects.values()) + self._game_objects_to_add
+            for g_o in all_objects:
                 if g_o.iid == obj:
                     return g_o
             return None
@@ -217,7 +217,9 @@ class Engine:
                     _renderer.fill_background_color(self.room_background_color)
                     _renderer.draw_background_images()
 
-                    for obj in self._game_objects.copy().values():
+                    self._add_pending_objects()
+                    self._free_destroyed_objects()
+                    for obj in self._game_objects.values():
                         obj.step()
                         obj.draw()
 
@@ -237,6 +239,19 @@ class Engine:
 
         pg.quit()
         sys.exit()
+
+    def _free_destroyed_objects(self) -> None:
+        for obj in self._game_objects_to_destroy:
+            try:
+                self._game_objects.pop(obj.id)
+            except KeyError:
+                pass
+        self._game_objects_to_destroy.clear()
+
+    def _add_pending_objects(self) -> None:
+        for obj in self._game_objects_to_add:
+            self._game_objects[obj.id] = obj
+        self._game_objects_to_add.clear()
 
 
 _engine: Engine = Engine()

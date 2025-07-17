@@ -45,6 +45,12 @@
             "type": "debugpy",
             "request": "launch",
             "module": "demo_projects.multiplayer.client"
+        },
+        {
+            "name": "Sokoban",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "demo_projects.sokoban"
         }
     ]
 }

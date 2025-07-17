@@ -165,7 +165,7 @@ of `aj.Sprite` objects which you can use to define the sprites of objects in you
 For example, to define a sprite for a player object, you can do the following:
 ```python
 class Player(PhysicsObject):
-    def __init__(self, x: float, y: float, *args, **kwargs):
+    def __init__(self, x: float, y: float, *args, **kwargs) -> None:
         super().__init__(x, y)
         self.sprite_index = sprites['player']
         self.image_speed = 10
@@ -194,7 +194,7 @@ enhance the feel of the game.
 
 ```python
 class PlatformerPlayer(aj.GameObject):
-    def __init__(self, x: float, y: float, *args, **kwargs):
+    def __init__(self, x: float, y: float, *args, **kwargs) -> None:
         super().__init__(x, y)
         self.sprite_index = sprites['player']
         self.collision_mask = aj.CollisionMask(

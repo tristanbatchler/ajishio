@@ -3,12 +3,12 @@ from demo_projects.multiplayer.shared import sprites
 
 
 class PlayerSpawner(aj.GameObject):
-    def __init__(self, x: float, y: float, *args, **kwargs):
+    def __init__(self, x: float, y: float, *args, **kwargs) -> None:
         super().__init__(x, y, *args, **kwargs)
 
 
 class Floor(aj.GameObject):
-    def __init__(self, x: float, y: float, *args, **kwargs):
+    def __init__(self, x: float, y: float, *args, **kwargs) -> None:
         super().__init__(x, y, *args, **kwargs)
         self.collision_mask = aj.CollisionMask(
             bbtop=0, bbleft=0, bbright=self.width, bbbottom=self.height

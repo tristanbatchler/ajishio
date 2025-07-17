@@ -33,6 +33,7 @@ class GameObject:
         self.image_index: int = 0
         self.image_speed: float = 0
         self.collision_mask: CollisionMask | None = collision_mask
+        self.depth: int = 0
         self._last_image_update: float = 0
 
         self.iid: str | None = kwargs.get("iid", None)

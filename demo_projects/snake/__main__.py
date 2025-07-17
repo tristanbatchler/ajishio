@@ -35,7 +35,7 @@ class GridAlignedObject(aj.GameObject):
         self.x = self.grid_x * GRID_SIZE
         self.y = self.grid_y * GRID_SIZE
 
-    def draw_self(self, color: aj.Color = aj.c_white):
+    def draw_self(self, color: aj.Color = aj.c_white) -> None:
         aj.draw_rectangle(self.x, self.y, GRID_SIZE, GRID_SIZE, color=color)
 
 

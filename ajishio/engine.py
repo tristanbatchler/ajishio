@@ -219,8 +219,17 @@ class Engine:
 
                     self._add_pending_objects()
                     self._free_destroyed_objects()
+
                     for obj in self._game_objects.values():
                         obj.step()
+
+                    draw_buffer = sorted(
+                        self._game_objects.values(),
+                        key=lambda obj: obj.depth,
+                        reverse=True,
+                    )
+
+                    for obj in draw_buffer:
                         obj.draw()
 
                     # Only clear the input after all objects have had a chance to process it

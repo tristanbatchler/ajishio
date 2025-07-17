@@ -42,6 +42,10 @@ def keyboard_check(key: int) -> bool:
     return pg.key.get_pressed()[key]
 
 
+def ord(char: str) -> int:
+    return pg.key.key_code(char)
+
+
 vk_left: int = pg.K_LEFT
 vk_right: int = pg.K_RIGHT
 vk_up: int = pg.K_UP

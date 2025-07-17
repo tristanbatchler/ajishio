@@ -4,7 +4,7 @@ from typing import Any
 
 
 class Floor(aj.GameObject):
-    def __init__(self, x: float, y: float, *args, **kwargs):
+    def __init__(self, x: float, y: float, *args, **kwargs) -> None:
         super().__init__(x, y, *args, **kwargs)
         self.collision_mask = aj.CollisionMask(
             bbtop=0, bbleft=0, bbright=self.width, bbbottom=self.height
@@ -12,7 +12,7 @@ class Floor(aj.GameObject):
 
 
 class Doorway(aj.GameObject):
-    def __init__(self, x: float, y: float, *args, **kwargs):
+    def __init__(self, x: float, y: float, *args, **kwargs) -> None:
         super().__init__(x, y, *args, **kwargs)
 
         self.to_room: int = self.custom_fields.get("to_room", 0)
@@ -38,7 +38,7 @@ class Doorway(aj.GameObject):
 
 
 class PhysicsObject(aj.GameObject):
-    def __init__(self, x: float, y: float, *args, **kwargs):
+    def __init__(self, x: float, y: float, *args, **kwargs) -> None:
         super().__init__(x, y, *args, **kwargs)
         self.x_velocity: float = 0
         self.y_velocity: float = 0
@@ -70,7 +70,7 @@ class PhysicsObject(aj.GameObject):
 class Player(PhysicsObject):
     persistent: bool = True
 
-    def __init__(self, x: float, y: float, *args, **kwargs):
+    def __init__(self, x: float, y: float, *args, **kwargs) -> None:
         super().__init__(x, y, *args, **kwargs)
         self.sprite_index = sprites["player"]
         self.image_speed = 10
@@ -219,7 +219,7 @@ class Camera(aj.GameObject):
 
 
 class Enemy(PhysicsObject):
-    def __init__(self, x: float, y: float, *args, **kwargs):
+    def __init__(self, x: float, y: float, *args, **kwargs) -> None:
         super().__init__(x, y, *args, **kwargs)
         self.sprite_index = sprites["enemy"]
 
@@ -247,7 +247,7 @@ class Enemy(PhysicsObject):
 
 
 class Coin(aj.GameObject):
-    def __init__(self, x: float, y: float, *args, **kwargs):
+    def __init__(self, x: float, y: float, *args, **kwargs) -> None:
         super().__init__(x, y, *args, **kwargs)
 
         if self.iid in coins_collected:

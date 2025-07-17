@@ -5,7 +5,7 @@ GRID_SIZE = 32
 
 
 class Wall(aj.GameObject):
-    def __init__(self, x: float, y: float, *args, **kwargs):
+    def __init__(self, x: float, y: float, *args, **kwargs) -> None:
         super().__init__(x, y, *args, **kwargs)
         self.collision_mask = aj.CollisionMask(
             bbleft=0, bbtop=0, bbright=self.width, bbbottom=self.height
@@ -13,7 +13,7 @@ class Wall(aj.GameObject):
 
 
 class Doorway(aj.GameObject):
-    def __init__(self, x: float, y: float, *args, **kwargs):
+    def __init__(self, x: float, y: float, *args, **kwargs) -> None:
         super().__init__(x, y, *args, **kwargs)
         if GRID_SIZE not in (self.width, self.height):
             raise ValueError("Doorway must be a single tile in width or height")
@@ -31,7 +31,7 @@ class Doorway(aj.GameObject):
 class Player(aj.GameObject):
     persistent: bool = True
 
-    def __init__(self, x: float, y: float, *args, **kwargs):
+    def __init__(self, x: float, y: float, *args, **kwargs) -> None:
         super().__init__(x, y, *args, **kwargs)
         self.sprite_index = sprites["player"]
         self.grid_x: int = int(x / GRID_SIZE)

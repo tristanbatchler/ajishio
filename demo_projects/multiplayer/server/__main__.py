@@ -91,7 +91,7 @@ class GameServer(aj.GameObject):
             ns.requested_position_sync_timer += 1
             send_packet(pck.PositionSyncRequestPacket(), self.socket, ns.address)
 
-    def process_packets(self):
+    def process_packets(self) -> None:
         while not self.packet_queue.empty():
             packet, address = self.packet_queue.get()
 

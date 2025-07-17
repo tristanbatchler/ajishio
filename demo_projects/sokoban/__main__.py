@@ -6,6 +6,10 @@ class Player(aj.GameObject):
     def __init__(self, radius: float, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.radius = radius
+        try:
+            self.sprite_index: aj.GameSprite = sprites["player"]
+        except KeyError:
+            raise ValueError("Player sprite not found in sprites dictionary")
 
     def step(self) -> None:
         dx, dy = 0, 0
@@ -21,14 +25,6 @@ class Player(aj.GameObject):
         # Level controls
         if aj.keyboard_check_pressed(aj.ord("R")):
             level.restart()
-            return
-        if aj.keyboard_check_pressed(aj.ord("N")):
-            if level.next_level():
-                print(f"Skipped to {level.get_level_info()}")
-            return
-        if aj.keyboard_check_pressed(aj.ord("P")):
-            if level.previous_level():
-                print(f"Back to {level.get_level_info()}")
             return
         if dx == 0 and dy == 0:
             return
@@ -47,9 +43,16 @@ class Player(aj.GameObject):
         self.x, self.y = target_pos
 
     def draw(self) -> None:
-        x = level.offset_x + self.x * level.grid_size + level.half_grid_size
-        y = level.offset_y + self.y * level.grid_size + level.half_grid_size
-        aj.draw_circle(x, y, self.radius, aj.c_lime)
+        x_scale = level.grid_size / self.sprite_index.width
+        y_scale = level.grid_size / self.sprite_index.height
+        aj.draw_sprite(
+            self.x * level.grid_size + level.offset_x,
+            self.y * level.grid_size + level.offset_y,
+            self.sprite_index,
+            self.image_index,
+            x_scale=x_scale,
+            y_scale=y_scale,
+        )
 
 
 class Wall(aj.GameObject):
@@ -277,10 +280,14 @@ class Level:
 
 aj.room_set_caption("Sokoban")
 aj.room_set_background(aj.c_purple)
+
+game_dir = Path(__file__).parent
+
+sprites = aj.load_aseprite_sprites(game_dir / "sprites")
+
 aj.register_objects(Player, Wall, Goal, Crate)
 
-levels_file = Path(__file__).parent / "levels.txt"
-level = Level(levels_file)
+level = Level(game_dir / "levels.txt")
 
 print("Controls:")
 print("Arrow keys: Move")

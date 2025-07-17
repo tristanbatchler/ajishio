@@ -46,11 +46,6 @@ class Renderer:
         for bg in self._background_images:
             self._display.blit(bg, _view.offset)
 
-    def draw_sprite(self, x: float, y: float, sprite_index: GameSprite, image_index: int) -> None:
-        self._display.blit(
-            sprite_index.images[image_index], (x + _view.offset[0], y + _view.offset[1])
-        )
-
 
 _renderer: Renderer = Renderer()
 
@@ -137,3 +132,29 @@ def text_width(string: str) -> int:
 
 def text_height(string: str) -> int:
     return _renderer.draw_font.size(string)[1]
+
+
+def draw_sprite(
+    x: float,
+    y: float,
+    sprite_index: GameSprite,
+    image_index: int,
+    x_scale: float = 1.0,
+    y_scale: float = 1.0,
+    rotation: float = 0.0,
+    color: Color = c_white,
+    alpha: float = 1.0,
+) -> None:
+    x, y = _translate_offset(x, y)
+    image = sprite_index.images[image_index]
+    if rotation != 0.0:
+        image = pg.transform.rotate(image, rotation)
+    if x_scale != 1.0 or y_scale != 1.0:
+        image = pg.transform.scale(
+            image, (int(image.get_width() * x_scale), int(image.get_height() * y_scale))
+        )
+    if alpha < 1.0:
+        image.set_alpha(int(alpha * 255))
+    if color != c_white:
+        image.fill(color, special_flags=pg.BLEND_MULT)
+    _renderer._display.blit(image, (x, y))

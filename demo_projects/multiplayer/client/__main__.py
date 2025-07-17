@@ -7,6 +7,7 @@ import demo_projects.multiplayer.shared.packet as pck
 import demo_projects.multiplayer.shared as shared
 from queue import Queue
 
+
 class NetworkClient(aj.GameObject):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -45,7 +46,7 @@ class NetworkClient(aj.GameObject):
                 print("Connection reset")
                 aj.game_end()
                 return
-            
+
             except OSError as e:
                 print("Got an error:", e)
                 return
@@ -60,9 +61,9 @@ class NetworkClient(aj.GameObject):
 
         if self.player_id is None or self.player is None:
             return
-    
+
         x_input: int = aj.keyboard_check(aj.vk_right) - aj.keyboard_check(aj.vk_left)
-        
+
         if x_input != self.last_input_x:
             self.player.input_x = x_input
 
@@ -73,7 +74,7 @@ class NetworkClient(aj.GameObject):
         if aj.keyboard_check_pressed(aj.vk_space):
             self.player.jump()
             for _ in range(3):
-                # It won't matter if the server receives the jump packet multiple times, since 
+                # It won't matter if the server receives the jump packet multiple times, since
                 # on subsequent jumps, the player won't be on the ground so the jump won't be applied
                 self.send(pck.PlayerJumpPacket(self.player_id))
 
@@ -113,7 +114,6 @@ class NetworkClient(aj.GameObject):
             if self.player_id is not None:
                 self.player.name = self.player_id.hex[:4]
 
-
     def handle_other_player_position_packet(self, packet: pck.OtherPlayerPositionPacket) -> None:
         if packet.player_id in self.others:
             self.others[packet.player_id].x = packet.x
@@ -152,7 +152,8 @@ class NetworkClient(aj.GameObject):
             self.send(pck.PlayerDisconnectPacket(self.player_id))
         self.socket.close()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     aj.set_rooms(shared.rooms)
     aj.register_objects(go.Floor, NetworkClient)
     aj.room_set_caption("Multiplayer Client")

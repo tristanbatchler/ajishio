@@ -10,11 +10,13 @@ import logging
 
 # Import classes only for type hinting, must avoid circular imports
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from ajishio.game_object import GameObject
     from ajishio.sound_loader import GameSound
 
 epsilon: float = 0.00001
+
 
 class Engine:
     _instance: Engine | None = None
@@ -31,8 +33,10 @@ class Engine:
         self.room_background_color: pg.Color
         self.room: int = 0
         self.delta_time: float
-        
-        self.room_set_size(_view.view_wport[_view.view_current], _view.view_hport[_view.view_current])
+
+        self.room_set_size(
+            _view.view_wport[_view.view_current], _view.view_hport[_view.view_current]
+        )
         self.game_set_speed(60)
         self.room_set_background(pg.Color(0, 0, 0))
 
@@ -77,9 +81,16 @@ class Engine:
                         try:
                             tile_cls: type = globals()[layer]
                         except KeyError:
-                            raise ValueError(f"{layer} object not found in engine namespace. Make sure you have registered it with `aj.register_objects({layer})")
-                        tile_cls(x * tile_size[0], y * tile_size[1], width=tile_size[0], height=tile_size[1])
-                        
+                            raise ValueError(
+                                f"{layer} object not found in engine namespace. Make sure you have "
+                                f"registered it with `aj.register_objects({layer})"
+                            )
+                        tile_cls(
+                            x * tile_size[0],
+                            y * tile_size[1],
+                            width=tile_size[0],
+                            height=tile_size[1],
+                        )
 
         # Load the entities
         for entity_type, entities in level.entities.items():
@@ -87,7 +98,10 @@ class Engine:
                 try:
                     entity_cls: type[GameObject] = globals()[entity_type]
                 except KeyError:
-                    self._logger.warning(f"{entity_type} object not found in engine namespace. Make sure you have registered it with `aj.register_objects({entity_type})")
+                    self._logger.warning(
+                        f"{entity_type} object not found in engine namespace. Make sure you have "
+                        f"registered it with `aj.register_objects({entity_type})"
+                    )
                     continue
 
                 if not (self.instance_exists(entity_cls) and entity_cls.persistent):
@@ -114,11 +128,11 @@ class Engine:
         for obj in self._game_objects.copy().values():
             obj.on_game_end()
 
-    def game_set_speed(self, speed: float) -> None:       
+    def game_set_speed(self, speed: float) -> None:
         self.room_speed = speed
         if speed != 0:
-            self.delta_time = 1 / self.room_speed # seconds
-            
+            self.delta_time = 1 / self.room_speed  # seconds
+
     def room_set_size(self, w: float, h: float) -> None:
         self.room_width = w
         self.room_height = h
@@ -183,14 +197,16 @@ class Engine:
 
         self._game_running = True
         while self._game_running:
-            
+
             try:
                 _input.events += pg.event.get()
 
                 if any(event.type == pg.QUIT for event in _input.events):
                     self.game_end()
 
-                self.delta_time = self._clock.tick(self.room_speed) / 1000 # milliseconds to seconds
+                self.delta_time = (
+                    self._clock.tick(self.room_speed) / 1000
+                )  # milliseconds to seconds
 
                 if self.room_speed == 0:
                     continue
@@ -200,7 +216,7 @@ class Engine:
                     _renderer.fit_display()
                     _renderer.fill_background_color(self.room_background_color)
                     _renderer.draw_background_images()
-                    
+
                     for obj in self._game_objects.copy().values():
                         obj.step()
                         obj.draw()
@@ -211,21 +227,21 @@ class Engine:
 
                     _renderer.draw_display()
                     pg.display.update()
-                    
 
                 for audio in self._audio_playing:
                     if audio._is_finished():
                         self._audio_playing.remove(audio)
-                        
+
             except KeyboardInterrupt:
                 self._game_running = False
 
         pg.quit()
         sys.exit()
 
+
 _engine: Engine = Engine()
 
-# Put exposed instance variables here to help with code completion, but they are actually evaluated 
+# Put exposed instance variables here to help with code completion, but they are actually evaluated
 # at runtime by the __getattr__ method in ajishio.__init__.py
 room_speed: float
 room_width: int
@@ -233,8 +249,9 @@ room_height: int
 room_background_color: pg.Color
 room: int
 delta_time: float
-        
-# These do not need to be evaluated at runtime, since they are references to methods, so they go here
+
+# These do not need to be evaluated at runtime, since they are references to methods, so they go
+# here
 game_set_speed = _engine.game_set_speed
 room_set_width = _engine.room_set_width
 room_set_height = _engine.room_set_height

@@ -13,11 +13,13 @@ import demo_projects.multiplayer.shared.game_objects as go
 def send_packet(packet: pck.Packet, socket: socket.socket, address: tuple[str, int]) -> None:
     socket.sendto(packet.pack(), address)
 
+
 @dataclass
 class PlayerNetstate:
     obj: go.Player
     address: tuple[str, int]
     requested_position_sync_timer: float = 0
+
 
 class GameServer(aj.GameObject):
     def __init__(self, *args, **kwargs) -> None:
@@ -37,7 +39,7 @@ class GameServer(aj.GameObject):
 
         self.sync_timer: float = 0
         self.sync_timeout: float = 1
- 
+
     def broadcast(self, packet: pck.Packet, exclude: UUID | None = None) -> None:
         for player_id, player in self.players_netstates.items():
             if not exclude or player_id != exclude:
@@ -67,7 +69,6 @@ class GameServer(aj.GameObject):
         if self.sync_timer >= self.sync_timeout:
             self.sync_timer = self.sync_timer % self.sync_timeout
             self.sync_positions()
-            
 
     def stop(self) -> None:
         print("Server stopped")
@@ -76,10 +77,10 @@ class GameServer(aj.GameObject):
         self.socket.close()
 
     def sync_positions(self) -> None:
-        # We ask each player to report their position. If  they don't respond in time, we assume 
-        # they've disconnected or are cheating, so we disconnect them. If they do respond with a 
-        # reasonably close position to ours, we let them keep that position and we update ours and 
-        # all other players' positions to match theirs. If they respond with a position that's too 
+        # We ask each player to report their position. If  they don't respond in time, we assume
+        # they've disconnected or are cheating, so we disconnect them. If they do respond with a
+        # reasonably close position to ours, we let them keep that position and we update ours and
+        # all other players' positions to match theirs. If they respond with a position that's too
         # far away from ours, we snap them back to our position.
         for player_id, ns in self.players_netstates.copy().items():
             if ns.requested_position_sync_timer >= 5:
@@ -89,7 +90,7 @@ class GameServer(aj.GameObject):
 
             ns.requested_position_sync_timer += 1
             send_packet(pck.PositionSyncRequestPacket(), self.socket, ns.address)
-        
+
     def process_packets(self):
         while not self.packet_queue.empty():
             packet, address = self.packet_queue.get()
@@ -108,7 +109,7 @@ class GameServer(aj.GameObject):
                 self.handle_position_sync_response_packet(packet)
 
     def handle_connection_request_packet(self, address: tuple[str, int]) -> None:
-        print('Connection from: ', address[0], ':', address[1]) 
+        print("Connection from: ", address[0], ":", address[1])
 
         num_player_spawners = aj.instance_count(go.PlayerSpawner)
         player_spawner = aj.instance_find(go.PlayerSpawner, randrange(num_player_spawners))
@@ -123,10 +124,19 @@ class GameServer(aj.GameObject):
 
         # Also send the connecting player the positions of all other players
         for other_player_id, other_player in self.players_netstates.items():
-            send_packet(pck.OtherPlayerPositionPacket(other_player_id, other_player.obj.x, other_player.obj.y), self.socket, address)
+            send_packet(
+                pck.OtherPlayerPositionPacket(
+                    other_player_id, other_player.obj.x, other_player.obj.y
+                ),
+                self.socket,
+                address,
+            )
 
         # Send other players the new player's position
-        self.broadcast(pck.OtherPlayerPositionPacket(player_id, player.x, player.y), exclude=player_id)
+        self.broadcast(
+            pck.OtherPlayerPositionPacket(player_id, player.x, player.y),
+            exclude=player_id,
+        )
 
         # Finally, add the new player to the list of players
         player_netstate = PlayerNetstate(player, address)
@@ -144,7 +154,9 @@ class GameServer(aj.GameObject):
 
     def handle_player_disconnect_packet(self, packet: pck.PlayerDisconnectPacket) -> None:
         self.broadcast(packet)
-        player_disconnecting: PlayerNetstate | None = self.players_netstates.pop(packet.player_id, None)
+        player_disconnecting: PlayerNetstate | None = self.players_netstates.pop(
+            packet.player_id, None
+        )
         if player_disconnecting is not None:
             aj.instance_destroy(player_disconnecting.obj)
 
@@ -153,16 +165,36 @@ class GameServer(aj.GameObject):
         player = self.players_netstates[packet.player_id]
         distance = aj.point_distance(player.obj.x, player.obj.y, packet.x, packet.y)
         if distance < 10:
-            print("Player", packet.player_id, "reports position only", distance, "units away - accepting!")
+            print(
+                "Player",
+                packet.player_id,
+                "reports position only",
+                distance,
+                "units away - accepting!",
+            )
             player.obj.x = packet.x
             player.obj.y = packet.y
-            self.broadcast(pck.OtherPlayerPositionPacket(packet.player_id, packet.x, packet.y), exclude=packet.player_id)
+            self.broadcast(
+                pck.OtherPlayerPositionPacket(packet.player_id, packet.x, packet.y),
+                exclude=packet.player_id,
+            )
             player.requested_position_sync_timer = 0
         else:
-            print("Player", packet.player_id, "is cheating! They reported a position", distance, "units away! Snapping back!")
-            send_packet(pck.PlayerPositionPacket(player.obj.x, player.obj.y), self.socket, player.address)
+            print(
+                "Player",
+                packet.player_id,
+                "is cheating! They reported a position",
+                distance,
+                "units away! Snapping back!",
+            )
+            send_packet(
+                pck.PlayerPositionPacket(player.obj.x, player.obj.y),
+                self.socket,
+                player.address,
+            )
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     aj.set_rooms(shared.rooms)
     aj.register_objects(go.Floor, GameServer, go.PlayerSpawner)
     aj.room_set_caption("Multiplayer Server")

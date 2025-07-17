@@ -15,7 +15,9 @@ class Renderer:
 
     def __init__(self) -> None:
         self._screen: pg.Surface
-        self.set_screen_size(_view.view_wport[_view.view_current], _view.view_hport[_view.view_current])
+        self.set_screen_size(
+            _view.view_wport[_view.view_current], _view.view_hport[_view.view_current]
+        )
         self._display: pg.Surface
         self._background_images: list[pg.Surface] = []
 
@@ -30,7 +32,9 @@ class Renderer:
         self._screen.blit(scaled_display, (0, 0))
 
     def fit_display(self) -> None:
-        self._display = pg.Surface((_view.view_wport[_view.view_current], _view.view_hport[_view.view_current]))
+        self._display = pg.Surface(
+            (_view.view_wport[_view.view_current], _view.view_hport[_view.view_current])
+        )
 
     def fill_background_color(self, color: pg.Color) -> None:
         self._display.fill(color)
@@ -43,7 +47,9 @@ class Renderer:
             self._display.blit(bg, _view.offset)
 
     def draw_sprite(self, x: float, y: float, sprite_index: GameSprite, image_index: int) -> None:
-        self._display.blit(sprite_index.images[image_index], (x + _view.offset[0], y + _view.offset[1]))
+        self._display.blit(
+            sprite_index.images[image_index], (x + _view.offset[0], y + _view.offset[1])
+        )
 
 
 _renderer: Renderer = Renderer()
@@ -70,33 +76,64 @@ c_teal: Color = Color(0, 128, 128)
 c_white: Color = Color(255, 255, 255)
 c_yellow: Color = Color(255, 255, 0)
 
+
 def _translate_offset(x: float, y: float) -> tuple[float, float]:
     return (x + _view.offset[0], y + _view.offset[1])
+
 
 def make_color_hsv(hue: float, sat: float, val: float) -> Color:
     return Color(*[int(c * 255) for c in colorsys.hsv_to_rgb(hue, sat, val)])
 
-def draw_circle(x: float, y: float, radius: float, color: Color | None = None) -> None:
-    x, y =_translate_offset(x, y)
-    pg.draw.circle(_renderer._display, _renderer.draw_color if color is None else color, (x, y), radius)
 
-def draw_rectangle(x: float, y: float, width: float, height: float, outline: bool = False, color: Color | None = None) -> None:
+def draw_circle(x: float, y: float, radius: float, color: Color | None = None) -> None:
     x, y = _translate_offset(x, y)
-    pg.draw.rect(_renderer._display, _renderer.draw_color if color is None else color, (x, y, width, height), int(outline))
+    pg.draw.circle(
+        _renderer._display,
+        _renderer.draw_color if color is None else color,
+        (x, y),
+        radius,
+    )
+
+
+def draw_rectangle(
+    x: float,
+    y: float,
+    width: float,
+    height: float,
+    outline: bool = False,
+    color: Color | None = None,
+) -> None:
+    x, y = _translate_offset(x, y)
+    pg.draw.rect(
+        _renderer._display,
+        _renderer.draw_color if color is None else color,
+        (x, y, width, height),
+        int(outline),
+    )
+
 
 def draw_line(x1: float, y1: float, x2: float, y2: float, color: Color | None = None) -> None:
-    x1, y1 =_translate_offset(x1, y1)
-    x2, y2 =_translate_offset(x2, y2)
-    pg.draw.line(_renderer._display, _renderer.draw_color if color is None else color, (x1, y1), (x2, y2))
+    x1, y1 = _translate_offset(x1, y1)
+    x2, y2 = _translate_offset(x2, y2)
+    pg.draw.line(
+        _renderer._display,
+        _renderer.draw_color if color is None else color,
+        (x1, y1),
+        (x2, y2),
+    )
+
 
 def draw_text(x: float, y: float, string: str, color: Color | None = None) -> None:
-    x, y =_translate_offset(x, y)
-    text = _renderer.draw_font.render(string, True, _renderer.draw_color if color is None else color)
+    x, y = _translate_offset(x, y)
+    text = _renderer.draw_font.render(
+        string, True, _renderer.draw_color if color is None else color
+    )
     _renderer._display.blit(text, (x, y))
+
 
 def text_width(string: str) -> int:
     return _renderer.draw_font.size(string)[0]
 
+
 def text_height(string: str) -> int:
     return _renderer.draw_font.size(string)[1]
-

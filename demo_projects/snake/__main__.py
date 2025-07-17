@@ -1,6 +1,7 @@
 import ajishio as aj
 from random import choice, randrange
 
+
 class GridAlignedObject(aj.GameObject):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -34,8 +35,9 @@ class GridAlignedObject(aj.GameObject):
         self.x = self.grid_x * GRID_SIZE
         self.y = self.grid_y * GRID_SIZE
 
-    def draw_self(self, color: aj.Color=aj.c_white):
+    def draw_self(self, color: aj.Color = aj.c_white):
         aj.draw_rectangle(self.x, self.y, GRID_SIZE, GRID_SIZE, color=color)
+
 
 class Apple(GridAlignedObject):
     def __init__(self, *args, **kwargs) -> None:
@@ -47,6 +49,7 @@ class Apple(GridAlignedObject):
     def draw(self) -> None:
         self.draw_self(color=aj.c_red)
 
+
 class SnakeHead(GridAlignedObject):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -57,7 +60,7 @@ class SnakeHead(GridAlignedObject):
 
         self.x_velocity: int = choice((-1, 0, 1))
         self.y_velocity: int = choice((-1, 1)) * (1 - abs(self.x_velocity))
-        
+
         self.tail_segments: list[SnakeTailSegment] = [SnakeTailSegment(self, i) for i in range(3)]
 
     def step(self) -> None:
@@ -65,12 +68,12 @@ class SnakeHead(GridAlignedObject):
 
         if self.y_velocity == 0:
             if aj.keyboard_check_pressed(aj.vk_up):
-                    self.x_velocity = 0
-                    self.y_velocity = -1
+                self.x_velocity = 0
+                self.y_velocity = -1
             elif aj.keyboard_check_pressed(aj.vk_down):
                 self.x_velocity = 0
                 self.y_velocity = 1
-        
+
         elif self.x_velocity == 0:
             if aj.keyboard_check_pressed(aj.vk_left):
                 self.x_velocity = -1
@@ -98,9 +101,13 @@ class SnakeHead(GridAlignedObject):
         self.draw_self()
         if game_over:
             text: str = "Game Over"
-            aj.draw_text((aj.room_width - aj.text_width(text)) / 2, (aj.room_height - aj.text_height(text)) / 2, text, color=aj.c_white)
+            aj.draw_text(
+                (aj.room_width - aj.text_width(text)) / 2,
+                (aj.room_height - aj.text_height(text)) / 2,
+                text,
+                color=aj.c_white,
+            )
             aj.game_set_speed(0)
-
 
 
 class SnakeTailSegment(GridAlignedObject):
@@ -112,11 +119,13 @@ class SnakeTailSegment(GridAlignedObject):
 
     def step(self) -> None:
         super().step()
-        in_front: SnakeHead | SnakeTailSegment = self.head if self.index == 0 else self.head.tail_segments[self.index - 1]
+        in_front: SnakeHead | SnakeTailSegment = (
+            self.head if self.index == 0 else self.head.tail_segments[self.index - 1]
+        )
         self.grid_x = in_front.previous_grid_x
         self.grid_y = in_front.previous_grid_y
         self.update_position()
-        
+
     def draw(self) -> None:
         self.draw_self(color=aj.c_ltgray)
 

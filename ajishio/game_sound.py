@@ -1,6 +1,7 @@
 import pygame as pg
 from ajishio.engine import _engine
 
+
 class GameSound:
     def __init__(self, sound: pg.mixer.Sound) -> None:
         self.sound: pg.mixer.Sound = sound

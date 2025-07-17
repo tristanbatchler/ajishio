@@ -1,19 +1,19 @@
 import ajishio as aj
 from demo_projects.multiplayer.shared import sprites
 
+
 class PlayerSpawner(aj.GameObject):
     def __init__(self, x: float, y: float, *args, **kwargs):
         super().__init__(x, y, *args, **kwargs)
+
 
 class Floor(aj.GameObject):
     def __init__(self, x: float, y: float, *args, **kwargs):
         super().__init__(x, y, *args, **kwargs)
         self.collision_mask = aj.CollisionMask(
-            bbtop=0,
-            bbleft=0,
-            bbright=self.width,
-            bbbottom=self.height
+            bbtop=0, bbleft=0, bbright=self.width, bbbottom=self.height
         )
+
 
 class Player(aj.GameObject):
     def __init__(self, x: float, y: float, *args, **kwargs) -> None:
@@ -24,7 +24,7 @@ class Player(aj.GameObject):
             bbtop=2,
             bbleft=5,
             bbright=self.sprite_width - 5,
-            bbbottom=self.sprite_height
+            bbbottom=self.sprite_height,
         )
 
         self.input_x: int = 0
@@ -104,4 +104,9 @@ class Player(aj.GameObject):
         super().draw()
         h = aj.text_height(self.name)
         w = aj.text_width(self.name)
-        aj.draw_text(self.x + (self.sprite_width - w) / 2, self.y - 10 - h, self.name, aj.Color(240, 240, 16))
+        aj.draw_text(
+            self.x + (self.sprite_width - w) / 2,
+            self.y - 10 - h,
+            self.name,
+            aj.Color(240, 240, 16),
+        )

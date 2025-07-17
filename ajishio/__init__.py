@@ -1,5 +1,6 @@
 # Initialise pygame first as the rest of our modules may depend on it
 from pygame import init as pg_init
+
 pg_init()
 
 # Now import all of our modules
@@ -23,8 +24,8 @@ def __getattr__(name: str) -> object:
 
     if name in _engine.__dict__:
         return getattr(_engine, name)
-    
+
     if name in _view.__dict__:
         return getattr(_view, name)
-    
-    raise AttributeError(f"module 'ajishio' has no attribute '{name}'")  
+
+    raise AttributeError(f"module 'ajishio' has no attribute '{name}'")

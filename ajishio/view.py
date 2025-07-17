@@ -1,12 +1,14 @@
 from __future__ import annotations
 
+
 class View:
     _instance: View | None = None
+
     def __new__(cls) -> View:
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
-    
+
     def __init__(self) -> None:
         self.view_current: int = 0
         self.window_width: int = 800
@@ -34,12 +36,15 @@ class View:
 
     @property
     def offset(self) -> tuple[float, float]:
-        return (-self.view_xport[self.view_current], -self.view_yport[self.view_current])
+        return (
+            -self.view_xport[self.view_current],
+            -self.view_yport[self.view_current],
+        )
 
 
 _view: View = View()
 
-# Put exposed instance variables here to help with code completion, but they are actually evaluated 
+# Put exposed instance variables here to help with code completion, but they are actually evaluated
 # at runtime by the __getattr__ method in ajishio.__init__.py
 view_current: int
 window_width: int

@@ -61,7 +61,7 @@ class GameObject:
             if (
                 self.image_speed > 0
                 and len(self.sprite_index.images) > 1
-                and self._last_image_update > _engine.room_speed / self.image_speed
+                and self._last_image_update > 1 / self.image_speed
             ):
                 self._last_image_update = 0
                 self.image_index = (self.image_index + 1) % len(self.sprite_index.images)

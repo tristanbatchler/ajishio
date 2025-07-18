@@ -33,7 +33,8 @@ class Renderer:
 
     def fit_display(self) -> None:
         self._display = pg.Surface(
-            (_view.view_wport[_view.view_current], _view.view_hport[_view.view_current])
+            (_view.view_wport[_view.view_current], _view.view_hport[_view.view_current]),
+            flags=pg.SRCALPHA,
         )
 
     def fill_background_color(self, color: pg.Color) -> None:
@@ -97,11 +98,14 @@ def draw_rectangle(
     height: float,
     outline: bool = False,
     color: Color | None = None,
+    alpha: float = 1.0,
 ) -> None:
     x, y = _translate_offset(x, y)
+    color = _renderer.draw_color if color is None else color
+    color.a = int(alpha * 255)
     pg.draw.rect(
         _renderer._display,
-        _renderer.draw_color if color is None else color,
+        color,
         (x, y, width, height),
         int(outline),
     )

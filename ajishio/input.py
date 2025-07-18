@@ -51,3 +51,5 @@ vk_right: int = pg.K_RIGHT
 vk_up: int = pg.K_UP
 vk_down: int = pg.K_DOWN
 vk_space: int = pg.K_SPACE
+vk_escape: int = pg.K_ESCAPE
+vk_enter: int = pg.K_RETURN

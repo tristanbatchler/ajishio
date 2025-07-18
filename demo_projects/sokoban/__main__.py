@@ -2,6 +2,32 @@ import ajishio as aj
 from pathlib import Path
 
 
+class MessageBox(aj.GameObject):
+    def __init__(self, message: str, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.message = message
+        self.depth = -999
+
+    def step(self) -> None:
+        dismiss_keys = aj.vk_enter, aj.vk_space, aj.vk_escape
+        for key in dismiss_keys:
+            if aj.keyboard_check_released(key):
+                aj.instance_destroy(self)
+
+    def draw(self) -> None:
+        text_width = aj.text_width(self.message)
+        text_height = aj.text_height(self.message)
+        x = aj.view_xport[aj.view_current] + (aj.view_wport[aj.view_current] - text_width) / 2
+        y = aj.view_yport[aj.view_current] + (aj.view_hport[aj.view_current] - text_height) / 2
+
+        # Draw a semi-transparent background
+        aj.draw_rectangle(
+            x - 10, y - 10, text_width + 20, text_height + 20, color=aj.c_black, alpha=0.5
+        )
+
+        aj.draw_text(x, y, self.message, aj.c_yellow)
+
+
 class Player(aj.GameObject):
     def __init__(self, radius: float, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -12,6 +38,10 @@ class Player(aj.GameObject):
             raise ValueError("Player sprite not found in sprites dictionary")
 
     def step(self) -> None:
+        # Lock input if a message box is active
+        if aj.instance_exists(MessageBox):
+            return
+
         dx, dy = 0, 0
         if aj.keyboard_check_pressed(aj.vk_right):
             dx = 1
@@ -267,14 +297,10 @@ class Level:
 
     def check_completion(self) -> None:
         if all((x, y) in self.goals for x, y in self.crates):
-            print(f"Level {self._index} completed!")
-            if self.next_level():
-                print(f"Moving to {self.get_level_info()}")
-            else:
-                print("Congratulations! You've completed all levels!")
-                print("Press R to restart from level 1")
-                self._index = 1
-                self._load_level()
+            MessageBox(f"Level {self._index} completed!")
+            if not self.next_level():
+                MessageBox("Congratulations! You've completed all levels!")
+                aj.game_end()
 
 
 aj.room_set_caption("Sokoban")
@@ -288,11 +314,6 @@ aj.register_objects(Player, Wall, Goal, Crate)
 
 level = Level(game_dir / "levels.txt")
 
-print("Controls:")
-print("Arrow keys: Move")
-print("R: Restart current level")
-print("N: Next level (skip)")
-print("P: Previous level")
-print(f"Starting {level.get_level_info()}")
+MessageBox(f"Starting {level.get_level_info()}")
 
 aj.game_start()

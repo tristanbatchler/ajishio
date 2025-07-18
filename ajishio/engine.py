@@ -231,12 +231,12 @@ class Engine:
 
                     for obj in draw_buffer:
                         obj.draw()
+                        _renderer.draw_display()
 
                     # Only clear the input after all objects have had a chance to process it
                     _input.prev_events = _input.events.copy()
                     _input.events.clear()
 
-                    _renderer.draw_display()
                     pg.display.update()
 
                 for audio in self._audio_playing:

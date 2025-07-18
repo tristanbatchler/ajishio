@@ -103,12 +103,12 @@ def draw_rectangle(
     x, y = _translate_offset(x, y)
     color = _renderer.draw_color if color is None else color
     color.a = int(alpha * 255)
-    pg.draw.rect(
-        _renderer._display,
-        color,
-        (x, y, width, height),
-        int(outline),
-    )
+    rect_surf = pg.Surface((width, height), flags=pg.SRCALPHA)
+    if outline:
+        pg.draw.rect(rect_surf, color, (0, 0, width, height), 1)
+    else:
+        rect_surf.fill(color)
+        _renderer._display.blit(rect_surf, (x, y))
 
 
 def draw_line(x1: float, y1: float, x2: float, y2: float, color: Color | None = None) -> None:
@@ -157,8 +157,7 @@ def draw_sprite(
         image = pg.transform.scale(
             image, (int(image.get_width() * x_scale), int(image.get_height() * y_scale))
         )
-    if alpha < 1.0:
-        image.set_alpha(int(alpha * 255))
+    image.set_alpha(int(alpha * 255))
     if color != c_white:
         image.fill(color, special_flags=pg.BLEND_MULT)
     _renderer._display.blit(image, (x, y))

@@ -84,6 +84,13 @@ class Player(aj.GameObject):
             y_scale=y_scale,
         )
 
+        aj.draw_text(
+            aj.view_xport[aj.view_current] + 10,
+            aj.view_yport[aj.view_current] + 10,
+            str(aj.fps_real),
+            aj.c_yellow,
+        )
+
 
 class Wall(aj.GameObject):
     def draw(self) -> None:

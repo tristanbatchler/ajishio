@@ -33,6 +33,7 @@ class Engine:
         self.room_background_color: pg.Color
         self.room: int = 0
         self.delta_time: float
+        self.fps_real: float
 
         self.room_set_size(
             _view.view_wport[_view.view_current], _view.view_hport[_view.view_current]
@@ -204,9 +205,8 @@ class Engine:
                 if any(event.type == pg.QUIT for event in _input.events):
                     self.game_end()
 
-                self.delta_time = (
-                    self._clock.tick(self.room_speed) / 1000
-                )  # milliseconds to seconds
+                self.delta_time = self._clock.tick(self.room_speed) / 1000  # ms to seconds
+                self.fps_real = self._clock.get_fps()
 
                 if self.room_speed == 0:
                     continue
@@ -231,13 +231,13 @@ class Engine:
 
                     for obj in draw_buffer:
                         obj.draw()
-                        _renderer.draw_display()
 
                     # Only clear the input after all objects have had a chance to process it
                     _input.prev_events = _input.events.copy()
                     _input.events.clear()
 
                     pg.display.update()
+                    _renderer.draw_display()
 
                 for audio in self._audio_playing:
                     if audio._is_finished():
@@ -273,6 +273,7 @@ room_height: int
 room_background_color: pg.Color
 room: int
 delta_time: float
+fps_real: float
 
 # These do not need to be evaluated at runtime, since they are references to methods, so they go
 # here

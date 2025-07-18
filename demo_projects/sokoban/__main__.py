@@ -46,8 +46,8 @@ class Player(aj.GameObject):
         x_scale = level.grid_size / self.sprite_index.width
         y_scale = level.grid_size / self.sprite_index.height
         aj.draw_sprite(
-            self.x * level.grid_size + level.offset_x,
-            self.y * level.grid_size + level.offset_y,
+            self.x * level.grid_size,
+            self.y * level.grid_size,
             self.sprite_index,
             self.image_index,
             x_scale=x_scale,
@@ -58,8 +58,8 @@ class Player(aj.GameObject):
 class Wall(aj.GameObject):
     def draw(self) -> None:
         aj.draw_rectangle(
-            level.offset_x + self.x * level.grid_size,
-            level.offset_y + self.y * level.grid_size,
+            self.x * level.grid_size,
+            self.y * level.grid_size,
             level.grid_size,
             level.grid_size,
             color=aj.c_black,
@@ -72,8 +72,8 @@ class Crate(Wall):
         self.depth = -1  # Ensure crates are drawn on top of everything else
 
     def draw(self) -> None:
-        x = level.offset_x + self.x * level.grid_size + level.half_grid_size
-        y = level.offset_y + self.y * level.grid_size + level.half_grid_size
+        x = self.x * level.grid_size + level.half_grid_size
+        y = self.y * level.grid_size + level.half_grid_size
         aj.draw_rectangle(
             x - level.half_grid_size * 0.8,
             y - level.half_grid_size * 0.8,
@@ -97,8 +97,8 @@ class Crate(Wall):
 class Goal(aj.GameObject):
     def draw(self) -> None:
         aj.draw_rectangle(
-            level.offset_x + self.x * level.grid_size,
-            level.offset_y + self.y * level.grid_size,
+            self.x * level.grid_size,
+            self.y * level.grid_size,
             level.grid_size,
             level.grid_size,
             color=aj.c_red,
@@ -220,11 +220,10 @@ class Level:
         )
         self.half_grid_size = self.grid_size // 2
 
-        # Calculate offsets to center the level
-        total_level_width = self.width * self.grid_size
-        total_level_height = self.height * self.grid_size
-        self.offset_x = (aj.window_width - total_level_width) // 2
-        self.offset_y = (aj.window_height - total_level_height) // 2
+        x_offset = (aj.window_width - self.width * self.grid_size) // 2
+        y_offset = (aj.window_height - self.height * self.grid_size) // 2
+        aj.view_set_xport(aj.view_current, -x_offset)
+        aj.view_set_yport(aj.view_current, -y_offset)
 
         if player_pos:
             self.player = Player(
@@ -267,7 +266,7 @@ class Level:
         return f"Level {self._index}/{self._max_level}"
 
     def check_completion(self) -> None:
-        if all((int(crate.x), int(crate.y)) in self.goals for crate in self.crates.values()):
+        if all((x, y) in self.goals for x, y in self.crates):
             print(f"Level {self._index} completed!")
             if self.next_level():
                 print(f"Moving to {self.get_level_info()}")

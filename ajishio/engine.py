@@ -166,8 +166,9 @@ class Engine:
 
     def instance_count(self, obj: type[GameObject]) -> int:
         count: int = 0
-        for g_o in self._game_objects.values():
-            if issubclass(type(g_o), obj):
+        all_objects = list(self._game_objects.values()) + self._game_objects_to_add
+        for g_o in all_objects:
+            if issubclass(type(g_o), obj) and g_o not in self._game_objects_to_destroy:
                 count += 1
         return count
 
@@ -179,14 +180,14 @@ class Engine:
         if isinstance(obj, str):
             all_objects = list(self._game_objects.values()) + self._game_objects_to_add
             for g_o in all_objects:
-                if g_o.iid == obj:
+                if g_o.iid == obj and g_o not in self._game_objects_to_destroy:
                     return g_o
             return None
 
         # If obj is a type, find the nth object of that type
         count: int = 0
-        for g_o in self._game_objects.values():
-            if issubclass(type(g_o), obj):
+        for g_o in all_objects:
+            if issubclass(type(g_o), obj) and g_o not in self._game_objects_to_destroy:
                 if count == n:
                     return g_o
                 count += 1

@@ -51,6 +51,12 @@
             "type": "debugpy",
             "request": "launch",
             "module": "demo_projects.sokoban"
+        },
+        {
+            "name": "Space Invaders",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "demo_projects.space_invaders"
         }
     ]
 }

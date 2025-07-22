@@ -1,7 +1,8 @@
 import ajishio as aj
 import random
 
-PADDING = 64
+PADDING: int = 64
+level: int = 1
 
 
 class Player(aj.GameObject):
@@ -112,20 +113,28 @@ class Bullet(aj.GameObject):
         elif not self.hurts_player and (enemy := self.place_meeting(self.x, self.y, Enemy)):
             aj.instance_destroy(self)
             aj.instance_destroy(enemy)
+            if not aj.instance_exists(Enemy):
+                global level
+                level += 1
+                spawn_wave(level)
 
     def draw(self) -> None:
         aj.draw_rectangle(self.x, self.y, Bullet.width, Bullet.height, color=aj.c_black)
 
 
-def main() -> None:
-    for row in range(4):
+def spawn_wave(difficulty: int) -> None:
+    speed = 2 ** (difficulty / 5.0)  # Gets exponentially harder each wave
+    for row in range(3):
         for enemy_x in range(PADDING, aj.room_width - PADDING, round(1.5 * Enemy.width)):
-            Enemy(enemy_x, PADDING + Enemy.height * row * 1.5, x_velocity=5.0)
-    Enemy(aj.room_width / 2.0, PADDING, 5)
+            Enemy(enemy_x, PADDING + Enemy.height * row * 1.5, x_velocity=speed)
+
+
+def main() -> None:
 
     Player()
 
     aj.register_objects(Player, Enemy, Bullet)
+    spawn_wave(level)
 
     aj.room_set_caption("Space Invaders")
     aj.room_set_background(aj.c_teal)

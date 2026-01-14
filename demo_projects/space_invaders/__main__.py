@@ -125,7 +125,7 @@ class Bullet(aj.GameObject):
 def spawn_wave(difficulty: int) -> None:
     speed = 2 ** (difficulty / 5.0)  # Gets exponentially harder each wave
     for row in range(3):
-        for enemy_x in range(PADDING, aj.room_width - PADDING, round(1.5 * Enemy.width)):
+        for enemy_x in range(PADDING, int(aj.room_width) - PADDING, round(1.5 * Enemy.width)):
             Enemy(enemy_x, PADDING + Enemy.height * row * 1.5, x_velocity=speed)
 
 

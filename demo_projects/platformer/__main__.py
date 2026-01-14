@@ -1,6 +1,5 @@
 import ajishio as aj
 from pathlib import Path
-from typing import Any
 
 
 class Floor(aj.GameObject):
@@ -15,12 +14,22 @@ class Doorway(aj.GameObject):
     def __init__(self, x: float, y: float, *args, **kwargs) -> None:
         super().__init__(x, y, *args, **kwargs)
 
-        self.to_room: int = self.custom_fields.get("to_room", 0)
-        self.to_doorway_iid: str | None = self.custom_fields.get("to_doorway", {}).get(
-            "entityIid", None
-        )
+        to_room_raw = self.custom_fields.get("to_room", 0)
+        self.to_room: int = int(to_room_raw) if isinstance(to_room_raw, (int, float)) else 0
 
-        entrance_direction_str: str = self.custom_fields["entrance_direction"]
+        to_doorway_raw = self.custom_fields.get("to_doorway")
+        self.to_doorway_iid: str | None
+        if isinstance(to_doorway_raw, dict):
+            doorway_iid = to_doorway_raw.get("entityIid")
+            self.to_doorway_iid = doorway_iid if isinstance(doorway_iid, str) else None
+        else:
+            self.to_doorway_iid = None
+
+        match self.custom_fields.get("entrance_direction"):
+            case str() as entrance_direction_str:
+                pass
+            case _:
+                raise ValueError("entrance_direction custom field missing or invalid")
         self.entrance_direction: tuple[int, int] = {
             "TOP": (0, -1),
             "BOTTOM": (0, 1),

@@ -9,7 +9,7 @@ import sys
 import logging
 
 # Import classes only for type hinting, must avoid circular imports
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
     from ajishio.game_object import GameObject
@@ -108,7 +108,37 @@ class Engine:
                     continue
 
                 if not (self.instance_exists(entity_cls) and entity_cls.persistent):
-                    entity_cls(**entity)
+                    from ajishio.game_object import CollisionMask
+                    from ajishio.sprite_loader import GameSprite
+
+                    x_value: float = float(entity.get("x", 0))
+                    y_value: float = float(entity.get("y", 0))
+                    sprite_value = entity.get("sprite_index")
+                    collision_value = entity.get("collision_mask")
+
+                    remaining_kwargs: dict[str, object] = {
+                        key: value
+                        for key, value in entity.items()
+                        if key
+                        not in {
+                            "x",
+                            "y",
+                            "sprite_index",
+                            "collision_mask",
+                        }
+                    }
+
+                    entity_cls(
+                        x=x_value,
+                        y=y_value,
+                        sprite_index=cast(GameSprite | None, sprite_value)
+                        if isinstance(sprite_value, (GameSprite, type(None)))
+                        else None,
+                        collision_mask=cast(CollisionMask | None, collision_value)
+                        if isinstance(collision_value, (CollisionMask, type(None)))
+                        else None,
+                        **remaining_kwargs,
+                    )
 
         self.room = index
 
@@ -176,9 +206,10 @@ class Engine:
         return self.instance_count(obj) > 0
 
     def instance_find(self, obj: type[GameObject] | str, n: int = 0) -> GameObject | None:
+        all_objects = list(self._game_objects.values()) + self._game_objects_to_add
+
         # If obj is a IID, find the object with that IID (it is unique)
         if isinstance(obj, str):
-            all_objects = list(self._game_objects.values()) + self._game_objects_to_add
             for g_o in all_objects:
                 if g_o.iid == obj and g_o not in self._game_objects_to_destroy:
                     return g_o
@@ -268,19 +299,20 @@ _engine: Engine = Engine()
 
 # Put exposed instance variables here to help with code completion, but they are actually evaluated
 # at runtime by the __getattr__ method in ajishio.__init__.py
-room_speed: float
-room_width: int
-room_height: int
-room_background_color: pg.Color
-room: int
-delta_time: float
-fps_real: float
+room_speed: float = 0.0
+room_width: int = 0
+room_height: int = 0
+room_background_color: pg.Color = pg.Color(0, 0, 0)
+room: int = 0
+delta_time: float = 0.0
+fps_real: float = 0.0
 
 # These do not need to be evaluated at runtime, since they are references to methods, so they go
 # here
 game_set_speed = _engine.game_set_speed
 room_set_width = _engine.room_set_width
 room_set_height = _engine.room_set_height
+room_set_size = _engine.room_set_size
 room_set_background = _engine.room_set_background
 game_start = _engine.game_start
 instance_destroy = _engine.instance_destroy

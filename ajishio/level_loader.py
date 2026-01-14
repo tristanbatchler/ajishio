@@ -1,10 +1,31 @@
 import csv
 import json
-import pygame as pg
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import TypedDict, cast
+
+import pygame as pg
+
 from ajishio.utils import remove_ext
+
+
+class EntityData(TypedDict, total=False):
+    x: float
+    y: float
+    iid: str
+    width: int
+    height: int
+    customFields: dict[str, object]
+
+
+EntitiesByType = dict[str, list[EntityData]]
+
+
+class RawLevelInfo(TypedDict):
+    width: int
+    height: int
+    layers: list[str]
+    entities: EntitiesByType
 
 
 @dataclass
@@ -13,7 +34,7 @@ class GameLevel:
     tile_sizes: dict[str, tuple[int, int]]
     background_surfaces: dict[str, pg.Surface]
     level_size: tuple[int, int]
-    entities: dict[str, Any]
+    entities: EntitiesByType
 
 
 def load_ldtk_levels(ldtk_super_simple_export_simplified_path: Path) -> list[GameLevel]:
@@ -25,14 +46,16 @@ def load_ldtk(level_dir: Path) -> GameLevel:
     tilemaps: dict[str, list[list[bool]]] = {}
     tile_sizes: dict[str, tuple[int, int]] = {}
     background_surfaces: dict[str, pg.Surface] = {}
-    level_size: tuple[int, int]
 
-    level_info: dict[str, Any] = json.loads((level_dir / "data.json").read_text())
+    level_info: RawLevelInfo = cast(
+        RawLevelInfo,
+        json.loads((level_dir / "data.json").read_text()),
+    )
 
     # Get the size of this level
-    level_size = (level_info["width"], level_info["height"])
+    level_size: tuple[int, int] = (level_info["width"], level_info["height"])
 
-    layers: list[str] = [remove_ext(x) for x in level_info["layers"]]
+    layers: list[str] = [remove_ext(layer_filename) for layer_filename in level_info["layers"]]
     for layer in layers:
         # Get the background surface for this layer
         with open(level_dir / f"{layer}.png", "rb") as f:
@@ -43,7 +66,7 @@ def load_ldtk(level_dir: Path) -> GameLevel:
         with open(level_dir / f"{layer}.csv", "r") as f:
             reader = csv.reader(f)
             for row in reader:
-                tilemap.append([bool(int(cell)) for cell in row if cell != ""])
+                tilemap.append([cell != "" and bool(int(cell)) for cell in row])
         tilemaps[layer] = tilemap
 
         # Get the tile size for this layer

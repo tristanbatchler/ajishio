@@ -1,0 +1,9 @@
+[project]
+name = "ajishio"
+version = "0.1.0"
+description = "A stripped-down pygame-based 2D game engine for creating 2D games."
+requires-python = ">=3.14"
+dependencies = [
+    "pygame-ce",
+]
+

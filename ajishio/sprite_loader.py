@@ -1,8 +1,24 @@
 import json
-import pygame as pg
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import TypedDict
+
+import pygame as pg
+
+
+class FrameRect(TypedDict):
+    x: int
+    y: int
+    w: int
+    h: int
+
+
+class FrameData(TypedDict):
+    frame: FrameRect
+
+
+class SpriteInfo(TypedDict):
+    frames: dict[str, FrameData]
 
 
 @dataclass
@@ -22,16 +38,19 @@ def load_aseprite_sprites(sprites_directory: Path) -> dict[str, GameSprite]:
 def load_aseprite_sprite(sprite_dir: Path) -> GameSprite:
     images: list[pg.Surface] = []
 
-    png_path: Path = list(sprite_dir.glob("*.png"))[0]
+    png_path: Path = next(sprite_dir.glob("*.png"))
 
-    json_path: Path = list(sprite_dir.glob("*.json"))[0]
-    sprite_info: dict[str, Any] = json.loads(json_path.read_text())
-    frames: dict[str, Any] = sprite_info["frames"]
+    json_path: Path = next(sprite_dir.glob("*.json"))
+    sprite_info: SpriteInfo = json.loads(json_path.read_text())
+    frames: dict[str, FrameData] = sprite_info["frames"]
+
+    width: int = 0
+    height: int = 0
 
     for data in frames.values():
-        dims: dict[str, int] = data["frame"]
-        x, y, w, h = dims["x"], dims["y"], dims["w"], dims["h"]
+        dims: FrameRect = data["frame"]
+        x, y, width, height = dims["x"], dims["y"], dims["w"], dims["h"]
         with open(png_path, "rb") as f:
-            images.append(pg.image.load(f).subsurface(pg.Rect(x, y, w, h)))
+            images.append(pg.image.load(f).subsurface(pg.Rect(x, y, width, height)))
 
-    return GameSprite(images, w, h)
+    return GameSprite(images, width, height)

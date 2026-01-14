@@ -46,13 +46,13 @@ _view: View = View()
 
 # Put exposed instance variables here to help with code completion, but they are actually evaluated
 # at runtime by the __getattr__ method in ajishio.__init__.py
-view_current: int
-window_width: int
-window_height: int
-view_xport: dict[int, float]
-view_yport: dict[int, float]
-view_wport: dict[int, float]
-view_hport: dict[int, float]
+view_current: int = _view.view_current
+window_width: int = _view.window_width
+window_height: int = _view.window_height
+view_xport: dict[int, float] = _view.view_xport
+view_yport: dict[int, float] = _view.view_yport
+view_wport: dict[int, float] = _view.view_wport
+view_hport: dict[int, float] = _view.view_hport
 
 # These do not need to be evaluated at runtime, since they are references to methods, so they go here
 view_set_wport = _view.view_set_wport

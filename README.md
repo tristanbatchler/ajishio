@@ -2,7 +2,7 @@
 
 ![Ajishio Taro](/.github/assets/ajishio_taro.png)
 
-Ajishio is a stripped-down [pygame](https://www.pygame.org)-based game engine for creating 2D games. 
+Ajishio is a stripped-down [pygame-ce](https://github.com/pygame-community/pygame-ce)-based game engine for creating 2D games. 
 Its API is modelled after old [GameMaker](https://gamemaker.io) versions, think pre-Studio 1.4. The 
 reason for this is that I wanted to create something that feels the same way as when I first started 
 making games in GameMaker 7, but with the optional features of a modern language and the choice of 
@@ -15,22 +15,20 @@ cool name.
 
 ## Installation
 
-Ajishio is not yet available on PyPI, so you'll have to install it from source. To do so, clone this 
-repository and install the dependencies:
+Ajishio is managed with [uv](https://github.com/astral-sh/uv). To get started, clone this repository
+and let `uv` create and manage the virtual environment for you:
 
 ```bash
 git clone https://github.com/tristanbatchler/ajishio
 cd ajishio
-python -m venv .venv
-source .venv/bin/activate # or .venv\Scripts\activate on Windows
-pip install -r requirements.txt
+uv sync
 ```
 
-To verify that the installation was successful, run the following command and you should see a blank 
+To verify that the installation was successful, run the following command and you should see a blank
 window pop up:
 
 ```bash
-python -m demo_projects.hello_world
+uv run -m demo_projects.hello_world
 ```
 
 ## Quick Start
@@ -46,16 +44,27 @@ aj.game_start()
 ```
 
 To run the game, execute the following command from the root of the repository:
+
 ```bash
-python -m ajishio <your_project_directory>
+uv run -m ajishio <your_project_directory>
 ```
 
-To see more substantial examples, check out the [`demo_projects`](/demo_projects/) directory. You can 
-also run these in the same way, e.g. running the following command from the root of the repository 
+To see more substantial examples, check out the [`demo_projects`](/demo_projects/) directory. You can
+also run these in the same way, e.g. running the following command from the root of the repository
 will bring up a pre-made platformer game:
+
 ```bash
-python -m ajishio.demo_projects.platformer
+uv run -m demo_projects.platformer
 ```
+
+### Demo commands at a glance
+
+- Platformer: `uv run -m demo_projects.platformer`
+- Pong: `uv run -m demo_projects.pong`
+- Snake: `uv run -m demo_projects.snake`
+- Space Invaders: `uv run -m demo_projects.space_invaders`
+- Roguelike: `uv run -m demo_projects.roguelike`
+- Sokoban: `uv run -m demo_projects.sokoban`
 
 ## VS Code Integration
 
@@ -100,29 +109,19 @@ Now, if you go to the debug tab in VS Code (`Ctrl+Shift+D`), you should see your
 available to select in the dropdown list up top. Select it and press F5 to run and debug your game.
 ![VS Code Debug Tab](/.github/assets/vscode_debug_tab.png)
 
-## Mypy Integration
+## Static Analysis
 
-Ajishio is fully typed with [mypy](https://mypy.readthedocs.io). If you're using VS Code, you can 
-install the [mypy extension](https://marketplace.visualstudio.com/items?itemName=matangover.mypy) to 
-get real-time type checking. 
+Ajishio is fully typed and works well with tools like [basedpyright](https://github.com/DetachHead/basedpyright)
+and [ruff](https://github.com/astral-sh/ruff). If you're using VS Code, you can install the
+corresponding extensions to get real-time type checking and linting.
 
-First you need to tell the extension where to locate the Mypy daemon executable. To do this, go to 
-your settings (`Ctrl+,`), find the `Mypy: Dmypy Executable` setting, and set it to 
-```
-${workspaceFolder}/.venv/bin/dmypy
-```
-or for Windows,
-```
-${workspaceFolder}/.venv/Scripts/dmypy.exe
-```
+### Runtime globals and typing
 
-Now, if you open a Python file in your project, you should see type errors and warnings underlined.
-![Mypy Integration](/.github/assets/mypy_integration.png)
-
-> Note: Mypy requires that you have an `__init__.py` file in your project directory, alongside your 
-> `__main__.py` file. If you are not seeing any type errors, check that at least an empty 
-> `__init__.py` file exists. If you still don't see any errors, try running `mypy .` in your 
-> activated virtual environment and check the output.
+Many familiar GameMaker-style globals (for example `aj.room_width`, `aj.delta_time`, `aj.view_xport`) are
+dynamic state maintained by the engine singletons. They remain accessible as attributes on the `ajishio`
+package via `__getattr__`, so game code can keep using `aj.<name>` and always see live values. Callables
+and data classes are exported in `__all__` to aid completions, while the dynamic values are resolved at
+runtime to avoid freezing them at import time.
 
 ## Loading Rooms
 

@@ -198,11 +198,10 @@ if __name__ == "__main__":
     aj.set_rooms(shared.rooms)
     aj.register_objects(go.Floor, GameServer, go.PlayerSpawner)
     aj.room_set_caption("Multiplayer Server")
-    aj.room_width = shared.room_width
-    aj.room_height = shared.room_height
-    aj.window_set_size(aj.room_width * 2, aj.room_height * 2)
-    aj.view_set_wport(aj.view_current, aj.room_width)
-    aj.view_set_hport(aj.view_current, aj.room_height)
+    aj.room_set_size(shared.room_width, shared.room_height)
+    aj.window_set_size(shared.room_width * 2, shared.room_height * 2)
+    aj.view_set_wport(aj.view_current, shared.room_width)
+    aj.view_set_hport(aj.view_current, shared.room_height)
     aj.room_set_background(shared.room_background_color)
     aj.game_start()
     exit()

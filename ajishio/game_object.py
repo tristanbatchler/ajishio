@@ -4,7 +4,6 @@ from ajishio.rendering import draw_sprite
 from ajishio.sprite_loader import GameSprite
 from dataclasses import dataclass
 from uuid import uuid4, UUID
-from typing import Any
 
 
 @dataclass
@@ -39,7 +38,7 @@ class GameObject:
         self.iid: str | None = kwargs.get("iid", None)
         self.width: float = kwargs.get("width", 0)
         self.height: float = kwargs.get("height", 0)
-        self.custom_fields: dict[str, Any] = kwargs.get("customFields", {})
+        self.custom_fields: dict[str, object] = kwargs.get("customFields", {})
 
         _engine.add_object(self)
 

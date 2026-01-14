@@ -131,8 +131,8 @@ class SnakeTailSegment(GridAlignedObject):
 
 
 GRID_SIZE: int = 16
-NUM_COLS: int = aj.room_width // GRID_SIZE
-NUM_ROWS: int = aj.room_height // GRID_SIZE
+NUM_COLS: int = int(aj.room_width // GRID_SIZE)
+NUM_ROWS: int = int(aj.room_height // GRID_SIZE)
 game_over: bool = False
 
 aj.room_set_caption("Snake")

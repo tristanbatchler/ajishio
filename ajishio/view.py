@@ -33,6 +33,17 @@ class View:
     def window_set_size(self, w: int, h: int) -> None:
         self.window_width = w
         self.window_height = h
+        # Keep the default viewport in sync with the window size
+        self.view_wport[self.view_current] = w
+        self.view_hport[self.view_current] = h
+        # Resize the renderer surface immediately so ordering with room_set_size does not matter
+        try:
+            from ajishio.rendering import _renderer
+
+            _renderer.set_screen_size(w, h)
+        except Exception:
+            # Renderer may not be initialized yet; safe to ignore
+            pass
 
     @property
     def offset(self) -> tuple[float, float]:

@@ -65,6 +65,7 @@ uv run -m demo_projects.platformer
 - Space Invaders: `uv run -m demo_projects.space_invaders`
 - Roguelike: `uv run -m demo_projects.roguelike`
 - Sokoban: `uv run -m demo_projects.sokoban`
+- Visual Novel: `uv run -m demo_projects.visual_novel`
 
 ## VS Code Integration
 

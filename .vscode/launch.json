@@ -57,6 +57,12 @@
             "type": "debugpy",
             "request": "launch",
             "module": "demo_projects.space_invaders"
+        },
+        {
+            "name": "Visual Novel",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "demo_projects.visual_novel"
         }
     ]
 }

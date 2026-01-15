@@ -151,18 +151,32 @@ def draw_sprite(
     color: Color = c_white,
     alpha: float = 1.0,
 ) -> None:
-    x, y = _translate_offset(x, y)
+    if x_scale == 0.0 or y_scale == 0.0:
+        return
+
+    scale_x_abs: float = abs(x_scale)
+    scale_y_abs: float = abs(y_scale)
+
+    offset_x: float = sprite_index.x_offset if x_scale >= 0 else sprite_index.width - sprite_index.x_offset
+    offset_y: float = sprite_index.y_offset if y_scale >= 0 else sprite_index.height - sprite_index.y_offset
+
+    draw_x: float = x - offset_x * scale_x_abs
+    draw_y: float = y - offset_y * scale_y_abs
+    draw_x, draw_y = _translate_offset(draw_x, draw_y)
+    image_index = image_index % len(sprite_index.images)
     image = sprite_index.images[image_index]
     if rotation != 0.0:
         image = pg.transform.rotate(image, rotation)
+        
     if x_scale != 1.0 or y_scale != 1.0:
         image = pg.transform.scale(
-            image, (int(image.get_width() * x_scale), int(image.get_height() * y_scale))
+            image, (int(image.get_width() * scale_x_abs), int(image.get_height() * scale_y_abs))
         )
+        image = pg.transform.flip(image, x_scale < 0, y_scale < 0)
     image.set_alpha(int(alpha * 255))
     if color != c_white:
         image.fill(color, special_flags=pg.BLEND_MULT)
-    _renderer._display.blit(image, (x, y))
+    _renderer._display.blit(image, (draw_x, draw_y))
 
 
 def load_font(font_path: Path | str, size: int) -> pg.font.Font:

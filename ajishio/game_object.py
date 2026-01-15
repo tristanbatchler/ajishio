@@ -31,6 +31,8 @@ class GameObject:
         self.sprite_index: GameSprite | None = sprite_index
         self.image_index: int = 0
         self.image_speed: float = 0
+        self.image_xscale: float = 1.0
+        self.image_yscale: float = 1.0
         self.collision_mask: CollisionMask | None = collision_mask
         self.depth: int = 0
         self._last_image_update: float = 0
@@ -67,7 +69,7 @@ class GameObject:
 
     def draw(self) -> None:
         if self.sprite_index is not None:
-            draw_sprite(self.x, self.y, self.sprite_index, self.image_index)
+            draw_sprite(self.x, self.y, self.sprite_index, self.image_index, x_scale=self.image_xscale, y_scale=self.image_yscale)
 
     def on_game_end(self) -> None:
         pass

@@ -26,6 +26,8 @@ class GameSprite:
     images: list[pg.Surface]
     width: int
     height: int
+    x_offset: float = 0.0
+    y_offset: float = 0.0
 
 
 def load_aseprite_sprites(sprites_directory: Path) -> dict[str, GameSprite]:
@@ -44,13 +46,21 @@ def load_aseprite_sprite(sprite_dir: Path) -> GameSprite:
     sprite_info: SpriteInfo = json.loads(json_path.read_text())
     frames: dict[str, FrameData] = sprite_info["frames"]
 
-    width: int = 0
-    height: int = 0
+    sprite_width: int = 0
+    sprite_height: int = 0
 
     for data in frames.values():
         dims: FrameRect = data["frame"]
-        x, y, width, height = dims["x"], dims["y"], dims["w"], dims["h"]
+        x, y = dims["x"], dims["y"]
+        frame_width, frame_height = dims["w"], dims["h"]
+        sprite_width = max(sprite_width, frame_width)
+        sprite_height = max(sprite_height, frame_height)
         with open(png_path, "rb") as f:
-            images.append(pg.image.load(f).subsurface(pg.Rect(x, y, width, height)))
+            images.append(pg.image.load(f).subsurface(pg.Rect(x, y, frame_width, frame_height)))
 
-    return GameSprite(images, width, height)
+    return GameSprite(images, sprite_width, sprite_height)
+
+
+def sprite_set_offset(sprite: GameSprite, x_offset: float, y_offset: float) -> None:
+    sprite.x_offset = x_offset
+    sprite.y_offset = y_offset

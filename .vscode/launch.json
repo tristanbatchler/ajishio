@@ -63,6 +63,12 @@
             "type": "debugpy",
             "request": "launch",
             "module": "demo_projects.visual_novel"
+        },
+        {
+            "name": "Witch Game",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "demo_projects.witch_game"
         }
     ]
 }

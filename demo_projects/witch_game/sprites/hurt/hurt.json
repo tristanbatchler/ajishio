@@ -1,0 +1,55 @@
+{ "frames": {
+   "B_witch #Take_damage 0.aseprite": {
+    "frame": { "x": 0, "y": 0, "w": 111, "h": 48 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 111, "h": 48 },
+    "sourceSize": { "w": 111, "h": 48 },
+    "duration": 100
+   },
+   "B_witch #Take_damage 1.aseprite": {
+    "frame": { "x": 111, "y": 0, "w": 111, "h": 48 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 111, "h": 48 },
+    "sourceSize": { "w": 111, "h": 48 },
+    "duration": 100
+   },
+   "B_witch #Take_damage 2.aseprite": {
+    "frame": { "x": 222, "y": 0, "w": 111, "h": 48 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 111, "h": 48 },
+    "sourceSize": { "w": 111, "h": 48 },
+    "duration": 100
+   }
+ },
+ "meta": {
+  "app": "https://www.aseprite.org/",
+  "version": "1.3.16.1-x64",
+  "image": "hurt.png",
+  "format": "RGBA8888",
+  "size": { "w": 333, "h": 48 },
+  "scale": "1",
+  "frameTags": [
+   { "name": "Idle", "from": 0, "to": 5, "direction": "forward", "color": "#aad395ff" },
+   { "name": "Run", "from": 6, "to": 13, "direction": "forward", "color": "#4fa4a5ff" },
+   { "name": "Charge_Loop", "from": 14, "to": 18, "direction": "forward", "color": "#e8c498ff" },
+   { "name": "Attack", "from": 19, "to": 27, "direction": "forward", "color": "#d47564ff" },
+   { "name": "Take_damage", "from": 28, "to": 30, "direction": "forward", "color": "#ecece0ff" },
+   { "name": "Death", "from": 31, "to": 42, "direction": "forward", "color": "#3b324aff" }
+  ],
+  "layers": [
+   { "name": "Shadow", "opacity": 255, "blendMode": "normal" },
+   { "name": "Haire", "opacity": 255, "blendMode": "normal" },
+   { "name": "Body", "opacity": 255, "blendMode": "normal" },
+   { "name": "Head", "opacity": 255, "blendMode": "normal" },
+   { "name": "Magic_effect", "opacity": 255, "blendMode": "normal" },
+   { "name": "Wind_effect", "opacity": 255, "blendMode": "normal" },
+   { "name": "Light_effect", "opacity": 70, "blendMode": "normal" },
+   { "name": "Bonus_effect", "opacity": 40, "blendMode": "normal" }
+  ],
+  "slices": [
+  ]
+ }
+}

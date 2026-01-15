@@ -97,7 +97,12 @@ from ajishio.rendering import (  # noqa: E402
     text_width,
 )
 from ajishio.sound_loader import load_sound, load_sounds  # noqa: E402
-from ajishio.sprite_loader import GameSprite, load_aseprite_sprite, load_aseprite_sprites  # noqa: E402
+from ajishio.sprite_loader import (  # noqa: E402
+    GameSprite,
+    load_aseprite_sprite,
+    load_aseprite_sprites,
+    sprite_set_offset,
+)
 from ajishio.utils import (  # noqa: E402
     clamp,
     lengthdir_x,
@@ -174,6 +179,7 @@ __all__: tuple[str, ...] = (
     "GameLevel",
     "GameSound",
     "GameSprite",
+    "sprite_set_offset",
     "game_end",
     "game_restart",
     "game_set_speed",

@@ -65,8 +65,15 @@ def load_ldtk(level_dir: Path) -> GameLevel:
         tilemap: list[list[bool]] = []
         with open(level_dir / f"{layer}.csv", "r") as f:
             reader = csv.reader(f)
-            for row in reader:
-                tilemap.append([cell != "" and bool(int(cell)) for cell in row])
+            for raw_row in reader:
+                # LDTK's simplified export includes a trailing comma, so drop empty cells
+                row: list[str] = [cell for cell in raw_row if cell != ""]
+                tilemap.append([bool(int(cell)) for cell in row])
+
+        # Ensure consistent row widths so placement math stays aligned
+        unique_widths: set[int] = {len(r) for r in tilemap}
+        if len(unique_widths) != 1:
+            raise ValueError(f"Inconsistent row widths in tilemap for layer {layer}: {unique_widths}")
         tilemaps[layer] = tilemap
 
         # Get the tile size for this layer

@@ -2,9 +2,13 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
+from typing import Callable, TYPE_CHECKING
 
 import ajishio as aj
 from demo_projects.visual_novel.ui.primitives import PanelStyle, draw_panel, draw_text_block
+
+if TYPE_CHECKING:
+    from demo_projects.visual_novel.ui.script import ScriptStep
 
 _logger = logging.getLogger(__name__)
 
@@ -12,7 +16,7 @@ _logger = logging.getLogger(__name__)
 @dataclass(frozen=True)
 class ChoiceOption:
     label: str
-    next_index: int
+    callback: Callable[[], list[ScriptStep] | None] | None = None
 
 
 class ChoiceMenu(aj.GameObject):

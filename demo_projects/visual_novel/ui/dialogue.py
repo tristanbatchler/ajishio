@@ -44,13 +44,21 @@ class DialogueBox(aj.GameObject):
         if self.finished:
             return
         self.visible_chars += self.type_rate * dt
-        total_length = sum(len(line) for line in self.lines_wrapped)
+        total_length = self._total_chars()
         if self.visible_chars >= total_length:
             self.visible_chars = float(total_length)
             self.finished = True
 
     def advance_requested(self) -> bool:
         return aj.keyboard_check_pressed(aj.vk_space) or aj.keyboard_check_pressed(aj.vk_enter)
+
+    def reveal_all(self) -> None:
+        total_length = self._total_chars()
+        self.visible_chars = float(total_length)
+        self.finished = True
+
+    def _total_chars(self) -> int:
+        return sum(len(line) for line in self.lines_wrapped)
 
     def draw(self) -> None:
         ox = aj.view_xport[aj.view_current]

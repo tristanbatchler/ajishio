@@ -1,5 +1,5 @@
 import json
-from dataclasses import dataclass
+from ajishio.types import GameSprite
 from pathlib import Path
 from typing import TypedDict
 
@@ -21,13 +21,6 @@ class SpriteInfo(TypedDict):
     frames: dict[str, FrameData]
 
 
-@dataclass
-class GameSprite:
-    images: list[pg.Surface]
-    width: int
-    height: int
-    x_offset: float = 0.0
-    y_offset: float = 0.0
 
 
 def load_aseprite_sprites(sprites_directory: Path) -> dict[str, GameSprite]:

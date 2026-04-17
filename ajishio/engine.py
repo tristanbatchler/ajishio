@@ -1,32 +1,27 @@
 from __future__ import annotations
+
+from collections.abc import Iterable, Callable
+from logging import Logger
+from typing import TYPE_CHECKING, cast
 from uuid import UUID
-from ajishio.input import _input
-from ajishio.view import _view
-from ajishio.rendering import _renderer
-from ajishio.level_loader import GameLevel
+from ajishio.input import input
+from ajishio.view import view
+from ajishio.types import GameLevel, IGameObject
+from ajishio.rendering import Renderer
 import pygame as pg
 import sys
 import logging
 
-# Import classes only for type hinting, must avoid circular imports
-from typing import TYPE_CHECKING, cast
-
 if TYPE_CHECKING:
-    from ajishio.game_object import GameObject
-    from ajishio.sound_loader import GameSound
+    from ajishio.game_sound import GameSound
+
 
 epsilon: float = 0.00001
 
 
 class Engine:
-    _instance: Engine | None = None
-
-    def __new__(cls) -> Engine:
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
-
-    def __init__(self) -> None:
+    def __init__(self, renderer: Renderer) -> None:
+        self.renderer: Renderer = renderer
         self.room_width: float
         self.room_height: float
         self.room_speed: float
@@ -36,43 +31,44 @@ class Engine:
         self.fps_real: float
 
         self.room_set_size(
-            _view.view_wport[_view.view_current], _view.view_hport[_view.view_current]
+            view.view_wport[view.view_current], view.view_hport[view.view_current]
         )
         self.game_set_speed(60)
         self.room_set_background(pg.Color(0, 0, 0))
 
         self._clock: pg.time.Clock = pg.time.Clock()
         self._last_render_time: float = 0
-        self._game_objects: dict[UUID, GameObject] = {}
-        self._game_objects_to_destroy: set[GameObject] = set()
-        self._game_objects_to_add: list[GameObject] = []
+        self._game_objects: dict[UUID, IGameObject] = {}
+        self._game_objects_to_destroy: set[IGameObject] = set()
+        self._game_objects_to_add: list[IGameObject] = []
         self._game_running: bool
+        self._object_registry: dict[str, type[IGameObject]] = {}
 
         self._rooms: list[GameLevel] = []
         self._audio_playing: list[GameSound] = []
 
-        self._logger = logging.getLogger(__name__)
+        self._logger: Logger = logging.getLogger(__name__)
         logging.basicConfig(level=logging.DEBUG)
 
     def set_rooms(self, rooms: list[GameLevel]) -> None:
         self._rooms = rooms
 
-    def register_objects(self, *objects: type[GameObject]) -> None:
+    def register_objects(self, *objects: type[IGameObject]) -> None:
         for obj in objects:
-            globals()[obj.__name__] = obj
+            self._object_registry[obj.__name__] = obj
 
-    def room_goto(self, index) -> None:
+    def room_goto(self, index: int) -> None:
         # Remove just the non-persistent instances
         for instance in self._game_objects.values():
             if not instance.persistent:
                 self.instance_destroy(instance)
 
-        level: GameLevel = self._rooms[index]
+        level = self._rooms[index]
 
         self.room_set_size(*level.level_size)
 
         # Draw the level
-        _renderer.set_background_images(list(level.background_surfaces.values()))
+        self.renderer.set_background_images(list(level.background_surfaces.values()))
 
         # Load the tilemaps
         for layer, tilemap in level.tilemaps.items():
@@ -81,14 +77,13 @@ class Engine:
             for y, row in enumerate(tilemap):
                 for x, cell in enumerate(row):
                     if cell:
-                        try:
-                            tile_cls: type = globals()[layer]
-                        except KeyError:
+                        tile_cls = self._object_registry.get(layer)
+                        if tile_cls is None:
                             raise ValueError(
-                                f"{layer} object not found in engine namespace. Make sure you have "
-                                f"registered it with `aj.register_objects({layer})"
+                                f"{layer} object not found in registry. Make sure you "
+                                + f"have registered it with `aj.register_objects({layer})`"
                             )
-                        tile_cls(
+                        _ = cast(Callable[..., IGameObject], tile_cls)(
                             x * tile_size[0],
                             y * tile_size[1],
                             width=tile_size[0],
@@ -98,47 +93,17 @@ class Engine:
         # Load the entities
         for entity_type, entities in level.entities.items():
             for entity in entities:
-                try:
-                    entity_cls: type[GameObject] = globals()[entity_type]
-                except KeyError:
+                entity_cls = self._object_registry.get(entity_type)
+                if entity_cls is None:
                     self._logger.warning(
-                        f"{entity_type} object not found in engine namespace. Make sure you have "
-                        f"registered it with `aj.register_objects({entity_type})"
+                        "%s object not found in registry. Make sure you "
+                        + "have registered it with `aj.register_objects(%s)`",
+                        entity_type, entity_type,
                     )
                     continue
 
                 if not (self.instance_exists(entity_cls) and entity_cls.persistent):
-                    from ajishio.game_object import CollisionMask
-                    from ajishio.sprite_loader import GameSprite
-
-                    x_value: float = float(entity.get("x", 0))
-                    y_value: float = float(entity.get("y", 0))
-                    sprite_value = entity.get("sprite_index")
-                    collision_value = entity.get("collision_mask")
-
-                    remaining_kwargs: dict[str, object] = {
-                        key: value
-                        for key, value in entity.items()
-                        if key
-                        not in {
-                            "x",
-                            "y",
-                            "sprite_index",
-                            "collision_mask",
-                        }
-                    }
-
-                    entity_cls(
-                        x=x_value,
-                        y=y_value,
-                        sprite_index=cast(GameSprite | None, sprite_value)
-                        if isinstance(sprite_value, (GameSprite, type(None)))
-                        else None,
-                        collision_mask=cast(CollisionMask | None, collision_value)
-                        if isinstance(collision_value, (CollisionMask, type(None)))
-                        else None,
-                        **remaining_kwargs,
-                    )
+                    _ = entity_cls.create_from_entity(entity)
 
         self.room = index
 
@@ -169,8 +134,8 @@ class Engine:
     def room_set_size(self, w: float, h: float) -> None:
         self.room_width = w
         self.room_height = h
-        _renderer.set_screen_size(_view.window_width, _view.window_height)
-        _renderer.fit_display()
+        self.renderer.set_screen_size(view.window_width, view.window_height)
+        self.renderer.fit_display()
 
     def room_set_width(self, w: int) -> None:
         self.room_set_size(w, self.room_height)
@@ -183,46 +148,45 @@ class Engine:
 
     def audio_play_sound(self, index: GameSound, loop: bool = False, gain: float = 1) -> None:
         self._audio_playing.append(index)
-        index._play(loop=loop, gain=gain)
+        index.play(loop=loop, gain=gain)
 
     def audio_is_playing(self, index: GameSound) -> bool:
         return index in self._audio_playing
 
-    def add_object(self, obj: GameObject) -> None:
+    def add_object(self, obj: IGameObject) -> None:
         self._game_objects_to_add.append(obj)
 
-    def instance_destroy(self, obj: GameObject) -> None:
+    def instance_destroy(self, obj: IGameObject) -> None:
         self._game_objects_to_destroy.add(obj)
 
-    def instance_count(self, obj: type[GameObject]) -> int:
+    def instance_count(self, obj: type[IGameObject]) -> int:
         count: int = 0
         all_objects = list(self._game_objects.values()) + self._game_objects_to_add
         for g_o in all_objects:
-            if issubclass(type(g_o), obj) and g_o not in self._game_objects_to_destroy:
+            if isinstance(g_o, obj) and g_o not in self._game_objects_to_destroy:
                 count += 1
         return count
 
-    def instance_exists(self, obj: type[GameObject]) -> bool:
+    def instance_exists(self, obj: type[IGameObject]) -> bool:
         return self.instance_count(obj) > 0
 
-    def instance_find(self, obj: type[GameObject] | str, n: int = 0) -> GameObject | None:
+    def instance_find(self, obj: type[IGameObject] | str, n: int = 0) -> IGameObject | None:
         all_objects = list(self._game_objects.values()) + self._game_objects_to_add
 
-        # If obj is a IID, find the object with that IID (it is unique)
         if isinstance(obj, str):
             for g_o in all_objects:
                 if g_o.iid == obj and g_o not in self._game_objects_to_destroy:
                     return g_o
             return None
 
-        # If obj is a type, find the nth object of that type
         count: int = 0
         for g_o in all_objects:
-            if issubclass(type(g_o), obj) and g_o not in self._game_objects_to_destroy:
+            if isinstance(g_o, obj) and g_o not in self._game_objects_to_destroy:
                 if count == n:
                     return g_o
                 count += 1
         return None
+
 
     def game_start(self) -> None:
         if len(self._rooms) > 0:
@@ -232,9 +196,9 @@ class Engine:
         while self._game_running:
 
             try:
-                _input.events += pg.event.get()
+                input.events += pg.event.get()
 
-                if any(event.type == pg.QUIT for event in _input.events):
+                if any(event.type == pg.QUIT for event in input.events):
                     self.game_end()
 
                 self.delta_time = self._clock.tick(self.room_speed) / 1000  # ms to seconds
@@ -245,9 +209,9 @@ class Engine:
                 self._last_render_time += self.delta_time
                 if self._last_render_time >= 1 / self.room_speed:
                     self._last_render_time %= self.room_speed
-                    _renderer.fit_display()
-                    _renderer.fill_background_color(self.room_background_color)
-                    _renderer.draw_background_images()
+                    self.renderer.fit_display()
+                    self.renderer.fill_background_color(self.room_background_color)
+                    self.renderer.draw_background_images()
 
                     self._add_pending_objects()
                     self._free_destroyed_objects()
@@ -265,14 +229,14 @@ class Engine:
                         obj.draw()
 
                     # Only clear the input after all objects have had a chance to process it
-                    _input.prev_events = _input.events.copy()
-                    _input.events.clear()
+                    input.prev_events = input.events.copy()
+                    input.events.clear()
 
                     pg.display.update()
-                    _renderer.draw_display()
+                    self.renderer.draw_display()
 
                 for audio in self._audio_playing:
-                    if audio._is_finished():
+                    if audio.is_finished(self.delta_time):
                         self._audio_playing.remove(audio)
 
             except KeyboardInterrupt:
@@ -281,10 +245,16 @@ class Engine:
         pg.quit()
         sys.exit()
 
+    def get_game_objects(self) -> Iterable[IGameObject]:
+        return self._game_objects.values()
+
+    def get_game_object_by_id(self, id: UUID) -> IGameObject | None:
+        return self._game_objects.get(id)
+
     def _free_destroyed_objects(self) -> None:
         for obj in self._game_objects_to_destroy:
             try:
-                self._game_objects.pop(obj.id)
+                _ = self._game_objects.pop(obj.id)
             except KeyError:
                 pass
         self._game_objects_to_destroy.clear()
@@ -294,38 +264,3 @@ class Engine:
             self._game_objects[obj.id] = obj
         self._game_objects_to_add.clear()
 
-
-_engine: Engine = Engine()
-
-# Put exposed instance variables here to help with code completion, but they are actually evaluated
-# at runtime by the __getattr__ method in ajishio.__init__.py
-room_speed: float = 0.0
-room_width: int = 0
-room_height: int = 0
-room_background_color: pg.Color = pg.Color(0, 0, 0)
-room: int = 0
-delta_time: float = 0.0
-fps_real: float = 0.0
-
-# These do not need to be evaluated at runtime, since they are references to methods, so they go
-# here
-game_set_speed = _engine.game_set_speed
-room_set_width = _engine.room_set_width
-room_set_height = _engine.room_set_height
-room_set_size = _engine.room_set_size
-room_set_background = _engine.room_set_background
-game_start = _engine.game_start
-instance_destroy = _engine.instance_destroy
-instance_count = _engine.instance_count
-instance_exists = _engine.instance_exists
-instance_find = _engine.instance_find
-set_rooms = _engine.set_rooms
-register_objects = _engine.register_objects
-room_goto = _engine.room_goto
-room_goto_next = _engine.room_goto_next
-room_goto_previous = _engine.room_goto_previous
-room_restart = _engine.room_restart
-game_restart = _engine.game_restart
-game_end = _engine.game_end
-audio_play_sound = _engine.audio_play_sound
-audio_is_playing = _engine.audio_is_playing

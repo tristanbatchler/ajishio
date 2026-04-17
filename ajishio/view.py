@@ -7,6 +7,7 @@ class View:
     def __new__(cls) -> View:
         if cls._instance is None:
             cls._instance = super().__new__(cls)
+            cls._instance.__init__()
         return cls._instance
 
     def __init__(self) -> None:
@@ -36,14 +37,7 @@ class View:
         # Keep the default viewport in sync with the window size
         self.view_wport[self.view_current] = w
         self.view_hport[self.view_current] = h
-        # Resize the renderer surface immediately so ordering with room_set_size does not matter
-        try:
-            from ajishio.rendering import _renderer
 
-            _renderer.set_screen_size(w, h)
-        except Exception:
-            # Renderer may not be initialized yet; safe to ignore
-            pass
 
     @property
     def offset(self) -> tuple[float, float]:
@@ -52,22 +46,4 @@ class View:
             -self.view_yport[self.view_current],
         )
 
-
-_view: View = View()
-
-# Put exposed instance variables here to help with code completion, but they are actually evaluated
-# at runtime by the __getattr__ method in ajishio.__init__.py
-view_current: int = _view.view_current
-window_width: int = _view.window_width
-window_height: int = _view.window_height
-view_xport: dict[int, float] = _view.view_xport
-view_yport: dict[int, float] = _view.view_yport
-view_wport: dict[int, float] = _view.view_wport
-view_hport: dict[int, float] = _view.view_hport
-
-# These do not need to be evaluated at runtime, since they are references to methods, so they go here
-view_set_wport = _view.view_set_wport
-view_set_hport = _view.view_set_hport
-view_set_xport = _view.view_set_xport
-view_set_yport = _view.view_set_yport
-window_set_size = _view.window_set_size
+view = View()

@@ -1,3 +1,4 @@
+from collections.abc import Iterable
 import csv
 import json
 from dataclasses import dataclass
@@ -7,19 +8,9 @@ from typing import TypedDict, cast
 import pygame as pg
 
 from ajishio.utils import remove_ext
+from ajishio.types import Entity
 
-
-class EntityData(TypedDict, total=False):
-    x: float
-    y: float
-    iid: str
-    width: int
-    height: int
-    customFields: dict[str, object]
-
-
-EntitiesByType = dict[str, list[EntityData]]
-
+type EntitiesByType = dict[type[Entity], Iterable[Entity]]
 
 class RawLevelInfo(TypedDict):
     width: int

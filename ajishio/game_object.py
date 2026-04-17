@@ -1,17 +1,9 @@
 from __future__ import annotations
-from ajishio.engine import _engine
-from ajishio.rendering import draw_sprite
-from ajishio.sprite_loader import GameSprite
-from dataclasses import dataclass
+from ajishio.types import GameSprite, CollisionMask, IGameObject, Entity
 from uuid import uuid4, UUID
+import ajishio._context as _ctx
 
 
-@dataclass
-class CollisionMask:
-    bbleft: float = 0
-    bbtop: float = 0
-    bbright: float = 0
-    bbbottom: float = 0
 
 
 class GameObject:
@@ -23,7 +15,11 @@ class GameObject:
         y: float = 0,
         sprite_index: GameSprite | None = None,
         collision_mask: CollisionMask | None = None,
-        **kwargs,
+        iid: str | None = None,
+        width: float = 0,
+        height: float = 0,
+        customFields: dict[str, object] | None = None,
+        **_: object,
     ) -> None:
         self.id: UUID = uuid4()
         self.x: float = x
@@ -37,12 +33,12 @@ class GameObject:
         self.depth: int = 0
         self._last_image_update: float = 0
 
-        self.iid: str | None = kwargs.get("iid", None)
-        self.width: float = kwargs.get("width", 0)
-        self.height: float = kwargs.get("height", 0)
-        self.custom_fields: dict[str, object] = kwargs.get("customFields", {})
+        self.iid: str | None = iid
+        self.width: float = width
+        self.height: float = height
+        self.custom_fields: dict[str, object] = customFields if customFields is not None else {}
 
-        _engine.add_object(self)
+        _ctx.engine.add_object(self)
 
     @property
     def sprite_width(self) -> int:
@@ -56,9 +52,13 @@ class GameObject:
             return 0
         return self.sprite_index.height
 
+    @staticmethod
+    def create_from_entity(entity: Entity) -> IGameObject:
+        return GameObject(**entity)
+
     def step(self) -> None:
         if self.sprite_index is not None:
-            self._last_image_update += _engine.delta_time
+            self._last_image_update += _ctx.engine.delta_time
             if (
                 self.image_speed > 0
                 and len(self.sprite_index.images) > 1
@@ -69,16 +69,16 @@ class GameObject:
 
     def draw(self) -> None:
         if self.sprite_index is not None:
-            draw_sprite(self.x, self.y, self.sprite_index, self.image_index, x_scale=self.image_xscale, y_scale=self.image_yscale)
+            _ctx.engine.renderer.draw_sprite(self.x, self.y, self.sprite_index, self.image_index, x_scale=self.image_xscale, y_scale=self.image_yscale)
 
     def on_game_end(self) -> None:
         pass
 
     def place_meeting(
-        self, x: float, y: float, obj: GameObject | type[GameObject] | UUID
-    ) -> GameObject | None:
-        if isinstance(obj, GameObject):
-            o: GameObject = obj
+        self, x: float, y: float, obj: IGameObject | type[IGameObject] | UUID
+    ) -> IGameObject | None:
+        if isinstance(obj, IGameObject):
+            o: IGameObject = obj
             s_msk: CollisionMask | None = self.collision_mask
             o_msk: CollisionMask | None = o.collision_mask
 
@@ -95,12 +95,12 @@ class GameObject:
             return None
 
         elif isinstance(obj, UUID):
-            game_obj = _engine._game_objects[obj]
+            game_obj = _ctx.engine.get_game_object_by_id(obj)
+            if game_obj is None:
+                return None
             return self.place_meeting(x, y, game_obj)
 
-        elif issubclass(obj, GameObject):
-            for g_o in _engine._game_objects.values():
-                if isinstance(g_o, obj):
-                    if self.place_meeting(x, y, g_o):
-                        return g_o
-            return None
+        for g_o in _ctx.engine.get_game_objects():
+            if isinstance(g_o, obj) and self.place_meeting(x, y, g_o):
+                return g_o
+        return None

@@ -1,3 +1,6 @@
+from threading import Thread
+from typing import override
+
 import ajishio as aj
 from uuid import UUID
 import socket
@@ -9,14 +12,14 @@ from queue import Queue
 
 
 class NetworkClient(aj.GameObject):
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    def __init__(self, x: float = 0, y: float = 0, **_: object) -> None:
+        super().__init__(x, y)
+        self.socket: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.socket.bind(("localhost", 0))
 
-        self.packet_queue: Queue = Queue()
+        self.packet_queue: Queue[pck.Packet] = Queue()
 
-        self.listen_thread = threading.Thread(target=self.listen, daemon=True)
+        self.listen_thread: Thread = threading.Thread(target=self.listen, daemon=True)
         self.listen_thread.start()
 
         self.player_id: UUID | None = None
@@ -24,7 +27,7 @@ class NetworkClient(aj.GameObject):
 
         self.others: dict[UUID, go.Player] = {}
 
-        self.kicked = False
+        self.kicked: bool = False
 
         self.last_input_x: int = 0
 
@@ -33,7 +36,7 @@ class NetworkClient(aj.GameObject):
 
     def send(self, packet: pck.Packet) -> None:
         try:
-            self.socket.sendto(packet.pack(), ("localhost", 12345))
+            _ = self.socket.sendto(packet.pack(), ("localhost", 12345))
         except OSError as e:
             print("Got an error:", e)
             return
@@ -54,6 +57,7 @@ class NetworkClient(aj.GameObject):
             packet = pck.unpack(data)
             self.packet_queue.put(packet)
 
+    @override
     def step(self) -> None:
         super().step()
 
@@ -147,6 +151,7 @@ class NetworkClient(aj.GameObject):
         if self.player is not None and self.player_id is not None:
             self.send(pck.PositionSyncResponsePacket(self.player_id, self.player.x, self.player.y))
 
+    @override
     def on_game_end(self) -> None:
         if not self.kicked and self.player_id is not None:
             self.send(pck.PlayerDisconnectPacket(self.player_id))

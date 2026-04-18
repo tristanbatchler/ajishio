@@ -1,3 +1,6 @@
+from threading import Thread
+
+
 from random import randrange
 from uuid import UUID, uuid4
 import socket
@@ -11,7 +14,7 @@ import demo_projects.multiplayer.shared.game_objects as go
 
 
 def send_packet(packet: pck.Packet, socket: socket.socket, address: tuple[str, int]) -> None:
-    socket.sendto(packet.pack(), address)
+    _ = socket.sendto(packet.pack(), address)
 
 
 @dataclass
@@ -22,20 +25,20 @@ class PlayerNetstate:
 
 
 class GameServer(aj.GameObject):
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    def __init__(self, x: float = 0, y: float = 0, **_: object) -> None:
+        super().__init__(x, y)
+        self.socket: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-        self.packet_queue: Queue = Queue()
+        self.packet_queue: Queue[tuple[pck.Packet, tuple[str, int]]] = Queue()
 
         print("Server started")
 
         self.players_netstates: dict[UUID, PlayerNetstate] = {}
 
-        self.listen_thread = threading.Thread(target=self.listen, daemon=True)
+        self.listen_thread: Thread = threading.Thread(target=self.listen, daemon=True)
         self.listen_thread.start()
 
-        self.running = True
+        self.running: bool = True
 
         self.sync_timer: float = 0
         self.sync_timeout: float = 1

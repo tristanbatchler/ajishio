@@ -1,4 +1,5 @@
-from typing import Protocol, TypedDict, runtime_checkable
+from typing import TypedDict
+from abc import ABC
 from collections.abc import Sequence
 from uuid import UUID
 from pygame import Surface
@@ -42,7 +43,7 @@ class GameLevel:
     entities: dict[str, Sequence[Entity]]
 
 
-class IGameObject(Protocol):
+class IGameObject(ABC):
     persistent: bool
     id: UUID
     x: float
@@ -66,7 +67,7 @@ class IGameObject(Protocol):
     def sprite_height(self) -> int: ...
 
     @classmethod
-    def create_from_entity(cls, entity: Entity) -> IGameObject: ...
+    def create_from_entity(cls, _entity: Entity) -> IGameObject: ...
 
     def step(self) -> None: ...
 
@@ -75,5 +76,5 @@ class IGameObject(Protocol):
     def on_game_end(self) -> None: ...
 
     def place_meeting(
-        self, x: float, y: float, obj: IGameObject | type[IGameObject] | UUID
+        self, _x: float, _y: float, _obj: IGameObject | type[IGameObject] | UUID
     ) -> IGameObject | None: ...

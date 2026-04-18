@@ -1,3 +1,4 @@
+from typing import override
 import ajishio as aj
 from demo_projects.multiplayer.shared import sprites
 
@@ -10,7 +11,7 @@ class PlayerSpawner(aj.GameObject):
 class Floor(aj.GameObject):
     def __init__(self, x: float, y: float, *args, **kwargs) -> None:
         super().__init__(x, y, *args, **kwargs)
-        self.collision_mask = aj.CollisionMask(
+        self.collision_mask: aj.CollisionMask | None = aj.CollisionMask(
             bbtop=0, bbleft=0, bbright=self.width, bbbottom=self.height
         )
 
@@ -18,9 +19,9 @@ class Floor(aj.GameObject):
 class Player(aj.GameObject):
     def __init__(self, x: float, y: float, *args, **kwargs) -> None:
         super().__init__(x, y, *args, **kwargs)
-        self.sprite_index = sprites["player"]
-        self.image_speed = 10
-        self.collision_mask = aj.CollisionMask(
+        self.sprite_index: aj.GameSprite | None = sprites.get("player")
+        self.image_speed: float = 10
+        self.collision_mask: aj.CollisionMask | None = aj.CollisionMask(
             bbtop=2,
             bbleft=5,
             bbright=self.sprite_width - 5,
@@ -32,7 +33,7 @@ class Player(aj.GameObject):
         self.x_velocity: float = 0.0
         self.y_velocity: float = 0.0
 
-        self.speed = 3.0 * aj.room_speed
+        self.speed: float = 3.0 * aj.room_speed
         self.jump_height: float = -12 * aj.room_speed
         self.max_fall_speed: float = 12 * aj.room_speed
 
@@ -48,6 +49,7 @@ class Player(aj.GameObject):
         if self.place_meeting(self.x, self.y + 1, Floor):
             self.y_velocity = self.jump_height
 
+    @override
     def step(self) -> None:
         super().step()
 
@@ -100,6 +102,7 @@ class Player(aj.GameObject):
                 self.y = target_y
                 remaining_time -= step_time
 
+    @override
     def draw(self) -> None:
         super().draw()
         h = aj.text_height(self.name)

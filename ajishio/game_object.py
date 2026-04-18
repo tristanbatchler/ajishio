@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import override
 from ajishio.types import GameSprite, CollisionMask, IGameObject, Entity
 from uuid import uuid4, UUID
 import ajishio._context as _ctx
@@ -6,7 +7,7 @@ import ajishio._context as _ctx
 
 
 
-class GameObject:
+class GameObject(IGameObject):
     persistent: bool = False
 
     def __init__(
@@ -41,21 +42,25 @@ class GameObject:
         _ctx.engine.add_object(self)
 
     @property
+    @override
     def sprite_width(self) -> int:
         if self.sprite_index is None:
             return 0
         return self.sprite_index.width
 
     @property
+    @override
     def sprite_height(self) -> int:
         if self.sprite_index is None:
             return 0
         return self.sprite_index.height
 
     @classmethod
+    @override
     def create_from_entity(cls, entity: Entity) -> IGameObject:
         return cls(**entity)
 
+    @override
     def step(self) -> None:
         if self.sprite_index is not None:
             self._last_image_update += _ctx.engine.delta_time
@@ -67,13 +72,16 @@ class GameObject:
                 self._last_image_update = 0
                 self.image_index = (self.image_index + 1) % len(self.sprite_index.images)
 
+    @override
     def draw(self) -> None:
         if self.sprite_index is not None:
             _ctx.engine.renderer.draw_sprite(self.x, self.y, self.sprite_index, self.image_index, x_scale=self.image_xscale, y_scale=self.image_yscale)
 
+    @override
     def on_game_end(self) -> None:
         pass
 
+    @override
     def place_meeting(
         self, x: float, y: float, obj: IGameObject | type[IGameObject] | UUID
     ) -> IGameObject | None:

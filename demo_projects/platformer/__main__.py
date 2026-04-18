@@ -1,6 +1,11 @@
 import ajishio as aj
 from pathlib import Path
 
+project_dir: Path = Path(__file__).parent
+sprites: dict[str, aj.GameSprite] = aj.load_aseprite_sprites(project_dir / "sprites")
+sounds: dict[str, aj.GameSound] = aj.load_sounds(project_dir / "sounds")
+coins_collected: set[str] = set()
+
 
 class Floor(aj.GameObject):
     def __init__(self, x: float, y: float, *args, **kwargs) -> None:
@@ -286,20 +291,22 @@ class Coin(aj.GameObject):
             coins_collected.add(self.iid)
 
 
-project_dir: Path = Path(__file__).parent
-sprites: dict[str, aj.GameSprite] = aj.load_aseprite_sprites(project_dir / "sprites")
-levels: list[aj.GameLevel] = aj.load_ldtk_levels(project_dir / "room_data" / "world" / "simplified")
-sounds: dict[str, aj.GameSound] = aj.load_sounds(project_dir / "sounds")
+@aj.profile
+def main() -> None:
+    levels: list[aj.GameLevel] = aj.load_ldtk_levels(project_dir / "room_data" / "world" / "simplified")
+    
+    aj.set_rooms(levels)
+    aj.register_objects(Floor, Player, Camera, Enemy, Coin, Doorway)
 
-coins_collected: set[str] = set()
+    aj.room_set_caption("Platformer")
+    aspect_ratio: float = levels[0].level_size[0] / levels[0].level_size[1]
+    aj.window_set_size(960, int(960 / aspect_ratio))
 
-aj.set_rooms(levels)
-aj.register_objects(Floor, Player, Camera, Enemy, Coin, Doorway)
+    aj.room_set_background(aj.Color(135, 206, 235))
 
-aj.room_set_caption("Platformer")
-aspect_ratio: float = levels[0].level_size[0] / levels[0].level_size[1]
-aj.window_set_size(960, int(960 / aspect_ratio))
+    aj.game_start()
 
-aj.room_set_background(aj.Color(135, 206, 235))
 
-aj.game_start()
+
+if __name__ == "__main__":
+    main()

@@ -7,3 +7,6 @@ dependencies = [
     "ajishio",
 ]
 
+[tool.setuptools.packages.find]
+include = ["demo_projects*"]
+

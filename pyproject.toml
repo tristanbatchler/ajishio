@@ -17,3 +17,8 @@ members = [
     "demo_projects",
 ]
 
+[dependency-groups]
+dev = [
+    "snakeviz>=2.2.2",
+]
+

@@ -31,6 +31,7 @@ from ajishio.utils import (
     point_distance,
     map_value,
     room_set_caption,
+    profile,
 )
 
 # --- Rendering: color constants and free functions ---

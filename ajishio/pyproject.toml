@@ -7,3 +7,6 @@ dependencies = [
     "pygame-ce",
 ]
 
+[tool.setuptools.packages.find]
+include = ["ajishio*"]
+

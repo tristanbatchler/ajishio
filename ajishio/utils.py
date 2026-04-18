@@ -1,5 +1,57 @@
+import cProfile
+import inspect
+import pstats
+import sys
+from collections.abc import Callable
+from functools import wraps
+from pathlib import Path
+from typing import ParamSpec, TypeVar
+
 import pygame as pg
 import math
+
+_P = ParamSpec("_P")
+_R = TypeVar("_R")
+
+
+def profile(fn: Callable[_P, _R]) -> Callable[_P, _R]:
+    """Decorator that profiles *fn* when ``--profile`` is passed on the command line.
+
+    The ``.prof`` file is saved to the current working directory and named after
+    the module that owns the decorated function (e.g. ``platformer.prof``).
+    Without ``--profile`` the function runs completely unmodified.
+
+    Example::
+
+        @aj.profile
+        def main() -> None:
+            aj.game_start()
+
+        if __name__ == "__main__":
+            main()
+    """
+    @wraps(fn)
+    def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> _R:
+        if "--profile" not in sys.argv:
+            return fn(*args, **kwargs)
+
+        # Derive a friendly name from the owning module's file path.
+        module_file = inspect.getfile(fn)
+        stem = Path(module_file).parent.name  # e.g. "platformer" from .../platformer/__main__.py
+        output_path = Path.cwd() / f"{stem}.prof"
+
+        profiler = cProfile.Profile()
+        profiler.enable()
+        try:
+            return fn(*args, **kwargs)
+        finally:
+            profiler.disable()
+            profiler.dump_stats(output_path)
+            _ = pstats.Stats(profiler).sort_stats("cumulative").print_stats(30)
+            print(f"\nProfile saved to {output_path.name}")
+            print(f"   To visualise: uv run snakeviz {output_path.name}")
+
+    return wrapper
 
 
 def remove_ext(filename: str) -> str:

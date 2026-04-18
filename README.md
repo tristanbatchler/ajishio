@@ -207,6 +207,38 @@ class PlatformerPlayer(aj.GameObject):
 The bounding box coordinates are relative to the top-left corner of the sprite, but in future 
 versions of Ajishio, it is planned to support adjusting the center of the bounding box.
 
+## Profiling
+
+Ajishio ships a `@aj.profile` decorator. Apply it to your `main()` function and pass `--profile`
+on the command line to collect a `cProfile` run and save a `.prof` file to the current working
+directory (named after the project folder, e.g. `platformer.prof`):
+
+```python
+@aj.profile
+def main() -> None:
+    aj.game_start()
+
+if __name__ == "__main__":
+    main()
+```
+
+```bash
+uv run -m demo_projects.platformer --profile
+```
+
+This prints a summary of the top 30 hotspots sorted by cumulative time. Without `--profile` the
+decorator is a no-op and adds zero overhead.
+
+To explore the results visually, install [snakeviz](https://jiffyclub.github.io/snakeviz/) (already
+included in the dev dependency group) and open the saved file:
+
+```bash
+uv run snakeviz platformer.prof
+```
+
+This starts a local web server and opens an interactive flame-graph in your browser. Press `Ctrl-C`
+to stop the server when you are done.
+
 ## TODO
 
 - [x] Support to load rooms from files (only support for LDtk at the moment)

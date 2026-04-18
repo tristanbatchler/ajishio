@@ -77,30 +77,33 @@ class GameObject:
     def place_meeting(
         self, x: float, y: float, obj: IGameObject | type[IGameObject] | UUID
     ) -> IGameObject | None:
-        if isinstance(obj, IGameObject):
-            o: IGameObject = obj
-            s_msk: CollisionMask | None = self.collision_mask
-            o_msk: CollisionMask | None = o.collision_mask
-
-            if s_msk is None or o_msk is None:
-                return None
-
-            if (
-                x + s_msk.bbleft < o.x + o_msk.bbright
-                and x + s_msk.bbright > o.x + o_msk.bbleft
-                and y + s_msk.bbtop < o.y + o_msk.bbbottom
-                and y + s_msk.bbbottom > o.y + o_msk.bbtop
-            ):
-                return o
+        # Check cheapest cases first to avoid the expensive runtime Protocol
+        # isinstance check that inspect.getattr_static triggers on IGameObject.
+        if isinstance(obj, type):
+            for g_o in _ctx.engine.get_game_objects():
+                if isinstance(g_o, obj) and self.place_meeting(x, y, g_o):
+                    return g_o
             return None
 
-        elif isinstance(obj, UUID):
+        if isinstance(obj, UUID):
             game_obj = _ctx.engine.get_game_object_by_id(obj)
             if game_obj is None:
                 return None
             return self.place_meeting(x, y, game_obj)
 
-        for g_o in _ctx.engine.get_game_objects():
-            if isinstance(g_o, obj) and self.place_meeting(x, y, g_o):
-                return g_o
+        # obj is a concrete game object instance
+        o: IGameObject = obj
+        s_msk: CollisionMask | None = self.collision_mask
+        o_msk: CollisionMask | None = o.collision_mask
+
+        if s_msk is None or o_msk is None:
+            return None
+
+        if (
+            x + s_msk.bbleft < o.x + o_msk.bbright
+            and x + s_msk.bbright > o.x + o_msk.bbleft
+            and y + s_msk.bbtop < o.y + o_msk.bbbottom
+            and y + s_msk.bbbottom > o.y + o_msk.bbtop
+        ):
+            return o
         return None

@@ -42,7 +42,6 @@ class GameLevel:
     entities: dict[str, Sequence[Entity]]
 
 
-@runtime_checkable
 class IGameObject(Protocol):
     persistent: bool
     id: UUID

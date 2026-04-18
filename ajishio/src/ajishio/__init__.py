@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING, Callable, cast
 
 from pygame import Color
 
@@ -92,8 +92,8 @@ if _os.environ.get("AJISHIO_DOCS"):
         def __getattr__(self, name: str) -> Callable[..., None]:
             return lambda *args, **kwargs: None
 
-    _renderer = _Dummy()
-    _engine = _Dummy()
+    _renderer: Renderer = cast(Renderer, _Dummy())
+    _engine: Engine = cast(Engine, _Dummy())
 else:
     import pygame as _pg
 

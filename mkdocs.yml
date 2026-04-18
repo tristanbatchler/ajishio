@@ -43,4 +43,10 @@ plugins:
 
 nav:
   - Home: index.md
+  - Guide:
+      - VS Code & Static Analysis: vs-code.md
+      - Loading Rooms: rooms.md
+      - Sprites & Collision: sprites.md
+      - Profiling: profiling.md
   - API Reference: api.md   # This file is generated automatically
+  - Contributing: contributing.md

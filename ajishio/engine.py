@@ -139,11 +139,9 @@ class Engine:
 
     def view_set_wport(self, view_idx: int, w: float) -> None:
         view.view_set_wport(view_idx, w)
-        self.renderer.fit_display()
 
     def view_set_hport(self, view_idx: int, h: float) -> None:
         view.view_set_hport(view_idx, h)
-        self.renderer.fit_display()
 
     def view_set_xport(self, view_idx: int, x: float) -> None:
         view.view_set_xport(view_idx, x)

@@ -52,9 +52,9 @@ class GameObject:
             return 0
         return self.sprite_index.height
 
-    @staticmethod
-    def create_from_entity(entity: Entity) -> IGameObject:
-        return GameObject(**entity)
+    @classmethod
+    def create_from_entity(cls, entity: Entity) -> IGameObject:
+        return cls(**entity)
 
     def step(self) -> None:
         if self.sprite_index is not None:

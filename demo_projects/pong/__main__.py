@@ -5,8 +5,8 @@ import ajishio as aj
 
 
 class Wall(aj.GameObject):
-    def __init__(self, width: float, height: float, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(self, width: float, height: float, x: float = 0, y: float = 0, **_: object) -> None:
+        super().__init__(x, y)
         self.collision_mask = aj.CollisionMask(bbtop=0, bbleft=0, bbright=width, bbbottom=height)
         self.width: float = width
         self.height: float = height
@@ -16,16 +16,13 @@ class Wall(aj.GameObject):
 
 
 class Boundary(Wall):
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-
     def draw(self) -> None:
         super().draw()
 
 
 class Paddle(Wall):
-    def __init__(self, player: int, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(self, player: int, width: float, height: float, x: float = 0, y: float = 0, **_: object) -> None:
+        super().__init__(width, height, x, y)
         self.speed: float = 5
         self.y_vel: float = 0
 
@@ -46,8 +43,8 @@ class Paddle(Wall):
 
 
 class Ball(aj.GameObject):
-    def __init__(self, radius: float, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(self, radius: float, x: float = 0, y: float = 0, **_: object) -> None:
+        super().__init__(x, y)
         self.radius: float = radius
 
         self.collision_mask = aj.CollisionMask(

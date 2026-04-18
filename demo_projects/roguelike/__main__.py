@@ -1,20 +1,21 @@
 import ajishio as aj
+from typing import Unpack, cast
 from pathlib import Path
 
 GRID_SIZE = 32
 
 
 class Wall(aj.GameObject):
-    def __init__(self, x: float, y: float, *args, **kwargs) -> None:
-        super().__init__(x, y, *args, **kwargs)
+    def __init__(self, x: float, y: float, **kwargs: Unpack[aj.GameObjectKwargs]) -> None:
+        super().__init__(x, y, **kwargs)
         self.collision_mask = aj.CollisionMask(
             bbleft=0, bbtop=0, bbright=self.width, bbbottom=self.height
         )
 
 
 class Doorway(aj.GameObject):
-    def __init__(self, x: float, y: float, *args, **kwargs) -> None:
-        super().__init__(x, y, *args, **kwargs)
+    def __init__(self, x: float, y: float, **kwargs: Unpack[aj.GameObjectKwargs]) -> None:
+        super().__init__(x, y, **kwargs)
         if GRID_SIZE not in (self.width, self.height):
             raise ValueError("Doorway must be a single tile in width or height")
 
@@ -25,9 +26,9 @@ class Doorway(aj.GameObject):
         to_room_raw = self.custom_fields.get("to_room", 0)
         self.to_room: int = int(to_room_raw) if isinstance(to_room_raw, (int, float)) else 0
 
-        to_doorway_raw = self.custom_fields.get("to_doorway")
+        to_doorway_raw = cast(aj.CustomFields | None, self.custom_fields.get("to_doorway"))
         if isinstance(to_doorway_raw, dict):
-            doorway_iid = to_doorway_raw.get("entityIid")
+            doorway_iid = cast(str | None, to_doorway_raw.get("entityIid"))
             self.to_doorway_iid: str | None = doorway_iid if isinstance(doorway_iid, str) else None
         else:
             self.to_doorway_iid = None
@@ -36,8 +37,8 @@ class Doorway(aj.GameObject):
 class Player(aj.GameObject):
     persistent: bool = True
 
-    def __init__(self, x: float, y: float, *args, **kwargs) -> None:
-        super().__init__(x, y, *args, **kwargs)
+    def __init__(self, x: float, y: float, **kwargs: Unpack[aj.GameObjectKwargs]) -> None:
+        super().__init__(x, y, **kwargs)
         self.sprite_index = sprites["player"]
         self.grid_x: int = int(x / GRID_SIZE)
         self.grid_y: int = int(y / GRID_SIZE)

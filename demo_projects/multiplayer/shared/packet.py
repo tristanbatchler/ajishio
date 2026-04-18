@@ -145,7 +145,7 @@ class ConnectionRequestPacket(Packet):
         return self.header
 
     @staticmethod
-    def unpack(_) -> ConnectionRequestPacket:
+    def unpack(_: bytes) -> ConnectionRequestPacket:
         return ConnectionRequestPacket()
 
 
@@ -173,7 +173,7 @@ class PositionSyncRequestPacket(Packet):
         return self.header
 
     @staticmethod
-    def unpack(_) -> PositionSyncRequestPacket:
+    def unpack(_: bytes) -> PositionSyncRequestPacket:
         return PositionSyncRequestPacket()
 
 

@@ -9,7 +9,7 @@ class Player(aj.GameObject):
     width = 32
     height = 32
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self) -> None:
         super().__init__()
         self.speed = 5.0
         self.x = aj.room_width / 2.0
@@ -62,8 +62,8 @@ class Enemy(aj.GameObject):
     width = 32.0
     height = 32.0
 
-    def __init__(self, x: float, y: float, x_velocity: float, *args, **kwargs) -> None:
-        super().__init__(x, y, *args, **kwargs)
+    def __init__(self, x: float, y: float, x_velocity: float, **_: object) -> None:
+        super().__init__(x, y)
         self.x_velocity = x_velocity
         self.bullet_speed = 8.0
         self.collision_mask = aj.CollisionMask(0, 0, Enemy.width, Enemy.height)
@@ -93,9 +93,9 @@ class Bullet(aj.GameObject):
     height = 8
 
     def __init__(
-        self, x: float, y: float, y_velocity: float, hurts_player: bool, *args, **kwargs
+        self, x: float, y: float, y_velocity: float, hurts_player: bool, **_: object
     ) -> None:
-        super().__init__(x, y, *args, *kwargs)
+        super().__init__(x, y)
         self.y_velocity = y_velocity
         self.hurts_player = hurts_player
         self.collision_mask = aj.CollisionMask(0, 0, Bullet.width, Bullet.height)

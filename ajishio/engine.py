@@ -6,7 +6,8 @@ from typing import TYPE_CHECKING, cast
 from uuid import UUID
 from ajishio.input import input
 from ajishio.view import view
-from ajishio.types import GameLevel, IGameObject
+from ajishio.types import GameLevel
+from ajishio.game_object import GameObject
 from ajishio.rendering import Renderer
 import pygame as pg
 import sys
@@ -38,11 +39,11 @@ class Engine:
 
         self._clock: pg.time.Clock = pg.time.Clock()
         self._last_render_time: float = 0
-        self._game_objects: dict[UUID, IGameObject] = {}
-        self._game_objects_to_destroy: set[IGameObject] = set()
-        self._game_objects_to_add: list[IGameObject] = []
+        self._game_objects: dict[UUID, GameObject] = {}
+        self._game_objects_to_destroy: set[GameObject] = set()
+        self._game_objects_to_add: list[GameObject] = []
         self._game_running: bool = False
-        self._object_registry: dict[str, type[IGameObject]] = {}
+        self._object_registry: dict[str, type[GameObject]] = {}
 
         self._rooms: list[GameLevel] = []
         self._audio_playing: list[GameSound] = []
@@ -53,7 +54,7 @@ class Engine:
     def set_rooms(self, rooms: list[GameLevel]) -> None:
         self._rooms = rooms
 
-    def register_objects(self, *objects: type[IGameObject]) -> None:
+    def register_objects(self, *objects: type[GameObject]) -> None:
         for obj in objects:
             self._object_registry[obj.__name__] = obj
 
@@ -83,7 +84,7 @@ class Engine:
                                 f"{layer} object not found in registry. Make sure you "
                                 + f"have registered it with `aj.register_objects({layer})`"
                             )
-                        _ = cast(Callable[..., IGameObject], tile_cls)(
+                        _ = cast(Callable[..., GameObject], tile_cls)(
                             x * tile_size[0],
                             y * tile_size[1],
                             width=tile_size[0],
@@ -169,13 +170,13 @@ class Engine:
     def audio_is_playing(self, index: GameSound) -> bool:
         return index in self._audio_playing
 
-    def add_object(self, obj: IGameObject) -> None:
+    def add_object(self, obj: GameObject) -> None:
         self._game_objects_to_add.append(obj)
 
-    def instance_destroy(self, obj: IGameObject) -> None:
+    def instance_destroy(self, obj: GameObject) -> None:
         self._game_objects_to_destroy.add(obj)
 
-    def instance_count(self, obj: type[IGameObject]) -> int:
+    def instance_count(self, obj: type[GameObject]) -> int:
         count: int = 0
         all_objects = list(self._game_objects.values()) + self._game_objects_to_add
         for g_o in all_objects:
@@ -183,10 +184,10 @@ class Engine:
                 count += 1
         return count
 
-    def instance_exists(self, obj: type[IGameObject]) -> bool:
+    def instance_exists(self, obj: type[GameObject]) -> bool:
         return self.instance_count(obj) > 0
 
-    def instance_find(self, obj: type[IGameObject] | str, n: int = 0) -> IGameObject | None:
+    def instance_find(self, obj: type[GameObject] | str, n: int = 0) -> GameObject | None:
         all_objects = list(self._game_objects.values()) + self._game_objects_to_add
 
         if isinstance(obj, str):
@@ -262,10 +263,10 @@ class Engine:
         pg.quit()
         sys.exit()
 
-    def get_game_objects(self) -> Iterable[IGameObject]:
+    def get_game_objects(self) -> Iterable[GameObject]:
         return self._game_objects.values()
 
-    def get_game_object_by_id(self, id: UUID) -> IGameObject | None:
+    def get_game_object_by_id(self, id: UUID) -> GameObject | None:
         return self._game_objects.get(id)
 
     def _free_destroyed_objects(self) -> None:

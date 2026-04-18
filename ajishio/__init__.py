@@ -11,7 +11,7 @@ from ajishio.engine import Engine
 
 # --- Public class / type exports ---
 from ajishio.game_object import GameObject
-from ajishio.types import GameSprite, GameLevel, CollisionMask, IGameObject, Entity
+from ajishio.types import GameSprite, GameLevel, CollisionMask, IGameObject, Entity, CustomFields, GameObjectKwargs
 from ajishio.game_sound import GameSound
 
 # --- Input ---
@@ -148,14 +148,14 @@ if TYPE_CHECKING:
 __all__ = [
     # Classes / types
     "GameObject", "GameSprite", "GameLevel", "CollisionMask", "IGameObject", "Entity",
-    "GameSound", "Color", 
+    "CustomFields", "GameObjectKwargs", "GameSound", "Color",
     # Input
     "keyboard_check", "keyboard_check_pressed", "keyboard_check_released",
     "ord",
     "vk_left", "vk_right", "vk_up", "vk_down", "vk_space", "vk_escape", "vk_enter",
     # Utils
-    "lengthdir_x", "lengthdir_y", "clamp", "sign", "lerp",
-    "point_distance", "map_value", "room_set_caption",
+    "lengthdir_x", "lengthdir_y", "clamp", "sign", "lerp", "profile",
+    "point_distance", "map_value", "room_set_caption", "profile",
     # Colors
     "c_aqua", "c_black", "c_blue", "c_dkgray", "c_fuchsia", "c_gray",
     "c_green", "c_lime", "c_ltgray", "c_maroon", "c_navy", "c_olive",

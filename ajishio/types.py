@@ -5,6 +5,8 @@ from uuid import UUID
 from pygame import Surface
 from dataclasses import dataclass
 
+type CustomFields = dict[str, object]
+
 
 @dataclass
 class CollisionMask:
@@ -31,7 +33,16 @@ class Entity(TypedDict):
     height: int
     sprite_index: GameSprite | None
     collision_mask: CollisionMask | None
-    customFields: dict[str, object]
+    customFields: CustomFields
+
+
+class GameObjectKwargs(TypedDict, total=False):
+    sprite_index: GameSprite | None
+    collision_mask: CollisionMask | None
+    iid: str | None
+    width: float
+    height: float
+    customFields: CustomFields | None
 
 
 @dataclass
@@ -58,7 +69,7 @@ class IGameObject(ABC):
     iid: str | None
     width: float
     height: float
-    custom_fields: dict[str, object]
+    custom_fields: CustomFields
 
     @property
     def sprite_width(self) -> int: ...

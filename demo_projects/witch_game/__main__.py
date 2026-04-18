@@ -21,8 +21,8 @@ class WitchGirlAnims(enum.StrEnum):
     HURT = "hurt"
 
 class WitchGirl(aj.GameObject):
-    def __init__(self, x: float, y: float, *args, **kwargs):
-        super().__init__(x, y, *args, **kwargs)
+    def __init__(self, x: float, y: float, **_: object) -> None:
+        super().__init__(x, y)
         
         self.sprite_index = sprites[witch_girl_anims[WitchGirlAnims.IDLE].name]
 

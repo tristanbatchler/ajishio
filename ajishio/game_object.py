@@ -1,6 +1,6 @@
 from __future__ import annotations
-from typing import override
-from ajishio.types import GameSprite, CollisionMask, IGameObject, Entity
+from typing import Unpack, override
+from ajishio.types import CustomFields, GameSprite, CollisionMask, IGameObject, Entity, GameObjectKwargs
 from uuid import uuid4, UUID
 import ajishio._context as _ctx
 
@@ -14,30 +14,25 @@ class GameObject(IGameObject):
         self,
         x: float = 0,
         y: float = 0,
-        sprite_index: GameSprite | None = None,
-        collision_mask: CollisionMask | None = None,
-        iid: str | None = None,
-        width: float = 0,
-        height: float = 0,
-        customFields: dict[str, object] | None = None,
-        **_: object,
+        **kwargs: Unpack[GameObjectKwargs],
     ) -> None:
         self.id: UUID = uuid4()
         self.x: float = x
         self.y: float = y
-        self.sprite_index: GameSprite | None = sprite_index
+        self.sprite_index: GameSprite | None = kwargs.get('sprite_index')
         self.image_index: int = 0
         self.image_speed: float = 0
         self.image_xscale: float = 1.0
         self.image_yscale: float = 1.0
-        self.collision_mask: CollisionMask | None = collision_mask
+        self.collision_mask: CollisionMask | None = kwargs.get('collision_mask')
         self.depth: int = 0
         self._last_image_update: float = 0
 
-        self.iid: str | None = iid
-        self.width: float = width
-        self.height: float = height
-        self.custom_fields: dict[str, object] = customFields if customFields is not None else {}
+        self.iid: str | None = kwargs.get('iid')
+        self.width: float = kwargs.get('width') or 0
+        self.height: float = kwargs.get('height') or 0
+        custom_fields = kwargs.get('customFields')
+        self.custom_fields: CustomFields = custom_fields if custom_fields is not None else {}
 
         _ctx.engine.add_object(self)
 
@@ -84,7 +79,7 @@ class GameObject(IGameObject):
     @override
     def place_meeting(
         self, x: float, y: float, obj: IGameObject | type[IGameObject] | UUID
-    ) -> IGameObject | None:
+    ) -> GameObject | None:
         # Check cheapest cases first to avoid the expensive runtime Protocol
         # isinstance check that inspect.getattr_static triggers on IGameObject.
         if isinstance(obj, type):
@@ -99,8 +94,9 @@ class GameObject(IGameObject):
                 return None
             return self.place_meeting(x, y, game_obj)
 
-        # obj is a concrete game object instance
-        o: IGameObject = obj
+        # obj is a concrete game object instance; all stored objects are GameObjects
+        assert isinstance(obj, GameObject)
+        o = obj
         s_msk: CollisionMask | None = self.collision_mask
         o_msk: CollisionMask | None = o.collision_mask
 

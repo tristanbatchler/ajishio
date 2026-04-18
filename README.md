@@ -249,3 +249,7 @@ to stop the server when you are done.
 - [x] Load and play sounds
 - [x] Load and play music
 - [x] Support persistant objects
+- [x] Support easy profiling
+- [ ] Faster collision detection using spatial quadtree
+- [ ] Support loading levels with [Tiled](https://www.mapeditor.org/)
+- [ ] Add library mkdocs generation and docstrings for all exposed objects

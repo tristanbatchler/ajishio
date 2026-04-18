@@ -3,8 +3,8 @@ from pathlib import Path
 
 
 class MessageBox(aj.GameObject):
-    def __init__(self, message: str, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(self, message: str, x: float = 0, y: float = 0, **_: object) -> None:
+        super().__init__(x, y)
         self.message = message
         self.depth = -999
 
@@ -29,11 +29,11 @@ class MessageBox(aj.GameObject):
 
 
 class Player(aj.GameObject):
-    def __init__(self, radius: float, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(self, radius: float, x: float = 0, y: float = 0, **_: object) -> None:
+        super().__init__(x, y)
         self.radius = radius
         try:
-            self.sprite_index: aj.GameSprite = sprites["player"]
+            self.sprite_index: aj.GameSprite | None = sprites["player"]
         except KeyError:
             raise ValueError("Player sprite not found in sprites dictionary")
 
@@ -73,6 +73,8 @@ class Player(aj.GameObject):
         self.x, self.y = target_pos
 
     def draw(self) -> None:
+        if self.sprite_index is None:
+            return
         x_scale = level.grid_size / self.sprite_index.width
         y_scale = level.grid_size / self.sprite_index.height
         aj.draw_sprite(
@@ -104,8 +106,8 @@ class Wall(aj.GameObject):
 
 
 class Crate(Wall):
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(self, x: float = 0, y: float = 0, **_: object) -> None:
+        super().__init__(x, y)
         self.depth = -1  # Ensure crates are drawn on top of everything else
 
     def draw(self) -> None:
@@ -161,7 +163,7 @@ class Level:
 
     def _parse_levels_file(self) -> dict[int, list[str]]:
         """Parse the levels.txt file and return a dictionary of level data."""
-        levels = {}
+        levels: dict[int, list[str]] = {}
         current_level = 0
         current_lines: list[str] = []
 
@@ -245,6 +247,8 @@ class Level:
                     case "+":
                         self.goals[coord] = Goal(x=x, y=y)
                         player_pos = (x, y)
+                    case _:
+                        pass
 
                 if x + 1 > self.width:
                     self.width = x + 1

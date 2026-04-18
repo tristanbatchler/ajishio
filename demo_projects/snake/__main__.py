@@ -3,8 +3,8 @@ from random import choice, randrange
 
 
 class GridAlignedObject(aj.GameObject):
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(self, x: float = 0, y: float = 0, **_: object) -> None:
+        super().__init__(x, y)
 
         self.collision_mask = aj.CollisionMask(
             bbtop=0, bbleft=0, bbright=GRID_SIZE, bbbottom=GRID_SIZE
@@ -40,8 +40,8 @@ class GridAlignedObject(aj.GameObject):
 
 
 class Apple(GridAlignedObject):
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(self) -> None:
+        super().__init__()
         self.grid_x = randrange(0, NUM_COLS)
         self.grid_y = randrange(0, NUM_ROWS)
         self.update_position()
@@ -51,8 +51,8 @@ class Apple(GridAlignedObject):
 
 
 class SnakeHead(GridAlignedObject):
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(self) -> None:
+        super().__init__()
         self.grid_x: int = NUM_COLS // 2
         self.grid_y: int = NUM_ROWS // 2
 
@@ -111,8 +111,8 @@ class SnakeHead(GridAlignedObject):
 
 
 class SnakeTailSegment(GridAlignedObject):
-    def __init__(self, head: SnakeHead, index: int, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(self, head: SnakeHead, index: int) -> None:
+        super().__init__()
 
         self.head: SnakeHead = head
         self.index: int = index

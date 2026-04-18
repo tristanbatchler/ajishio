@@ -1,3 +1,4 @@
+from typing import Unpack, cast, override
 import ajishio as aj
 from pathlib import Path
 
@@ -8,24 +9,24 @@ coins_collected: set[str] = set()
 
 
 class Floor(aj.GameObject):
-    def __init__(self, x: float, y: float, *args, **kwargs) -> None:
-        super().__init__(x, y, *args, **kwargs)
-        self.collision_mask = aj.CollisionMask(
+    def __init__(self, x: float, y: float, **kwargs: Unpack[aj.GameObjectKwargs]) -> None:
+        super().__init__(x, y, **kwargs)
+        self.collision_mask: aj.CollisionMask | None = aj.CollisionMask(
             bbtop=0, bbleft=0, bbright=self.width, bbbottom=self.height
         )
 
 
 class Doorway(aj.GameObject):
-    def __init__(self, x: float, y: float, *args, **kwargs) -> None:
-        super().__init__(x, y, *args, **kwargs)
+    def __init__(self, x: float, y: float, **kwargs: Unpack[aj.GameObjectKwargs]) -> None:
+        super().__init__(x, y, **kwargs)
 
         to_room_raw = self.custom_fields.get("to_room", 0)
         self.to_room: int = int(to_room_raw) if isinstance(to_room_raw, (int, float)) else 0
 
-        to_doorway_raw = self.custom_fields.get("to_doorway")
+        to_doorway_raw = cast(aj.CustomFields | None, self.custom_fields.get("to_doorway"))
         self.to_doorway_iid: str | None
         if isinstance(to_doorway_raw, dict):
-            doorway_iid = to_doorway_raw.get("entityIid")
+            doorway_iid = cast(str | None, to_doorway_raw.get("entityIid"))
             self.to_doorway_iid = doorway_iid if isinstance(doorway_iid, str) else None
         else:
             self.to_doorway_iid = None
@@ -43,7 +44,7 @@ class Doorway(aj.GameObject):
         }[entrance_direction_str]
 
         # Modify the collision mask to be a single pixel wide in the direction of the entrance
-        self.collision_mask = aj.CollisionMask(
+        self.collision_mask: aj.CollisionMask | None = aj.CollisionMask(
             bbleft=(self.width - 1) if self.entrance_direction[0] == -1 else 0,
             bbtop=(self.height - 1) if self.entrance_direction[1] == -1 else 0,
             bbright=(1 if self.entrance_direction[0] == 1 else self.width),
@@ -52,13 +53,14 @@ class Doorway(aj.GameObject):
 
 
 class PhysicsObject(aj.GameObject):
-    def __init__(self, x: float, y: float, *args, **kwargs) -> None:
-        super().__init__(x, y, *args, **kwargs)
+    def __init__(self, x: float, y: float, **kwargs: Unpack[aj.GameObjectKwargs]) -> None:
+        super().__init__(x, y, **kwargs)
         self.x_velocity: float = 0
         self.y_velocity: float = 0
         self.gravity: float = 0.5
         self.max_fall_speed: float = 10
 
+    @override
     def step(self) -> None:
         super().step()
 
@@ -84,14 +86,14 @@ class PhysicsObject(aj.GameObject):
 class Player(PhysicsObject):
     persistent: bool = True
 
-    def __init__(self, x: float, y: float, *args, **kwargs) -> None:
-        super().__init__(x, y, *args, **kwargs)
-        self.sprite_index = sprites["player"]
-        self.image_speed = 10
+    def __init__(self, x: float, y: float, **kwargs: Unpack[aj.GameObjectKwargs]) -> None:
+        super().__init__(x, y, **kwargs)
+        self.sprite_index: aj.GameSprite | None = sprites.get("player")
+        self.image_speed: float = 10.0
         self.speed: float = 3.5
         self.score: int = 0
 
-        self.collision_mask = aj.CollisionMask(
+        self.collision_mask: aj.CollisionMask | None = aj.CollisionMask(
             bbtop=2,
             bbleft=5,
             bbright=self.sprite_width - 5,
@@ -101,13 +103,14 @@ class Player(PhysicsObject):
         self.jump_height: float = -9
         self.acceleration: float = 0.6
 
-        bg_music: aj.GameSound = sounds["8_bit_ice_cave_lofi"]
-        if not aj.audio_is_playing(bg_music):
-            aj.audio_play_sound(bg_music, loop=True)
+        bg_music: aj.GameSound | None = sounds.get("8_bit_ice_cave_lofi")
+        if bg_music is not None and not aj.audio_is_playing(bg_music):
+             aj.audio_play_sound(bg_music, loop=True)
 
         self.room_start_x: float = x
         self.room_start_y: float = y
 
+    @override
     def step(self) -> None:
         super().step()
         x_input: int = aj.keyboard_check(aj.vk_right) - aj.keyboard_check(aj.vk_left)
@@ -194,6 +197,7 @@ class Player(PhysicsObject):
         self.room_start_x = self.x
         self.room_start_y = self.y
 
+    @override
     def draw(self) -> None:
         super().draw()
         aj.draw_text(
@@ -207,13 +211,14 @@ class Player(PhysicsObject):
 class Camera(aj.GameObject):
     persistent: bool = True
 
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(self, x: float = 0, y: float = 0, **kwargs: Unpack[aj.GameObjectKwargs]) -> None:
+        super().__init__(x, y, **kwargs)
 
         # Set the display size
         aj.view_set_wport(aj.view_current, aj.room_width / 1.5)
         aj.view_set_hport(aj.view_current, aj.room_height / 1.5)
 
+    @override
     def step(self) -> None:
         player: aj.GameObject | None = aj.instance_find(Player)
         if player is None:
@@ -233,19 +238,20 @@ class Camera(aj.GameObject):
 
 
 class Enemy(PhysicsObject):
-    def __init__(self, x: float, y: float, *args, **kwargs) -> None:
-        super().__init__(x, y, *args, **kwargs)
-        self.sprite_index = sprites["enemy"]
+    def __init__(self, x: float, y: float, **kwargs: Unpack[aj.GameObjectKwargs]) -> None:
+        super().__init__(x, y, **kwargs)
+        self.sprite_index: aj.GameSprite | None = sprites["enemy"]
 
-        self.collision_mask = aj.CollisionMask(
+        self.collision_mask: aj.CollisionMask | None = aj.CollisionMask(
             bbtop=2,
             bbleft=2,
             bbright=self.sprite_width - 2,
             bbbottom=self.sprite_height,
         )
 
-        self.x_velocity = 1
+        self.x_velocity: float = 1
 
+    @override
     def step(self) -> None:
         super().step()
 
@@ -261,25 +267,26 @@ class Enemy(PhysicsObject):
 
 
 class Coin(aj.GameObject):
-    def __init__(self, x: float, y: float, *args, **kwargs) -> None:
-        super().__init__(x, y, *args, **kwargs)
+    def __init__(self, x: float, y: float, **kwargs: Unpack[aj.GameObjectKwargs]) -> None:
+        super().__init__(x, y, **kwargs)
 
         if self.iid in coins_collected:
             aj.instance_destroy(self)
             return
 
-        self.sprite_index = sprites["coin"]
+        self.sprite_index: aj.GameSprite | None = sprites["coin"]
 
         # Give generous collision mask to make it easier to collect
-        self.collision_mask = aj.CollisionMask(
+        self.collision_mask: aj.CollisionMask | None = aj.CollisionMask(
             bbtop=-5,
             bbleft=-5,
             bbright=self.sprite_width + 5,
             bbbottom=self.sprite_height + 5,
         )
 
-        self.image_speed = 15
+        self.image_speed: float = 15
 
+    @override
     def step(self) -> None:
         super().step()
         player_hit: aj.GameObject | None = self.place_meeting(self.x, self.y, Player)

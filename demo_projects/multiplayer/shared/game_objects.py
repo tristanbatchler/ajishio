@@ -1,24 +1,24 @@
-from typing import override
+from typing import Unpack, override
 import ajishio as aj
 from demo_projects.multiplayer.shared import sprites
 
 
 class PlayerSpawner(aj.GameObject):
-    def __init__(self, x: float, y: float, *args, **kwargs) -> None:
-        super().__init__(x, y, *args, **kwargs)
+    def __init__(self, x: float, y: float, **kwargs: Unpack[aj.GameObjectKwargs]) -> None:
+        super().__init__(x, y, **kwargs)
 
 
 class Floor(aj.GameObject):
-    def __init__(self, x: float, y: float, *args, **kwargs) -> None:
-        super().__init__(x, y, *args, **kwargs)
+    def __init__(self, x: float, y: float, **kwargs: Unpack[aj.GameObjectKwargs]) -> None:
+        super().__init__(x, y, **kwargs)
         self.collision_mask: aj.CollisionMask | None = aj.CollisionMask(
             bbtop=0, bbleft=0, bbright=self.width, bbbottom=self.height
         )
 
 
 class Player(aj.GameObject):
-    def __init__(self, x: float, y: float, *args, **kwargs) -> None:
-        super().__init__(x, y, *args, **kwargs)
+    def __init__(self, x: float, y: float, **kwargs: Unpack[aj.GameObjectKwargs]) -> None:
+        super().__init__(x, y, **kwargs)
         self.sprite_index: aj.GameSprite | None = sprites.get("player")
         self.image_speed: float = 10
         self.collision_mask: aj.CollisionMask | None = aj.CollisionMask(

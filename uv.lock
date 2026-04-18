@@ -4,7 +4,6 @@ requires-python = ">=3.14"
 
 [manifest]
 members = [
-    "ajishio",
     "ajishio-demo-projects",
     "ajishio-workspace",
 ]
@@ -23,7 +22,7 @@ requires-dist = [{ name = "pygame-ce" }]
 [[package]]
 name = "ajishio-demo-projects"
 version = "0.1.0"
-source = { editable = "demo_projects" }
+source = { virtual = "demo_projects" }
 dependencies = [
     { name = "ajishio" },
 ]
@@ -36,7 +35,7 @@ name = "ajishio-workspace"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
-    { name = "pygame-ce" },
+    { name = "ajishio" },
 ]
 
 [package.dev-dependencies]
@@ -45,7 +44,7 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "pygame-ce" }]
+requires-dist = [{ name = "ajishio", editable = "ajishio" }]
 
 [package.metadata.requires-dev]
 dev = [{ name = "snakeviz", specifier = ">=2.2.2" }]

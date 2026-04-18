@@ -4,21 +4,18 @@ version = "0.1.0"
 description = "Workspace for the Ajishio 2D game engine and demo projects."
 requires-python = ">=3.14"
 dependencies = [
-    "pygame-ce",
+    "ajishio",
 ]
-
-[tool.uv.sources]
-ajishio = { workspace = true }
-ajishio-demo-projects = { workspace = true }
 
 [tool.uv.workspace]
 members = [
-    "ajishio",
     "demo_projects",
 ]
+
+[tool.uv.sources]
+ajishio = { path = "./ajishio", editable = true }
 
 [dependency-groups]
 dev = [
     "snakeviz>=2.2.2",
 ]
-

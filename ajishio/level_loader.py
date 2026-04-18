@@ -1,30 +1,20 @@
-from collections.abc import Iterable
+from collections.abc import Sequence
 import csv
 import json
-from dataclasses import dataclass
 from pathlib import Path
 from typing import TypedDict, cast
 
 import pygame as pg
 
 from ajishio.utils import remove_ext
-from ajishio.types import Entity
+from ajishio.types import Entity, GameLevel
 
-type EntitiesByType = dict[type[Entity], Iterable[Entity]]
+type EntitiesByType = dict[str, Sequence[Entity]]
 
 class RawLevelInfo(TypedDict):
     width: int
     height: int
     layers: list[str]
-    entities: EntitiesByType
-
-
-@dataclass
-class GameLevel:
-    tilemaps: dict[str, list[list[bool]]]
-    tile_sizes: dict[str, tuple[int, int]]
-    background_surfaces: dict[str, pg.Surface]
-    level_size: tuple[int, int]
     entities: EntitiesByType
 
 

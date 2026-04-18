@@ -46,7 +46,7 @@ aj.game_start()
 To run the game, execute the following command from the root of the repository:
 
 ```bash
-uv run -m ajishio <your_project_directory>
+uv run -m <your_project_directory>
 ```
 
 To see more substantial examples, check out the [`demo_projects`](/demo_projects/) directory. You can
@@ -118,11 +118,14 @@ corresponding extensions to get real-time type checking and linting.
 
 ### Runtime globals and typing
 
-Many familiar GameMaker-style globals (for example `aj.room_width`, `aj.delta_time`, `aj.view_xport`) are
-dynamic state maintained by the engine singletons. They remain accessible as attributes on the `ajishio`
-package via `__getattr__`, so game code can keep using `aj.<name>` and always see live values. Callables
-and data classes are exported in `__all__` to aid completions, while the dynamic values are resolved at
-runtime to avoid freezing them at import time.
+All public API — functions, classes, constants, and live engine/view state — is available directly
+on the `ajishio` package via a single `import ajishio as aj`. Callables, data classes, and
+constants are module-level names resolved at import time. Live per-frame values such as
+`aj.room_width`, `aj.delta_time`, `aj.room_speed`, `aj.view_current`, `aj.window_width`, and
+`aj.room_background_color` are resolved dynamically via `__getattr__` so they always reflect the
+current engine state. View port dictionaries (`aj.view_xport`, `aj.view_yport`, `aj.view_wport`,
+`aj.view_hport`) are exported as direct references to the live mutable dicts on the `View`
+singleton, so reads and writes to them are always live.
 
 ## Loading Rooms
 
@@ -139,9 +142,8 @@ passing the path to the `simplified/` folder you copied as the argument. It will
 `aj.GameLevel` objects which you need to pass to the `aj.set_rooms` function.
 
 In order for the engine to instance your tiles and entities, you need to define classes for each of 
-them with the same name as it appears in LDtk. Tiles need to accept integer `tile_width` and 
-`tile_height` arguments in their constructor. To make the engine aware of these classes, you need to 
-inject them into the engine's namespace by calling the `aj.register_objects` function.
+them with the same name as it appears in LDtk. To make the engine aware of these classes, call
+`aj.register_objects` before `aj.game_start`:
 
 > Tip: It is recommended to save your LDtk project directly in your project directory, so that you 
 > can easily update the rooms without having to copy them over every time.
@@ -160,7 +162,7 @@ project.
 
 To load the sprite in your game, use the `aj.load_aseprite_sprites` function, passing the path to 
 the directory containing the `.png` and `.json` files as the argument. It will return a dictionary 
-of `aj.Sprite` objects which you can use to define the sprites of objects in your game.
+of `aj.GameSprite` objects which you can use to define the sprites of objects in your game.
 
 For example, to define a sprite for a player object, you can do the following:
 ```python

@@ -45,10 +45,8 @@ def load_font(font_path: Path | str, size: int) -> pg.font.Font:
 class Renderer:
     def __init__(self) -> None:
         self._screen: pg.Surface | None = None
-        self.set_screen_size(
-            view.view_wport[view.view_current], view.view_hport[view.view_current]
-        )
-        self.display: pg.Surface
+        self.set_screen_size(view.window_width, view.window_height)
+        self.fit_display()
         self._background_images: Iterable[pg.Surface] = []
 
         self.draw_color: pg.Color = pg.Color(255, 255, 255)
@@ -110,7 +108,7 @@ class Renderer:
             _ = pg.draw.rect(rect_surf, color, (0, 0, width, height), 1)
         else:
             _ = rect_surf.fill(color)
-            _ = self.display.blit(rect_surf, (x, y))
+        _ = self.display.blit(rect_surf, (x, y))
 
 
     def draw_line(self, x1: float, y1: float, x2: float, y2: float, color: pg.Color | None = None) -> None:

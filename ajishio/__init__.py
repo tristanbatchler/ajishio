@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from pygame import Color
+
 import ajishio._context as _ctx
 from ajishio.view import view
 from ajishio.rendering import Renderer
@@ -65,12 +67,18 @@ draw_set_font  = _renderer.draw_set_font
 text_width     = _renderer.text_width
 text_height    = _renderer.text_height
 
-# --- View: bound methods on the view singleton ---
-view_set_wport  = view.view_set_wport
-view_set_hport  = view.view_set_hport
-view_set_xport  = view.view_set_xport
-view_set_yport  = view.view_set_yport
-window_set_size = view.window_set_size
+# --- View: bound methods delegated through engine so the renderer stays in sync ---
+view_set_wport  = _engine.view_set_wport
+view_set_hport  = _engine.view_set_hport
+view_set_xport  = _engine.view_set_xport
+view_set_yport  = _engine.view_set_yport
+window_set_size = _engine.window_set_size
+
+# These are mutable dicts — exporting a reference is safe; mutations are shared.
+view_xport = view.view_xport
+view_yport = view.view_yport
+view_wport = view.view_wport
+view_hport = view.view_hport
 
 # --- Engine method delegates ---
 game_start          = _engine.game_start
@@ -95,24 +103,29 @@ audio_play_sound    = _engine.audio_play_sound
 audio_is_playing    = _engine.audio_is_playing
 
 # --- Live engine properties (change every frame) ---
+_LIVE_ENGINE_ATTRS = frozenset({
+    "room_width", "room_height", "room_speed",
+    "room_background_color", "delta_time", "fps_real", "room",
+})
+
+_LIVE_VIEW_ATTRS = frozenset({
+    "view_current", "window_width", "window_height",
+})
+
+
 def __getattr__(name: str) -> object:
-    match name:
-        case "room_width":
-            return _engine.room_width
-        case "room_height":
-            return _engine.room_height
-        case "room_speed":
-            return _engine.room_speed
-        case "room_background_color":
-            return _engine.room_background_color
-        case "delta_time":
-            return _engine.delta_time
-        case "fps_real":
-            return _engine.fps_real
-        case "room":
-            return _engine.room
-        case _:
+    if name in _LIVE_ENGINE_ATTRS:
+        try:
+            return getattr(_engine, name)  # type: ignore[return-value]
+        except AttributeError:
             raise AttributeError(f"module 'ajishio' has no attribute {name!r}")
+    if name in _LIVE_VIEW_ATTRS:
+        return getattr(view, name)  # type: ignore[return-value]
+    raise AttributeError(f"module 'ajishio' has no attribute {name!r}")
+
+
+def __dir__() -> list[str]:
+    return list(__all__)
 
 
 if TYPE_CHECKING:
@@ -126,11 +139,15 @@ if TYPE_CHECKING:
     fps_real: float
     room: int
 
+    view_current: int
+    window_width: int
+    window_height: int
+
 
 __all__ = [
     # Classes / types
     "GameObject", "GameSprite", "GameLevel", "CollisionMask", "IGameObject", "Entity",
-    "GameSound",
+    "GameSound", "Color", 
     # Input
     "keyboard_check", "keyboard_check_pressed", "keyboard_check_released",
     "ord",
@@ -149,6 +166,7 @@ __all__ = [
     # View
     "view_set_wport", "view_set_hport", "view_set_xport", "view_set_yport",
     "window_set_size",
+    "view_xport", "view_yport", "view_wport", "view_hport",
     # Loaders
     "load_aseprite_sprites", "load_aseprite_sprite", "sprite_set_offset",
     "load_sounds", "load_sound", "load_ldtk_levels",
@@ -162,4 +180,5 @@ __all__ = [
     # Live properties (resolved via __getattr__)
     "room_width", "room_height", "room_speed", "room_background_color",
     "delta_time", "fps_real", "room",
+    "view_current", "window_width", "window_height",
 ]

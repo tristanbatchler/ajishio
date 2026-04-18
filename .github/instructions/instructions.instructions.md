@@ -18,7 +18,20 @@ I am using `uv` as my build system and workspace manager. Ensure that each packa
 
 NEVER use relative imports as they are prone to creating circular dependencies. Always use absolute imports from the project root, which will be run as a module thanks to `uv run -m` and the `__main__.py` file in the application root.
 
-NEVER write substantial application logic in `__init__.py` files. These files should only be used for package initialization, such as setting up logging or importing submodules to expose them at the package level. Any significant code should reside in other modules within the package.
+NEVER write substantial application logic in `__init__.py` files. The `ajishio/__init__.py` is a deliberate exception: it is the public API facade responsible for singleton creation, init ordering, and namespace flattening — this is package bootstrapping, not application logic. Any game/application logic should reside in other modules.
+
+To break circular imports between interdependent modules (e.g. engine ↔ game objects), use a thin `_context.py` module as a lazy singleton holder. Internal modules import `_context` at module level and access `_ctx.engine` at method-call time rather than import time, so the attribute is resolved after all modules finish loading. Example:
+```python
+# ajishio/_context.py
+from __future__ import annotations
+from typing import TYPE_CHECKING, cast
+if TYPE_CHECKING:
+    from ajishio.engine import Engine
+engine: Engine = cast("Engine", cast(object, None))
+```
+Then in game object modules: `import ajishio._context as _ctx` and access `_ctx.engine` inside methods.
+
+All public engine/view API is exposed on the `ajishio` package itself. Game code should use a single `import ajishio as aj` and access everything via `aj.<name>`. Do not import submodules directly in game code.
 
 Make use of `dataclasses` whenever you need simple data containers. They reduce boilerplate code and improve readability. Also make good use of the `abc` module to define abstract base classes for shared interfaces and common functionality.
 

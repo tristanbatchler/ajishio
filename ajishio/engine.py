@@ -41,7 +41,7 @@ class Engine:
         self._game_objects: dict[UUID, IGameObject] = {}
         self._game_objects_to_destroy: set[IGameObject] = set()
         self._game_objects_to_add: list[IGameObject] = []
-        self._game_running: bool
+        self._game_running: bool = False
         self._object_registry: dict[str, type[IGameObject]] = {}
 
         self._rooms: list[GameLevel] = []
@@ -131,11 +131,29 @@ class Engine:
         if speed != 0:
             self.delta_time = 1 / self.room_speed  # seconds
 
+    def window_set_size(self, w: int, h: int) -> None:
+        view.window_set_size(w, h)
+        self.renderer.set_screen_size(w, h)
+        # viewport was also synced to window by view.window_set_size, so re-create surface
+        self.renderer.fit_display()
+
+    def view_set_wport(self, view_idx: int, w: float) -> None:
+        view.view_set_wport(view_idx, w)
+        self.renderer.fit_display()
+
+    def view_set_hport(self, view_idx: int, h: float) -> None:
+        view.view_set_hport(view_idx, h)
+        self.renderer.fit_display()
+
+    def view_set_xport(self, view_idx: int, x: float) -> None:
+        view.view_set_xport(view_idx, x)
+
+    def view_set_yport(self, view_idx: int, y: float) -> None:
+        view.view_set_yport(view_idx, y)
+
     def room_set_size(self, w: float, h: float) -> None:
         self.room_width = w
         self.room_height = h
-        self.renderer.set_screen_size(view.window_width, view.window_height)
-        self.renderer.fit_display()
 
     def room_set_width(self, w: int) -> None:
         self.room_set_size(w, self.room_height)
@@ -235,9 +253,10 @@ class Engine:
                     pg.display.update()
                     self.renderer.draw_display()
 
-                for audio in self._audio_playing:
-                    if audio.is_finished(self.delta_time):
-                        self._audio_playing.remove(audio)
+                self._audio_playing = [
+                    audio for audio in self._audio_playing
+                    if not audio.is_finished(self.delta_time)
+                ]
 
             except KeyboardInterrupt:
                 self._game_running = False

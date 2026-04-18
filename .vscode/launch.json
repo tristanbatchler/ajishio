@@ -69,6 +69,12 @@
             "type": "debugpy",
             "request": "launch",
             "module": "demo_projects.witch_game"
+        },
+        {
+            "name": "Tetris",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "demo_projects.tetris"
         }
     ]
 }

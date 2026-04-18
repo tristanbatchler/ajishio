@@ -24,7 +24,12 @@ class Player(aj.GameObject):
         self.x += x_input * self.speed
 
         if aj.keyboard_check_released(aj.vk_space):
-            Bullet(self.x + Player.width / 2, self.y, -self.bullet_speed, hurts_player=False)
+            Bullet(
+                self.x + Player.width / 2,
+                self.y,
+                -self.bullet_speed,
+                hurts_player=False,
+            )
 
         if self.lives <= 0:
             aj.instance_destroy(self)
@@ -54,7 +59,10 @@ class Player(aj.GameObject):
             alpha=0.5,
         )
         aj.draw_text(
-            aj.room_width - aj.text_width(lives_caption) - 10, 10, lives_caption, aj.c_white
+            aj.room_width - aj.text_width(lives_caption) - 10,
+            10,
+            lives_caption,
+            aj.c_white,
         )
 
 
@@ -77,7 +85,10 @@ class Enemy(aj.GameObject):
 
         if random.random() < 0.0005:
             Bullet(
-                self.x, self.y + Enemy.width / 2.0, y_velocity=self.bullet_speed, hurts_player=True
+                self.x,
+                self.y + Enemy.width / 2.0,
+                y_velocity=self.bullet_speed,
+                hurts_player=True,
             )
 
         if player := self.place_meeting(self.x, self.y, Player):
@@ -110,7 +121,9 @@ class Bullet(aj.GameObject):
             assert isinstance(player, Player)
             player.lives -= 1
 
-        elif not self.hurts_player and (enemy := self.place_meeting(self.x, self.y, Enemy)):
+        elif not self.hurts_player and (
+            enemy := self.place_meeting(self.x, self.y, Enemy)
+        ):
             aj.instance_destroy(self)
             aj.instance_destroy(enemy)
             if not aj.instance_exists(Enemy):
@@ -125,7 +138,9 @@ class Bullet(aj.GameObject):
 def spawn_wave(difficulty: int) -> None:
     speed = 2 ** (difficulty / 5.0)  # Gets exponentially harder each wave
     for row in range(3):
-        for enemy_x in range(PADDING, int(aj.room_width) - PADDING, round(1.5 * Enemy.width)):
+        for enemy_x in range(
+            PADDING, int(aj.room_width) - PADDING, round(1.5 * Enemy.width)
+        ):
             Enemy(enemy_x, PADDING + Enemy.height * row * 1.5, x_velocity=speed)
 
 

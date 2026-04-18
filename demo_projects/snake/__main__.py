@@ -61,7 +61,9 @@ class SnakeHead(GridAlignedObject):
         self.x_velocity: int = choice((-1, 0, 1))
         self.y_velocity: int = choice((-1, 1)) * (1 - abs(self.x_velocity))
 
-        self.tail_segments: list[SnakeTailSegment] = [SnakeTailSegment(self, i) for i in range(3)]
+        self.tail_segments: list[SnakeTailSegment] = [
+            SnakeTailSegment(self, i) for i in range(3)
+        ]
 
     def step(self) -> None:
         super().step()

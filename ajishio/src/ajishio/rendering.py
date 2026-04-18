@@ -7,25 +7,26 @@ from ajishio.view import view
 from ajishio.types import GameSprite
 
 
-c_aqua= Color(0, 255, 255)
-c_black= Color(0, 0, 0)
-c_blue= Color(0, 0, 255)
-c_dkgray= Color(64, 64, 64)
-c_fuchsia= Color(255, 0, 255)
-c_gray= Color(128, 128, 128)
-c_green= Color(0, 128, 0)
-c_lime= Color(0, 255, 0)
-c_ltgray= Color(192, 192, 192)
-c_maroon= Color(128, 0, 0)
-c_navy= Color(0, 0, 128)
-c_olive= Color(128, 128, 0)
-c_orange= Color(255, 160, 64)
-c_purple= Color(128, 0, 128)
-c_red= Color(255, 0, 0)
-c_silver= Color(192, 192, 192)
-c_teal= Color(0, 128, 128)
-c_white= Color(255, 255, 255)
-c_yellow= Color(255, 255, 0)
+c_aqua = Color(0, 255, 255)
+c_black = Color(0, 0, 0)
+c_blue = Color(0, 0, 255)
+c_dkgray = Color(64, 64, 64)
+c_fuchsia = Color(255, 0, 255)
+c_gray = Color(128, 128, 128)
+c_green = Color(0, 128, 0)
+c_lime = Color(0, 255, 0)
+c_ltgray = Color(192, 192, 192)
+c_maroon = Color(128, 0, 0)
+c_navy = Color(0, 0, 128)
+c_olive = Color(128, 128, 0)
+c_orange = Color(255, 160, 64)
+c_purple = Color(128, 0, 128)
+c_red = Color(255, 0, 0)
+c_silver = Color(192, 192, 192)
+c_teal = Color(0, 128, 128)
+c_white = Color(255, 255, 255)
+c_yellow = Color(255, 255, 0)
+
 
 def _translate_offset(x: float, y: float) -> tuple[float, float]:
     return (x + view.offset[0], y + view.offset[1])
@@ -59,7 +60,9 @@ class Renderer:
     def draw_display(self) -> None:
         if self._screen is None:
             return
-        scaled_display: pg.Surface = pg.transform.scale(self.display, self._screen.get_size())
+        scaled_display: pg.Surface = pg.transform.scale(
+            self.display, self._screen.get_size()
+        )
         _ = self._screen.blit(scaled_display, (0, 0))
 
     def fit_display(self) -> None:
@@ -78,9 +81,9 @@ class Renderer:
         for bg in self._background_images:
             _ = self.display.blit(bg, view.offset)
 
-
-
-    def draw_circle(self, x: float, y: float, radius: float, color: pg.Color | None = None) -> None:
+    def draw_circle(
+        self, x: float, y: float, radius: float, color: pg.Color | None = None
+    ) -> None:
         x, y = _translate_offset(x, y)
         _ = pg.draw.circle(
             self.display,
@@ -88,7 +91,6 @@ class Renderer:
             (x, y),
             radius,
         )
-
 
     def draw_rectangle(
         self,
@@ -110,8 +112,9 @@ class Renderer:
             _ = rect_surf.fill(color)
         _ = self.display.blit(rect_surf, (x, y))
 
-
-    def draw_line(self, x1: float, y1: float, x2: float, y2: float, color: pg.Color | None = None) -> None:
+    def draw_line(
+        self, x1: float, y1: float, x2: float, y2: float, color: pg.Color | None = None
+    ) -> None:
         x1, y1 = _translate_offset(x1, y1)
         x2, y2 = _translate_offset(x2, y2)
         _ = pg.draw.line(
@@ -121,25 +124,23 @@ class Renderer:
             (x2, y2),
         )
 
-
-    def draw_text(self, x: float, y: float, string: str, color: pg.Color | None = None) -> None:
+    def draw_text(
+        self, x: float, y: float, string: str, color: pg.Color | None = None
+    ) -> None:
         x, y = _translate_offset(x, y)
         surface = self._render_text_with_fallback(
             string, self.draw_color if color is None else color
         )
         _ = self.display.blit(surface, (x, y))
 
-
     def text_width(self, string: str) -> int:
         return self._render_text_with_fallback(string, self.draw_color).get_width()
-
 
     def text_height(self, string: str) -> int:
         return self._render_text_with_fallback(string, self.draw_color).get_height()
 
-
     def draw_sprite(
-        self, 
+        self,
         x: float,
         y: float,
         sprite_index: GameSprite,
@@ -156,8 +157,16 @@ class Renderer:
         scale_x_abs: float = abs(x_scale)
         scale_y_abs: float = abs(y_scale)
 
-        offset_x: float = sprite_index.x_offset if x_scale >= 0 else sprite_index.width - sprite_index.x_offset
-        offset_y: float = sprite_index.y_offset if y_scale >= 0 else sprite_index.height - sprite_index.y_offset
+        offset_x: float = (
+            sprite_index.x_offset
+            if x_scale >= 0
+            else sprite_index.width - sprite_index.x_offset
+        )
+        offset_y: float = (
+            sprite_index.y_offset
+            if y_scale >= 0
+            else sprite_index.height - sprite_index.y_offset
+        )
 
         draw_x: float = x - offset_x * scale_x_abs
         draw_y: float = y - offset_y * scale_y_abs
@@ -166,10 +175,14 @@ class Renderer:
         image = sprite_index.images[image_index]
         if rotation != 0.0:
             image = pg.transform.rotate(image, rotation)
-            
+
         if x_scale != 1.0 or y_scale != 1.0:
             image = pg.transform.scale(
-                image, (int(image.get_width() * scale_x_abs), int(image.get_height() * scale_y_abs))
+                image,
+                (
+                    int(image.get_width() * scale_x_abs),
+                    int(image.get_height() * scale_y_abs),
+                ),
             )
             image = pg.transform.flip(image, x_scale < 0, y_scale < 0)
         image.set_alpha(int(alpha * 255))
@@ -177,25 +190,23 @@ class Renderer:
             _ = image.fill(color, special_flags=pg.BLEND_MULT)
         _ = self.display.blit(image, (draw_x, draw_y))
 
-
-
-
-
-    def draw_set_font(self, font: pg.font.Font, fallbacks: Iterable[pg.font.Font] | None = None) -> None:
+    def draw_set_font(
+        self, font: pg.font.Font, fallbacks: Iterable[pg.font.Font] | None = None
+    ) -> None:
         self.draw_font = font
         self.draw_font_fallbacks = [] if fallbacks is None else fallbacks
-
 
     def _pick_font_for_char(self, char: str) -> pg.font.Font:
         for font in [self.draw_font, *self.draw_font_fallbacks]:
             glyph_surface = font.render(char, True, self.draw_color)
             tofu_surface = font.render("□", True, self.draw_color)
             if glyph_surface.get_size() == tofu_surface.get_size():
-                if pg.image.tobytes(glyph_surface, "RGBA") == pg.image.tobytes(tofu_surface, "RGBA"):
+                if pg.image.tobytes(glyph_surface, "RGBA") == pg.image.tobytes(
+                    tofu_surface, "RGBA"
+                ):
                     continue
             return font
         return self.draw_font
-
 
     def _render_text_with_fallback(self, string: str, color: pg.Color) -> pg.Surface:
         if not string:
@@ -216,5 +227,3 @@ class Renderer:
         for glyph_surface, gx in glyphs:
             _ = rendered.blit(glyph_surface, (gx, max_h - glyph_surface.get_height()))
         return rendered
-
-

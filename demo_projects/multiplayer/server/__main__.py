@@ -13,7 +13,9 @@ import demo_projects.multiplayer.shared as shared
 import demo_projects.multiplayer.shared.game_objects as go
 
 
-def send_packet(packet: pck.Packet, socket: socket.socket, address: tuple[str, int]) -> None:
+def send_packet(
+    packet: pck.Packet, socket: socket.socket, address: tuple[str, int]
+) -> None:
     _ = socket.sendto(packet.pack(), address)
 
 
@@ -88,7 +90,9 @@ class GameServer(aj.GameObject):
         for player_id, ns in self.players_netstates.copy().items():
             if ns.requested_position_sync_timer >= 5:
                 print("Player", ns.obj, "is not responding to sync requests!")
-                self.handle_player_disconnect_packet(pck.PlayerDisconnectPacket(player_id))
+                self.handle_player_disconnect_packet(
+                    pck.PlayerDisconnectPacket(player_id)
+                )
                 continue
 
             ns.requested_position_sync_timer += 1
@@ -115,7 +119,9 @@ class GameServer(aj.GameObject):
         print("Connection from: ", address[0], ":", address[1])
 
         num_player_spawners = aj.instance_count(go.PlayerSpawner)
-        player_spawner = aj.instance_find(go.PlayerSpawner, randrange(num_player_spawners))
+        player_spawner = aj.instance_find(
+            go.PlayerSpawner, randrange(num_player_spawners)
+        )
         assert player_spawner is not None
 
         player = go.Player(player_spawner.x, player_spawner.y)
@@ -155,7 +161,9 @@ class GameServer(aj.GameObject):
         player.obj.jump()
         self.broadcast(packet, exclude=packet.player_id)
 
-    def handle_player_disconnect_packet(self, packet: pck.PlayerDisconnectPacket) -> None:
+    def handle_player_disconnect_packet(
+        self, packet: pck.PlayerDisconnectPacket
+    ) -> None:
         self.broadcast(packet)
         player_disconnecting: PlayerNetstate | None = self.players_netstates.pop(
             packet.player_id, None
@@ -163,7 +171,9 @@ class GameServer(aj.GameObject):
         if player_disconnecting is not None:
             aj.instance_destroy(player_disconnecting.obj)
 
-    def handle_position_sync_response_packet(self, packet: pck.PositionSyncResponsePacket) -> None:
+    def handle_position_sync_response_packet(
+        self, packet: pck.PositionSyncResponsePacket
+    ) -> None:
         print("Received position sync response from", packet.player_id)
         player = self.players_netstates[packet.player_id]
         distance = aj.point_distance(player.obj.x, player.obj.y, packet.x, packet.y)

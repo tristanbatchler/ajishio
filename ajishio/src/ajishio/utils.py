@@ -30,6 +30,7 @@ def profile(fn: Callable[_P, _R]) -> Callable[_P, _R]:
         if __name__ == "__main__":
             main()
     """
+
     @wraps(fn)
     def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> _R:
         if "--profile" not in sys.argv:
@@ -37,7 +38,9 @@ def profile(fn: Callable[_P, _R]) -> Callable[_P, _R]:
 
         # Derive a friendly name from the owning module's file path.
         module_file = inspect.getfile(fn)
-        stem = Path(module_file).parent.name  # e.g. "platformer" from .../platformer/__main__.py
+        stem = Path(
+            module_file
+        ).parent.name  # e.g. "platformer" from .../platformer/__main__.py
         output_path = Path.cwd() / f"{stem}.prof"
 
         profiler = cProfile.Profile()
@@ -74,7 +77,9 @@ def clamp(value: float, min: float, max: float) -> float:
     return min if value < min else max if value > max else value
 
 
-def map_value(value: float, min: float, max: float, new_min: float, new_max: float) -> float:
+def map_value(
+    value: float, min: float, max: float, new_min: float, new_max: float
+) -> float:
     return (value - min) / (max - min) * (new_max - new_min) + new_min
 
 

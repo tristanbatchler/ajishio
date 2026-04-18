@@ -4,7 +4,12 @@ import logging
 from dataclasses import dataclass
 
 import ajishio as aj
-from demo_projects.visual_novel.ui.primitives import PanelStyle, draw_panel, draw_text_block, wrap_text
+from demo_projects.visual_novel.ui.primitives import (
+    PanelStyle,
+    draw_panel,
+    draw_text_block,
+    wrap_text,
+)
 
 _logger = logging.getLogger(__name__)
 
@@ -50,7 +55,9 @@ class DialogueBox(aj.GameObject):
             self.finished = True
 
     def advance_requested(self) -> bool:
-        return aj.keyboard_check_pressed(aj.vk_space) or aj.keyboard_check_pressed(aj.vk_enter)
+        return aj.keyboard_check_pressed(aj.vk_space) or aj.keyboard_check_pressed(
+            aj.vk_enter
+        )
 
     def reveal_all(self) -> None:
         total_length = self._total_chars()
@@ -83,7 +90,12 @@ class DialogueBox(aj.GameObject):
             take = min(len(line), remaining)
             rendered_lines.append(line[:take])
             remaining -= take
-        draw_text_block(rendered_lines, x + self.style.padding, y + self.style.padding, self.line_height)
+        draw_text_block(
+            rendered_lines,
+            x + self.style.padding,
+            y + self.style.padding,
+            self.line_height,
+        )
 
         if self.finished:
             prompt = "(Space/Enter to continue)"

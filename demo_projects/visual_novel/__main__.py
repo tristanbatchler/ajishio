@@ -43,20 +43,30 @@ def build_script() -> list[ScriptStep]:
     def resolve_outcome() -> list[ScriptStep]:
         if suspicion >= 2:
             return [
-                SayStep("Narrator", "Alarms strobe red. Security seals every exit. Mission blown."),
+                SayStep(
+                    "Narrator",
+                    "Alarms strobe red. Security seals every exit. Mission blown.",
+                ),
             ]
         if suspicion == 1:
             return [
-                SayStep("Narrator", "You slip through, but a patrol tags your ID. The clock starts ticking."),
+                SayStep(
+                    "Narrator",
+                    "You slip through, but a patrol tags your ID. The clock starts ticking.",
+                ),
             ]
         return [
-            SayStep("Narrator", "No eyes on you. The vault door hums open—clean entry."),
+            SayStep(
+                "Narrator", "No eyes on you. The vault door hums open—clean entry."
+            ),
         ]
 
     def over_explain() -> list[ScriptStep]:
         add_suspicion(1)
         return [
-            SayStep("You", "Absolutely, sir. The superintendent requested a dawn audit."),
+            SayStep(
+                "You", "Absolutely, sir. The superintendent requested a dawn audit."
+            ),
             SayStep("Guard", "Funny. That audit never hit my roster."),
             WaitStep(0.6),
         ] + resolve_outcome()
@@ -75,7 +85,9 @@ def build_script() -> list[ScriptStep]:
             ChoiceStep(
                 "The guard squints at the laminate.",
                 [
-                    ChoiceOption("Over-explain the maintenance order", callback=over_explain),
+                    ChoiceOption(
+                        "Over-explain the maintenance order", callback=over_explain
+                    ),
                     ChoiceOption("Keep it short and confident", callback=short_answer),
                 ],
             ),
@@ -83,13 +95,19 @@ def build_script() -> list[ScriptStep]:
 
     def tunnel_entry() -> list[ScriptStep]:
         return [
-            SayStep("Narrator", "You pry open a rusted service hatch and crawl through cables."),
+            SayStep(
+                "Narrator",
+                "You pry open a rusted service hatch and crawl through cables.",
+            ),
             WaitStep(0.5),
         ] + resolve_outcome()
 
     def alarm_entry() -> list[ScriptStep]:
         return [
-            SayStep("Narrator", "You trigger a silent fire alarm. Staff scatter; cameras reroute."),
+            SayStep(
+                "Narrator",
+                "You trigger a silent fire alarm. Staff scatter; cameras reroute.",
+            ),
             WaitStep(0.5),
         ] + resolve_outcome()
 
@@ -100,7 +118,9 @@ def build_script() -> list[ScriptStep]:
         ChoiceStep(
             "How do you get inside?",
             [
-                ChoiceOption("Flash a forged badge at the front desk", callback=badge_entry),
+                ChoiceOption(
+                    "Flash a forged badge at the front desk", callback=badge_entry
+                ),
                 ChoiceOption("Crawl through a service tunnel", callback=tunnel_entry),
                 ChoiceOption("Trigger a fire alarm distraction", callback=alarm_entry),
             ],

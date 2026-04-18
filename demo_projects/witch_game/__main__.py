@@ -5,12 +5,12 @@ from pathlib import Path
 import enum
 
 
-
 @dataclass
 class Animation:
     name: str
     x_offset: int
     y_offset: int
+
 
 class WitchGirlAnims(enum.StrEnum):
     IDLE = "idle"
@@ -20,10 +20,11 @@ class WitchGirlAnims(enum.StrEnum):
     DIE = "die"
     HURT = "hurt"
 
+
 class WitchGirl(aj.GameObject):
     def __init__(self, x: float, y: float, **_: object) -> None:
         super().__init__(x, y)
-        
+
         self.sprite_index = sprites[witch_girl_anims[WitchGirlAnims.IDLE].name]
 
         self.image_speed = 10
@@ -51,8 +52,6 @@ class WitchGirl(aj.GameObject):
             self.sprite_index = sprites[witch_girl_anims[WitchGirlAnims.HURT].name]
         elif aj.keyboard_check(ord("4")):
             self.sprite_index = sprites[witch_girl_anims[WitchGirlAnims.DIE].name]
-        
-        
 
 
 project_dir: Path = Path(__file__).parent
@@ -62,12 +61,24 @@ sprites = aj.load_aseprite_sprites(project_dir / "sprites")
 SPRITE_X_OFFSET = 26
 SPRITE_Y_OFFSET = 41
 witch_girl_anims = {
-    WitchGirlAnims.IDLE: Animation("idle", x_offset=SPRITE_X_OFFSET, y_offset=SPRITE_Y_OFFSET),
-    WitchGirlAnims.RUN: Animation("run", x_offset=SPRITE_X_OFFSET, y_offset=SPRITE_Y_OFFSET),
-    WitchGirlAnims.CHARGE: Animation("charge", x_offset=SPRITE_X_OFFSET, y_offset=SPRITE_Y_OFFSET),
-    WitchGirlAnims.ATTACK: Animation("attack", x_offset=SPRITE_X_OFFSET, y_offset=SPRITE_Y_OFFSET),
-    WitchGirlAnims.DIE: Animation("die", x_offset=SPRITE_X_OFFSET, y_offset=SPRITE_Y_OFFSET),
-    WitchGirlAnims.HURT: Animation("hurt", x_offset=SPRITE_X_OFFSET, y_offset=SPRITE_Y_OFFSET),
+    WitchGirlAnims.IDLE: Animation(
+        "idle", x_offset=SPRITE_X_OFFSET, y_offset=SPRITE_Y_OFFSET
+    ),
+    WitchGirlAnims.RUN: Animation(
+        "run", x_offset=SPRITE_X_OFFSET, y_offset=SPRITE_Y_OFFSET
+    ),
+    WitchGirlAnims.CHARGE: Animation(
+        "charge", x_offset=SPRITE_X_OFFSET, y_offset=SPRITE_Y_OFFSET
+    ),
+    WitchGirlAnims.ATTACK: Animation(
+        "attack", x_offset=SPRITE_X_OFFSET, y_offset=SPRITE_Y_OFFSET
+    ),
+    WitchGirlAnims.DIE: Animation(
+        "die", x_offset=SPRITE_X_OFFSET, y_offset=SPRITE_Y_OFFSET
+    ),
+    WitchGirlAnims.HURT: Animation(
+        "hurt", x_offset=SPRITE_X_OFFSET, y_offset=SPRITE_Y_OFFSET
+    ),
 }
 
 for anim in witch_girl_anims.values():

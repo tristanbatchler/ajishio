@@ -6,7 +6,9 @@ GRID_SIZE = 32
 
 
 class Wall(aj.GameObject):
-    def __init__(self, x: float, y: float, **kwargs: Unpack[aj.GameObjectKwargs]) -> None:
+    def __init__(
+        self, x: float, y: float, **kwargs: Unpack[aj.GameObjectKwargs]
+    ) -> None:
         super().__init__(x, y, **kwargs)
         self.collision_mask = aj.CollisionMask(
             bbleft=0, bbtop=0, bbright=self.width, bbbottom=self.height
@@ -14,7 +16,9 @@ class Wall(aj.GameObject):
 
 
 class Doorway(aj.GameObject):
-    def __init__(self, x: float, y: float, **kwargs: Unpack[aj.GameObjectKwargs]) -> None:
+    def __init__(
+        self, x: float, y: float, **kwargs: Unpack[aj.GameObjectKwargs]
+    ) -> None:
         super().__init__(x, y, **kwargs)
         if GRID_SIZE not in (self.width, self.height):
             raise ValueError("Doorway must be a single tile in width or height")
@@ -24,12 +28,18 @@ class Doorway(aj.GameObject):
         )
 
         to_room_raw = self.custom_fields.get("to_room", 0)
-        self.to_room: int = int(to_room_raw) if isinstance(to_room_raw, (int, float)) else 0
+        self.to_room: int = (
+            int(to_room_raw) if isinstance(to_room_raw, (int, float)) else 0
+        )
 
-        to_doorway_raw = cast(aj.CustomFields | None, self.custom_fields.get("to_doorway"))
+        to_doorway_raw = cast(
+            aj.CustomFields | None, self.custom_fields.get("to_doorway")
+        )
         if isinstance(to_doorway_raw, dict):
             doorway_iid = cast(str | None, to_doorway_raw.get("entityIid"))
-            self.to_doorway_iid: str | None = doorway_iid if isinstance(doorway_iid, str) else None
+            self.to_doorway_iid: str | None = (
+                doorway_iid if isinstance(doorway_iid, str) else None
+            )
         else:
             self.to_doorway_iid = None
 
@@ -37,7 +47,9 @@ class Doorway(aj.GameObject):
 class Player(aj.GameObject):
     persistent: bool = True
 
-    def __init__(self, x: float, y: float, **kwargs: Unpack[aj.GameObjectKwargs]) -> None:
+    def __init__(
+        self, x: float, y: float, **kwargs: Unpack[aj.GameObjectKwargs]
+    ) -> None:
         super().__init__(x, y, **kwargs)
         self.sprite_index = sprites["player"]
         self.grid_x: int = int(x / GRID_SIZE)
@@ -60,17 +72,23 @@ class Player(aj.GameObject):
         if doorway_hit and isinstance(doorway_hit, Doorway):
             aj.room_goto(doorway_hit.to_room)
             if doorway_hit.to_doorway_iid:
-                to_doorway: aj.GameObject | None = aj.instance_find(doorway_hit.to_doorway_iid)
+                to_doorway: aj.GameObject | None = aj.instance_find(
+                    doorway_hit.to_doorway_iid
+                )
                 if to_doorway and isinstance(to_doorway, Doorway):
                     to_door_grid_x = int(to_doorway.x / GRID_SIZE)
                     to_door_grid_y = int(to_doorway.y / GRID_SIZE)
 
-                    percentage_to_door_right = (self.x - doorway_hit.x) / doorway_hit.width
+                    percentage_to_door_right = (
+                        self.x - doorway_hit.x
+                    ) / doorway_hit.width
                     tiles_to_door_right = int(
                         to_doorway.width / GRID_SIZE * percentage_to_door_right
                     )
 
-                    percentage_to_door_down = (self.y - doorway_hit.y) / doorway_hit.height
+                    percentage_to_door_down = (
+                        self.y - doorway_hit.y
+                    ) / doorway_hit.height
                     tiles_to_door_down = int(
                         to_doorway.height / GRID_SIZE * percentage_to_door_down
                     )
@@ -78,7 +96,9 @@ class Player(aj.GameObject):
                     self.target_grid_x = (
                         to_door_grid_x + self.last_x_direction + tiles_to_door_right
                     )
-                    self.target_grid_y = to_door_grid_y + self.last_y_direction + tiles_to_door_down
+                    self.target_grid_y = (
+                        to_door_grid_y + self.last_y_direction + tiles_to_door_down
+                    )
 
         if not self.place_meeting(
             self.target_grid_x * GRID_SIZE, self.target_grid_y * GRID_SIZE, Wall
@@ -98,7 +118,9 @@ class Player(aj.GameObject):
         dx = int(aj.keyboard_check_pressed(aj.vk_right)) - int(
             aj.keyboard_check_pressed(aj.vk_left)
         )
-        dy = int(aj.keyboard_check_pressed(aj.vk_down)) - int(aj.keyboard_check_pressed(aj.vk_up))
+        dy = int(aj.keyboard_check_pressed(aj.vk_down)) - int(
+            aj.keyboard_check_pressed(aj.vk_up)
+        )
 
         # Move in two stages to avoid moving through walls diagonally
         if dx != 0:
@@ -110,7 +132,9 @@ class Player(aj.GameObject):
 project_dir = Path(__file__).parent
 
 
-rooms: list[aj.GameLevel] = aj.load_ldtk_levels(project_dir / "rooms" / "rooms" / "simplified")
+rooms: list[aj.GameLevel] = aj.load_ldtk_levels(
+    project_dir / "rooms" / "rooms" / "simplified"
+)
 
 aj.set_rooms(rooms)
 aj.register_objects(Wall, Doorway, Player)

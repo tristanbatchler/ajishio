@@ -5,9 +5,13 @@ import ajishio as aj
 
 
 class Wall(aj.GameObject):
-    def __init__(self, width: float, height: float, x: float = 0, y: float = 0, **_: object) -> None:
+    def __init__(
+        self, width: float, height: float, x: float = 0, y: float = 0, **_: object
+    ) -> None:
         super().__init__(x, y)
-        self.collision_mask = aj.CollisionMask(bbtop=0, bbleft=0, bbright=width, bbbottom=height)
+        self.collision_mask = aj.CollisionMask(
+            bbtop=0, bbleft=0, bbright=width, bbbottom=height
+        )
         self.width: float = width
         self.height: float = height
 
@@ -21,7 +25,15 @@ class Boundary(Wall):
 
 
 class Paddle(Wall):
-    def __init__(self, player: int, width: float, height: float, x: float = 0, y: float = 0, **_: object) -> None:
+    def __init__(
+        self,
+        player: int,
+        width: float,
+        height: float,
+        x: float = 0,
+        y: float = 0,
+        **_: object,
+    ) -> None:
         super().__init__(width, height, x, y)
         self.speed: float = 5
         self.y_vel: float = 0
@@ -35,7 +47,9 @@ class Paddle(Wall):
         ) * self.speed
         self.target_y = self.y + self.y_vel
         if self.place_meeting(self.x, self.target_y, Boundary):
-            while not self.place_meeting(self.x, self.y + aj.sign(self.y_vel), Boundary):
+            while not self.place_meeting(
+                self.x, self.y + aj.sign(self.y_vel), Boundary
+            ):
                 self.y += aj.sign(self.y_vel)
             self.y_vel = 0
         else:
@@ -82,7 +96,9 @@ class Ball(aj.GameObject):
 
             if isinstance(hit_x, Paddle):
                 added_y_vel: float = hit_x.y_vel / (4 * hit_x.speed)
-                self.y_dir = aj.clamp(self.y_dir + added_y_vel, -self.max_y_dir, self.max_y_dir)
+                self.y_dir = aj.clamp(
+                    self.y_dir + added_y_vel, -self.max_y_dir, self.max_y_dir
+                )
                 self.set_x_dir(aj.sign(self.x_dir))
                 self.speed = aj.clamp(
                     self.speed * self.speed_increase_percent, self.speed, self.max_speed
@@ -112,7 +128,9 @@ class Ball(aj.GameObject):
         return (
             2
             if self.x < -self.radius - buffer
-            else 1 if self.x > aj.room_width + self.radius + buffer else 0
+            else 1
+            if self.x > aj.room_width + self.radius + buffer
+            else 0
         )
 
     def update_score(self, winner: int) -> None:
@@ -130,7 +148,9 @@ class Ball(aj.GameObject):
         self.x_dir = sign * math.sqrt(1 - self.y_dir**2)
 
     def draw(self) -> None:
-        aj.draw_circle(self.x, self.y, self.radius, aj.make_color_hsv(self.color_hue_angle, 1, 1))
+        aj.draw_circle(
+            self.x, self.y, self.radius, aj.make_color_hsv(self.color_hue_angle, 1, 1)
+        )
         aj.draw_text(20, 20, str(self.score[1]))
         aj.draw_text(aj.room_width - 50, 20, str(self.score[2]))
 

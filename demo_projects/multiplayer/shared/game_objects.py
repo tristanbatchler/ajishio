@@ -4,12 +4,16 @@ from demo_projects.multiplayer.shared import sprites
 
 
 class PlayerSpawner(aj.GameObject):
-    def __init__(self, x: float, y: float, **kwargs: Unpack[aj.GameObjectKwargs]) -> None:
+    def __init__(
+        self, x: float, y: float, **kwargs: Unpack[aj.GameObjectKwargs]
+    ) -> None:
         super().__init__(x, y, **kwargs)
 
 
 class Floor(aj.GameObject):
-    def __init__(self, x: float, y: float, **kwargs: Unpack[aj.GameObjectKwargs]) -> None:
+    def __init__(
+        self, x: float, y: float, **kwargs: Unpack[aj.GameObjectKwargs]
+    ) -> None:
         super().__init__(x, y, **kwargs)
         self.collision_mask: aj.CollisionMask | None = aj.CollisionMask(
             bbtop=0, bbleft=0, bbright=self.width, bbbottom=self.height
@@ -17,7 +21,9 @@ class Floor(aj.GameObject):
 
 
 class Player(aj.GameObject):
-    def __init__(self, x: float, y: float, **kwargs: Unpack[aj.GameObjectKwargs]) -> None:
+    def __init__(
+        self, x: float, y: float, **kwargs: Unpack[aj.GameObjectKwargs]
+    ) -> None:
         super().__init__(x, y, **kwargs)
         self.sprite_index: aj.GameSprite | None = sprites.get("player")
         self.image_speed: float = 10
@@ -80,7 +86,9 @@ class Player(aj.GameObject):
             step_time = min(remaining_time, self.max_delta_time)
             target_x = self.x + self.x_velocity * step_time
             if self.place_meeting(target_x, self.y, Floor):
-                while not self.place_meeting(self.x + aj.sign(self.x_velocity), self.y, Floor):
+                while not self.place_meeting(
+                    self.x + aj.sign(self.x_velocity), self.y, Floor
+                ):
                     self.x += aj.sign(self.x_velocity)
                 self.x_velocity = 0
                 break
@@ -94,7 +102,9 @@ class Player(aj.GameObject):
             step_time = min(remaining_time, self.max_delta_time)
             target_y = self.y + self.y_velocity * step_time
             if self.place_meeting(self.x, target_y, Floor):
-                while not self.place_meeting(self.x, self.y + aj.sign(self.y_velocity), Floor):
+                while not self.place_meeting(
+                    self.x, self.y + aj.sign(self.y_velocity), Floor
+                ):
                     self.y += aj.sign(self.y_velocity)
                 self.y_velocity = 0
                 break

@@ -118,7 +118,9 @@ class NetworkClient(aj.GameObject):
             if self.player_id is not None:
                 self.player.name = self.player_id.hex[:4]
 
-    def handle_other_player_position_packet(self, packet: pck.OtherPlayerPositionPacket) -> None:
+    def handle_other_player_position_packet(
+        self, packet: pck.OtherPlayerPositionPacket
+    ) -> None:
         if packet.player_id in self.others:
             self.others[packet.player_id].x = packet.x
             self.others[packet.player_id].y = packet.y
@@ -136,7 +138,9 @@ class NetworkClient(aj.GameObject):
         if other_player is not None:
             other_player.jump()
 
-    def handle_player_disconnect_packet(self, packet: pck.PlayerDisconnectPacket) -> None:
+    def handle_player_disconnect_packet(
+        self, packet: pck.PlayerDisconnectPacket
+    ) -> None:
         print("Received player disconnect packet")
         if packet.player_id == self.player_id:
             self.kicked = True
@@ -149,7 +153,11 @@ class NetworkClient(aj.GameObject):
 
     def handle_position_sync_request_packet(self) -> None:
         if self.player is not None and self.player_id is not None:
-            self.send(pck.PositionSyncResponsePacket(self.player_id, self.player.x, self.player.y))
+            self.send(
+                pck.PositionSyncResponsePacket(
+                    self.player_id, self.player.x, self.player.y
+                )
+            )
 
     @override
     def on_game_end(self) -> None:

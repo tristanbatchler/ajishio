@@ -1,10 +1,15 @@
 from __future__ import annotations
 from typing import Unpack, override
-from ajishio.types import CustomFields, GameSprite, CollisionMask, IGameObject, Entity, GameObjectKwargs
+from ajishio.types import (
+    CustomFields,
+    GameSprite,
+    CollisionMask,
+    IGameObject,
+    Entity,
+    GameObjectKwargs,
+)
 from uuid import uuid4, UUID
 import ajishio._context as _ctx
-
-
 
 
 class GameObject(IGameObject):
@@ -19,20 +24,22 @@ class GameObject(IGameObject):
         self.id: UUID = uuid4()
         self.x: float = x
         self.y: float = y
-        self.sprite_index: GameSprite | None = kwargs.get('sprite_index')
+        self.sprite_index: GameSprite | None = kwargs.get("sprite_index")
         self.image_index: int = 0
         self.image_speed: float = 0
         self.image_xscale: float = 1.0
         self.image_yscale: float = 1.0
-        self.collision_mask: CollisionMask | None = kwargs.get('collision_mask')
+        self.collision_mask: CollisionMask | None = kwargs.get("collision_mask")
         self.depth: int = 0
         self._last_image_update: float = 0
 
-        self.iid: str | None = kwargs.get('iid')
-        self.width: float = kwargs.get('width') or 0
-        self.height: float = kwargs.get('height') or 0
-        custom_fields = kwargs.get('customFields')
-        self.custom_fields: CustomFields = custom_fields if custom_fields is not None else {}
+        self.iid: str | None = kwargs.get("iid")
+        self.width: float = kwargs.get("width") or 0
+        self.height: float = kwargs.get("height") or 0
+        custom_fields = kwargs.get("customFields")
+        self.custom_fields: CustomFields = (
+            custom_fields if custom_fields is not None else {}
+        )
 
         _ctx.engine.add_object(self)
 
@@ -65,12 +72,21 @@ class GameObject(IGameObject):
                 and self._last_image_update > 1 / self.image_speed
             ):
                 self._last_image_update = 0
-                self.image_index = (self.image_index + 1) % len(self.sprite_index.images)
+                self.image_index = (self.image_index + 1) % len(
+                    self.sprite_index.images
+                )
 
     @override
     def draw(self) -> None:
         if self.sprite_index is not None:
-            _ctx.engine.renderer.draw_sprite(self.x, self.y, self.sprite_index, self.image_index, x_scale=self.image_xscale, y_scale=self.image_yscale)
+            _ctx.engine.renderer.draw_sprite(
+                self.x,
+                self.y,
+                self.sprite_index,
+                self.image_index,
+                x_scale=self.image_xscale,
+                y_scale=self.image_yscale,
+            )
 
     @override
     def on_game_end(self) -> None:
@@ -98,7 +114,7 @@ class GameObject(IGameObject):
         # assert isinstance(obj, GameObject)
         if not isinstance(obj, GameObject):
             return None
-        
+
         o = obj
         s_msk: CollisionMask | None = self.collision_mask
         o_msk: CollisionMask | None = o.collision_mask

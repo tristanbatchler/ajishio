@@ -99,7 +99,8 @@ class Engine:
                     self._logger.warning(
                         "%s object not found in registry. Make sure you "
                         + "have registered it with `aj.register_objects(%s)`",
-                        entity_type, entity_type,
+                        entity_type,
+                        entity_type,
                     )
                     continue
 
@@ -163,7 +164,9 @@ class Engine:
     def room_set_background(self, color: pg.Color) -> None:
         self.room_background_color = color
 
-    def audio_play_sound(self, index: GameSound, loop: bool = False, gain: float = 1) -> None:
+    def audio_play_sound(
+        self, index: GameSound, loop: bool = False, gain: float = 1
+    ) -> None:
         self._audio_playing.append(index)
         index.play(loop=loop, gain=gain)
 
@@ -187,7 +190,9 @@ class Engine:
     def instance_exists(self, obj: type[GameObject]) -> bool:
         return self.instance_count(obj) > 0
 
-    def instance_find(self, obj: type[GameObject] | str, n: int = 0) -> GameObject | None:
+    def instance_find(
+        self, obj: type[GameObject] | str, n: int = 0
+    ) -> GameObject | None:
         all_objects = list(self._game_objects.values()) + self._game_objects_to_add
 
         if isinstance(obj, str):
@@ -204,21 +209,21 @@ class Engine:
                 count += 1
         return None
 
-
     def game_start(self) -> None:
         if len(self._rooms) > 0:
             self.room_goto(0)
 
         self._game_running = True
         while self._game_running:
-
             try:
                 input.events += pg.event.get()
 
                 if any(event.type == pg.QUIT for event in input.events):
                     self.game_end()
 
-                self.delta_time = self._clock.tick(self.room_speed) / 1000  # ms to seconds
+                self.delta_time = (
+                    self._clock.tick(self.room_speed) / 1000
+                )  # ms to seconds
                 self.fps_real = self._clock.get_fps()
 
                 if self.room_speed == 0:
@@ -253,7 +258,8 @@ class Engine:
                     self.renderer.draw_display()
 
                 self._audio_playing = [
-                    audio for audio in self._audio_playing
+                    audio
+                    for audio in self._audio_playing
                     if not audio.is_finished(self.delta_time)
                 ]
 
@@ -281,4 +287,3 @@ class Engine:
         for obj in self._game_objects_to_add:
             self._game_objects[obj.id] = obj
         self._game_objects_to_add.clear()
-

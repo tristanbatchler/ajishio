@@ -38,12 +38,12 @@ class View:
         self.view_wport[self.view_current] = w
         self.view_hport[self.view_current] = h
 
-
     @property
     def offset(self) -> tuple[float, float]:
         return (
             -self.view_xport[self.view_current],
             -self.view_yport[self.view_current],
         )
+
 
 view = View()

@@ -5,7 +5,11 @@ from dataclasses import dataclass
 from typing import Callable, TYPE_CHECKING
 
 import ajishio as aj
-from demo_projects.visual_novel.ui.primitives import PanelStyle, draw_panel, draw_text_block
+from demo_projects.visual_novel.ui.primitives import (
+    PanelStyle,
+    draw_panel,
+    draw_text_block,
+)
 
 if TYPE_CHECKING:
     from demo_projects.visual_novel.ui.script import ScriptStep
@@ -29,7 +33,9 @@ class ChoiceMenu(aj.GameObject):
         self.prompt: str | None = None
         self.selected: int = 0
         self.visible: bool = False
-        self.style = PanelStyle(bg_color=aj.Color(16, 16, 32, 230), border_color=aj.Color(180, 200, 255))
+        self.style = PanelStyle(
+            bg_color=aj.Color(16, 16, 32, 230), border_color=aj.Color(180, 200, 255)
+        )
         self._arrow_glyph: str = "➤"
 
     def show(self, prompt: str, options: list[ChoiceOption]) -> None:
@@ -54,7 +60,9 @@ class ChoiceMenu(aj.GameObject):
     def confirm(self) -> ChoiceOption | None:
         if not self.visible:
             return None
-        if aj.keyboard_check_pressed(aj.vk_enter) or aj.keyboard_check_pressed(aj.vk_space):
+        if aj.keyboard_check_pressed(aj.vk_enter) or aj.keyboard_check_pressed(
+            aj.vk_space
+        ):
             return self.options[self.selected]
         return None
 
@@ -66,7 +74,12 @@ class ChoiceMenu(aj.GameObject):
 
         box_w = self.width
         prompt_h = self.line_height if self.prompt else 0
-        box_h = prompt_h + len(self.options) * self.line_height + 20 + (self.style.padding if self.prompt else 0)
+        box_h = (
+            prompt_h
+            + len(self.options) * self.line_height
+            + 20
+            + (self.style.padding if self.prompt else 0)
+        )
         x = ox + aj.room_width - box_w - self.margin
         y = oy + self.margin
 
@@ -90,4 +103,3 @@ class ChoiceMenu(aj.GameObject):
                 aj.draw_text(arrow_x, ay, self._arrow_glyph, color=aj.c_white)
 
         draw_text_block(labels, text_x, text_y, self.line_height, color=aj.c_white)
-

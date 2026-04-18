@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable
 
 from pygame import Color
 
+import os as _os
 import ajishio._context as _ctx
 from ajishio.view import view
 from ajishio.rendering import Renderer
@@ -85,12 +86,21 @@ from ajishio.sound_loader import load_sounds, load_sound
 from ajishio.level_loader import load_ldtk_levels
 
 # --- Singleton instantiation (must happen before any game logic runs) ---
-import pygame as _pg
+if _os.environ.get("AJISHIO_DOCS"):
+    # Documentation mode: use lightweight dummies that won't open a window
+    class _Dummy:
+        def __getattr__(self, name: str) -> Callable[..., None]:
+            return lambda *args, **kwargs: None
 
-_ = _pg.init()
+    _renderer = _Dummy()
+    _engine = _Dummy()
+else:
+    import pygame as _pg
 
-_renderer = Renderer()
-_engine = Engine(_renderer)
+    _ = _pg.init()
+    _renderer = Renderer()
+    _engine = Engine(_renderer)
+
 
 # Populate the lazy context so game_object / game_sound can access the engine.
 _ctx.engine = _engine
@@ -129,7 +139,10 @@ room_goto = _engine.room_goto
 room_goto_next = _engine.room_goto_next
 room_goto_previous = _engine.room_goto_previous
 room_restart = _engine.room_restart
-room_set_size = _engine.room_set_size
+
+room_set_size: Callable[[float, float], None] = _engine.room_set_size
+"""Sets the size of the room. This does not affect the window size or viewport."""
+
 room_set_width = _engine.room_set_width
 room_set_height = _engine.room_set_height
 room_set_background = _engine.room_set_background

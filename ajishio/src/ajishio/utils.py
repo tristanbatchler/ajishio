@@ -66,10 +66,16 @@ def room_set_caption(caption: str) -> None:
 
 
 def lengthdir_x(length: float, direction: float) -> float:
+    """
+    Returns the length of the x component of a vector with the given length and direction (in radians).
+    """
     return length * math.cos(direction)
 
 
 def lengthdir_y(length: float, direction: float) -> float:
+    """
+    Returns the length of the y component of a vector with the given length and direction (in radians).
+    """
     return length * math.sin(direction)
 
 

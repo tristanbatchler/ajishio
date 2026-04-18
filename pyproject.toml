@@ -17,5 +17,10 @@ ajishio = { path = "./ajishio", editable = true }
 
 [dependency-groups]
 dev = [
+    "mkdocs-gen-files>=0.6.1",
+    "mkdocs-literate-nav>=0.6.3",
+    "mkdocs-material>=9.7.6",
+    "mkdocstrings[python]>=1.0.4",
+    "ruff>=0.15.11",
     "snakeviz>=2.2.2",
 ]

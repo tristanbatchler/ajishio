@@ -225,7 +225,7 @@ class Engine:
                     continue
                 self._last_render_time += self.delta_time
                 if self._last_render_time >= 1 / self.room_speed:
-                    self._last_render_time %= self.room_speed
+                    self._last_render_time %= 1 / self.room_speed
                     self.renderer.fit_display()
                     self.renderer.fill_background_color(self.room_background_color)
                     self.renderer.draw_background_images()

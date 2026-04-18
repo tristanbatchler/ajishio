@@ -1,5 +1,4 @@
-from typing import TypedDict
-from abc import ABC
+from typing import Protocol, TypedDict, runtime_checkable
 from collections.abc import Sequence
 from uuid import UUID
 from pygame import Surface
@@ -54,7 +53,8 @@ class GameLevel:
     entities: dict[str, Sequence[Entity]]
 
 
-class IGameObject(ABC):
+@runtime_checkable
+class IGameObject(Protocol):
     persistent: bool
     id: UUID
     x: float

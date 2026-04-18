@@ -155,7 +155,7 @@ __all__ = [
     "vk_left", "vk_right", "vk_up", "vk_down", "vk_space", "vk_escape", "vk_enter",
     # Utils
     "lengthdir_x", "lengthdir_y", "clamp", "sign", "lerp", "profile",
-    "point_distance", "map_value", "room_set_caption", "profile",
+    "point_distance", "map_value", "room_set_caption",
     # Colors
     "c_aqua", "c_black", "c_blue", "c_dkgray", "c_fuchsia", "c_gray",
     "c_green", "c_lime", "c_ltgray", "c_maroon", "c_navy", "c_olive",

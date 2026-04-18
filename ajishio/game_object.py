@@ -95,7 +95,10 @@ class GameObject(IGameObject):
             return self.place_meeting(x, y, game_obj)
 
         # obj is a concrete game object instance; all stored objects are GameObjects
-        assert isinstance(obj, GameObject)
+        # assert isinstance(obj, GameObject)
+        if not isinstance(obj, GameObject):
+            return None
+        
         o = obj
         s_msk: CollisionMask | None = self.collision_mask
         o_msk: CollisionMask | None = o.collision_mask

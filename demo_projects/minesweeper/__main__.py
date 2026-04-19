@@ -29,6 +29,17 @@ class Minesweeper(aj.GameObject):
         )
 
         aj.window_set_size(self.cols * self.cell_size, self.rows * self.cell_size)
+        self.hovered_cell: tuple[int, int] = self.get_hovered_cell()
+
+    def get_hovered_cell(self) -> tuple[int, int]:
+        x = int(aj.mouse_x / self.cell_size)
+        y = int(aj.mouse_y / self.cell_size)
+        return (x, y)
+
+    @override
+    def step(self) -> None:
+        super().step()
+        self.hovered_cell = self.get_hovered_cell()
 
     @override
     def draw(self) -> None:
@@ -38,10 +49,20 @@ class Minesweeper(aj.GameObject):
 
         for row in range(1, self.rows):
             y = row * self.cell_size
-            aj.draw_line(0, y, w, y)
+            aj.draw_line(0, y, w, y, aj.c_gray)
         for col in range(1, self.cols):
             x = col * self.cell_size
-            aj.draw_line(x, 0, x, h)
+            aj.draw_line(x, 0, x, h, aj.c_gray)
+
+        h_x, h_y = self.hovered_cell
+        aj.draw_rectangle(
+            h_x * self.cell_size,
+            h_y * self.cell_size,
+            self.cell_size,
+            self.cell_size,
+            True,
+            aj.c_lime,
+        )
 
 
 class MainMenu(aj.GameObject):

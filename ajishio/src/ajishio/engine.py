@@ -118,7 +118,8 @@ class Engine:
     def game_restart(self) -> None:
         for obj in self._game_objects.values():
             self.instance_destroy(obj)
-        self.room_goto(0)
+        if len(self._rooms) > 0:
+            self.room_goto(0)
 
     def game_end(self) -> None:
         self._game_running = False

@@ -1,16 +1,17 @@
 from dataclasses import dataclass
 import random
-from typing import Unpack, override
+from typing import Literal, Unpack, override
 import ajishio as aj
-from ajishio.rendering import c_gray
+
+type SolidMap = list[list[Literal[0, 1]]]
 
 
 @dataclass
 class Shape:
-    solid_map: list[list[bool]]
+    solid_map: SolidMap
     color: aj.Color
 
-    def get_rotation(self) -> list[list[bool]]:
+    def get_rotation(self) -> SolidMap:
         rotated_map = [row[:] for row in self.solid_map]
         n = len(rotated_map)
         for i in range(n):
@@ -24,42 +25,55 @@ class Shape:
         return rotated_map
 
 
-# fmt: off
-SHAPE_STRAIGHT = Shape([
-    [False, False, False, False],
-    [True,  True,  True,  True ], # Move to row 1 to rotate around center
-    [False, False, False, False],
-    [False, False, False, False]
-], aj.c_teal)
+SHAPE_STRAIGHT = Shape(
+    [
+        [0, 0, 0, 0],
+        [1, 1, 1, 1],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+    ],
+    aj.c_teal,
+)
 
-SHAPE_SQUARE = Shape([
-    [False, True,  True,  False],
-    [False, True,  True,  False], 
-    [False, False, False, False],
-    [False, False, False, False]
-], aj.c_yellow)
+SHAPE_SQUARE = Shape(
+    [
+        [0, 0, 0, 0],
+        [0, 1, 1, 0],
+        [0, 1, 1, 0],
+        [0, 0, 0, 0],
+    ],
+    aj.c_yellow,
+)
 
-SHAPE_T = Shape([
-    [False, True,  False, False], # Center horizontally
-    [True,  True,  True,  False],
-    [False, False, False, False],
-    [False, False, False, False]
-], aj.c_fuchsia)
+SHAPE_T = Shape(
+    [
+        [0, 0, 0, 0],
+        [1, 1, 1, 0],
+        [0, 1, 0, 0],
+        [0, 0, 0, 0],
+    ],
+    aj.c_fuchsia,
+)
 
-SHAPE_L = Shape([
-    [False, True,  False, False],
-    [False, True,  False, False],
-    [False, True,  True,  False], 
-    [False, False, False, False]
-], aj.c_orange)
+SHAPE_L = Shape(
+    [
+        [0, 1, 0, 0],
+        [0, 1, 0, 0],
+        [0, 1, 1, 0],
+        [0, 0, 0, 0],
+    ],
+    aj.c_orange,
+)
 
-SHAPE_SKEW = Shape([
-    [False, True,  True,  False],
-    [True,  True,  False, False],
-    [False, False, False, False],
-    [False, False, False, False]
-], aj.c_lime)
-# fmt: on
+SHAPE_SKEW = Shape(
+    [
+        [0, 0, 0, 0],
+        [0, 1, 1, 0],
+        [1, 1, 0, 0],
+        [0, 0, 0, 0],
+    ],
+    aj.c_lime,
+)
 
 
 class Tile(aj.GameObject):
@@ -113,7 +127,10 @@ class Piece(aj.GameObject):
     @override
     def step(self) -> None:
         super().step()
-        if aj.keyboard_check_released(aj.vk_right) and self.get_xmax() < aj.room_width:
+        if (
+            aj.keyboard_check_released(aj.vk_right)
+            and self.get_xmax() < aj.view_wport[aj.view_current]
+        ):
             self.move(dx=1)
         elif aj.keyboard_check_released(aj.vk_left) and self.get_xmin() > 0:
             self.move(dx=-1)
@@ -132,10 +149,14 @@ class Piece(aj.GameObject):
                     continue
                 tile_x = x + x_offset * Tile.DIM
                 tile_y = y + y_offset * Tile.DIM
-                if tile_y >= aj.room_height or tile_x < 0 or tile_x >= aj.room_width:
+                if (
+                    tile_y >= aj.view_hport[aj.view_current]
+                    or tile_x < 0
+                    or tile_x >= aj.view_wport[aj.view_current]
+                ):
                     return False
                 if aj.collision_rectangle(
-                    tile_x, tile_y, tile_x + Tile.DIM, tile_y + Tile.DIM, Tile, set(self.tiles)
+                    tile_x, tile_y, tile_x + Tile.DIM, tile_y + Tile.DIM, Tile, self.tiles
                 ):
                     return False
         return True
@@ -152,41 +173,19 @@ class Piece(aj.GameObject):
 
         return True
 
-    @override
-    def draw(self) -> None:
-        aj.draw_circle(self.x + 2 * Tile.DIM, self.y + 2 * Tile.DIM, 2, color=aj.c_red)
-        for y, row in enumerate(self.shape.solid_map):
-            for x, is_solid in enumerate(row):
-                color = aj.c_white if is_solid else c_gray
-                aj.draw_rectangle(
-                    self.x + x * Tile.DIM,
-                    self.y + y * Tile.DIM,
-                    Tile.DIM,
-                    Tile.DIM,
-                    color=color,
-                )
-
 
 class Manager(aj.GameObject):
-    BOARD_TILES_X = 12
-    BOARD_TILES_Y = 24
-
     def __init__(self, x: float = 0, y: float = 0, **kwargs: Unpack[aj.GameObjectKwargs]) -> None:
         super().__init__(x, y, **kwargs)
 
-        self.room_size: tuple[int, int] = (
-            Tile.DIM * self.BOARD_TILES_X,
-            Tile.DIM * self.BOARD_TILES_Y,
-        )
-        aj.room_set_size(*self.room_size)
-        aj.window_set_size(*self.room_size)
-
-        self.current_piece: Piece = self.spawn_piece()
+        self.current_piece: Piece | None = self.spawn_piece()
         self.base_move_interval: float = 0.25
         self.set_current_move_interval()
         self.move_timer: float = self.current_move_interval
+        self.game_over: bool = False
+        self.score: int = 0
 
-    def spawn_piece(self) -> Piece:
+    def spawn_piece(self) -> Piece | None:
         shape = random.choice(
             (
                 SHAPE_STRAIGHT,
@@ -196,37 +195,56 @@ class Manager(aj.GameObject):
                 SHAPE_SKEW,
             )
         )
-        return Piece(shape, aj.window_width / 2, Tile.DIM)
+        shape_width = len(shape.solid_map[0]) * Tile.DIM
+        new_piece = Piece(shape, (aj.room_width - shape_width) / 2, Tile.DIM)
+        if not new_piece.allowed_at_position(new_piece.x, new_piece.y):
+            aj.instance_destroy(new_piece)
+            return None
+        return new_piece
 
     def set_current_move_interval(self, fast: bool = False) -> None:
         self.current_move_interval = self.base_move_interval
         if fast:
             self.current_move_interval /= 4
 
-    def check_tetris_and_destroy(self) -> bool:
-        y = self.room_size[1] - Tile.DIM
-        bottom_row: list[aj.IGameObject] = []
-        for x in range(0, self.room_size[0], Tile.DIM):
-            tile = aj.collision_rectangle(x, y, x + Tile.DIM, y + Tile.DIM, Tile)
-            if tile is None:
-                return False
-            bottom_row.append(tile)
-
-        for tile in bottom_row:
-            aj.instance_destroy(tile)
-        return True
-
-    def shift_tiles_down(self) -> None:
+    def shift_tiles_above(self, y: float) -> None:
+        if self.current_piece is None:
+            return
         for tile in aj.instances_iterate(Tile):
-            if tile not in self.current_piece.tiles:
+            if tile.y < y and tile not in self.current_piece.tiles:
                 tile.y += Tile.DIM
+
+    def clear_full_rows(self, tiles_from_bottom_to_check: int) -> None:
+        if tiles_from_bottom_to_check <= 0:
+            return
+        y = aj.view_hport[aj.view_current] - tiles_from_bottom_to_check * Tile.DIM
+        top_row: list[aj.IGameObject] = []
+        for x in range(0, int(aj.view_wport[aj.view_current]), Tile.DIM):
+            if (tile := aj.instance_position(x + Tile.DIM // 2, y + Tile.DIM // 2, Tile)) is None:
+                return self.clear_full_rows(tiles_from_bottom_to_check - 1)
+            top_row.append(tile)
+
+        self.shift_tiles_above(top_row[0].y)
+
+        for tile in top_row:
+            self.score += 10
+            aj.instance_destroy(tile)
+
+        self.clear_full_rows(tiles_from_bottom_to_check - 1)
 
     @override
     def step(self) -> None:
         super().step()
         self.move_timer -= aj.delta_time
 
-        if aj.keyboard_check(aj.vk_down):
+        if self.current_piece is None:
+            self.game_over = True
+            return
+
+        if aj.keyboard_check_released(ord("r")):
+            aj.game_restart()
+            Manager()
+        elif aj.keyboard_check(aj.vk_down):
             self.set_current_move_interval(fast=True)
         elif aj.keyboard_check_released(aj.vk_down):
             self.set_current_move_interval()
@@ -234,28 +252,66 @@ class Manager(aj.GameObject):
             rotated_shape = Shape(
                 self.current_piece.shape.get_rotation(), self.current_piece.shape.color
             )
-            if not self.current_piece.allowed_at_position(
-                self.current_piece.x, self.current_piece.y, rotated_shape
-            ):
-                return
-            piece_x, piece_y = self.current_piece.x, self.current_piece.y
-            aj.instance_destroy(self.current_piece)
-            self.current_piece = Piece(rotated_shape, piece_x, piece_y)
+            # Try wall kicks: attempt offsets in order until one fits
+            kick_offsets = [0, -1, 1, -2, 2]
+            kicked_x: float | None = None
+            for offset in kick_offsets:
+                test_x = self.current_piece.x + offset * Tile.DIM
+                if self.current_piece.allowed_at_position(
+                    test_x, self.current_piece.y, rotated_shape
+                ):
+                    kicked_x = test_x
+                    break
+            if kicked_x is None:
+                pass  # No valid position found, don't rotate
+            else:
+                piece_y = self.current_piece.y
+                aj.instance_destroy(self.current_piece)
+                self.current_piece = Piece(rotated_shape, kicked_x, piece_y)
 
         if self.move_timer <= 0:
             self.move_timer += self.current_move_interval
             if not self.current_piece.move(dy=1):
                 for tile in self.current_piece.tiles:
                     Tile(tile.x, tile.y, tile.color)
+                tiles_from_bottom_to_check = int(self.current_piece.y / Tile.DIM)
                 aj.instance_destroy(self.current_piece)
+                self.clear_full_rows(tiles_from_bottom_to_check)
                 self.current_piece = self.spawn_piece()
 
-                if self.check_tetris_and_destroy():
-                    self.shift_tiles_down()
+    @override
+    def draw(self) -> None:
+        super().draw()
+        if self.game_over:
+            message = "GAME OVER"
+            msg_width = aj.text_width(message)
+            msg_height = aj.text_height(message)
+            x = (aj.view_wport[aj.view_current] - msg_width) / 2
+            y = (aj.view_hport[aj.view_current] - msg_height) / 2
+            aj.draw_text(x, y, message, aj.c_red)
+
+            score_text = f"Your score: {self.score}"
+            score_width = aj.text_width(score_text)
+            score_x = (aj.view_wport[aj.view_current] - score_width) / 2
+            score_y = y + msg_height + 10
+            aj.draw_text(score_x, score_y, score_text, aj.c_white)
+        else:
+            score_text = f"SCORE: {self.score}"
+            aj.draw_text(
+                aj.view_xport[aj.view_current] + 10,
+                aj.view_yport[aj.view_current] + 10,
+                score_text,
+                aj.c_white,
+            )
 
 
 def main() -> None:
     aj.room_set_caption("Tetris")
+    size = (10 * Tile.DIM, 20 * Tile.DIM)
+    aj.room_set_size(*size)
+    aj.window_set_size(size[0] * 2, size[1] * 2)
+    aj.view_set_wport(aj.view_current, size[0])
+    aj.view_set_hport(aj.view_current, size[1])
     Manager()
     aj.game_start()
 

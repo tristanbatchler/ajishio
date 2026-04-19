@@ -75,6 +75,12 @@
             "type": "debugpy",
             "request": "launch",
             "module": "demo_projects.tetris"
+        },
+        {
+            "name": "Minesweeper",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "demo_projects.minesweeper"
         }
     ]
 }

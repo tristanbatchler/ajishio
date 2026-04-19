@@ -370,6 +370,14 @@ class Engine:
             if isinstance(g_o, obj):
                 yield g_o
 
+    @property
+    def mouse_x(self) -> float:
+        return pg.mouse.get_pos()[0]
+
+    @property
+    def mouse_y(self) -> float:
+        return pg.mouse.get_pos()[1]
+
     def _free_destroyed_objects(self) -> None:
         for obj in self._game_objects_to_destroy:
             try:

@@ -28,6 +28,9 @@ from ajishio.input import (
     keyboard_check,
     keyboard_check_pressed,
     keyboard_check_released,
+    mouse_check_button,
+    mouse_check_button_pressed,
+    mouse_check_button_released,
     ord,
     vk_left,
     vk_right,
@@ -36,6 +39,9 @@ from ajishio.input import (
     vk_space,
     vk_escape,
     vk_enter,
+    mb_left,
+    mb_middle,
+    mb_right,
 )
 
 # --- Utils ---
@@ -166,6 +172,8 @@ _LIVE_ENGINE_ATTRS = frozenset(
         "delta_time",
         "fps_real",
         "room",
+        "mouse_x",
+        "mouse_y",
     }
 )
 
@@ -207,6 +215,8 @@ if TYPE_CHECKING:
     view_current: int
     window_width: int
     window_height: int
+    mouse_x: float
+    mouse_y: float
 
 
 __all__ = [
@@ -225,6 +235,9 @@ __all__ = [
     "keyboard_check",
     "keyboard_check_pressed",
     "keyboard_check_released",
+    "mouse_check_button",
+    "mouse_check_button_pressed",
+    "mouse_check_button_released",
     "ord",
     "vk_left",
     "vk_right",
@@ -233,6 +246,9 @@ __all__ = [
     "vk_space",
     "vk_escape",
     "vk_enter",
+    "mb_left",
+    "mb_middle",
+    "mb_right",
     # Utils
     "lengthdir_x",
     "lengthdir_y",

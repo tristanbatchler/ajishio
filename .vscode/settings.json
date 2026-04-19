@@ -3,5 +3,6 @@
     "editor.formatOnSave": true,
     "editor.rulers": [
         100
-    ]
+    ],
+    "ruff.lineLength": 100,
 }

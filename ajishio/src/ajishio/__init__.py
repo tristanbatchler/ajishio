@@ -149,7 +149,10 @@ room_set_background = _engine.room_set_background
 instance_destroy = _engine.instance_destroy
 instance_count = _engine.instance_count
 instance_exists = _engine.instance_exists
+instance_position = _engine.instance_position
 instance_find = _engine.instance_find
+instances_iterate = _engine.instances_iterate
+collision_rectangle = _engine.collision_rectangle
 audio_play_sound = _engine.audio_play_sound
 audio_is_playing = _engine.audio_is_playing
 
@@ -306,7 +309,10 @@ __all__ = [
     "instance_destroy",
     "instance_count",
     "instance_exists",
+    "instance_position",
     "instance_find",
+    "instances_iterate",
+    "collision_rectangle",
     "audio_play_sound",
     "audio_is_playing",
     # Live properties (resolved via __getattr__)

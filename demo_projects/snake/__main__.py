@@ -61,9 +61,7 @@ class SnakeHead(GridAlignedObject):
         self.x_velocity: int = choice((-1, 0, 1))
         self.y_velocity: int = choice((-1, 1)) * (1 - abs(self.x_velocity))
 
-        self.tail_segments: list[SnakeTailSegment] = [
-            SnakeTailSegment(self, i) for i in range(3)
-        ]
+        self.tail_segments: list[SnakeTailSegment] = [SnakeTailSegment(self, i) for i in range(3)]
 
     def step(self) -> None:
         super().step()
@@ -88,7 +86,7 @@ class SnakeHead(GridAlignedObject):
         self.grid_y += self.y_velocity
         self.update_position()
 
-        hit_apple: aj.GameObject | None = self.place_meeting(self.x, self.y, Apple)
+        hit_apple = self.place_meeting(self.x, self.y, Apple)
         if hit_apple:
             aj.game_set_speed(aj.room_speed * 1.05)
             self.tail_segments.append(SnakeTailSegment(self, len(self.tail_segments)))

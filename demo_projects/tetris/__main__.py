@@ -2,12 +2,26 @@ from dataclasses import dataclass
 import random
 from typing import Unpack, override
 import ajishio as aj
+from ajishio.rendering import c_gray
 
 
 @dataclass
 class Shape:
     solid_map: list[list[bool]]
     color: aj.Color
+
+    def get_rotation(self) -> list[list[bool]]:
+        rotated_map = [row[:] for row in self.solid_map]
+        n = len(rotated_map)
+        for i in range(n):
+            for j in range(i + 1, n):
+                rotated_map[i][j], rotated_map[j][i] = (
+                    rotated_map[j][i],
+                    rotated_map[i][j],
+                )
+        for row in rotated_map:
+            row.reverse()
+        return rotated_map
 
 
 # fmt: off
@@ -49,12 +63,10 @@ SHAPE_SKEW = Shape([
 
 
 class Tile(aj.GameObject):
-    DIM: int = 16  # Size in pixels of the tile
+    DIM = 16  # Size in pixels of the tile
 
     def __init__(self, x: float, y: float, color: aj.Color) -> None:
-        super().__init__(
-            x, y, collision_mask=aj.CollisionMask(bbright=self.DIM, bbbottom=self.DIM)
-        )
+        super().__init__(x, y, collision_mask=aj.CollisionMask(bbright=self.DIM, bbbottom=self.DIM))
         self.color: aj.Color = color
 
     @override
@@ -69,22 +81,22 @@ class Piece(aj.GameObject):
     def __init__(self, shape: Shape, x: float, y: float) -> None:
         super().__init__(x, y)
         self.shape: Shape = shape
-        self.tiles: list[Tile] = []
-        self.create_tiles(self.x, self.y)
+        self.tiles: list[Tile] = self.create_tiles(self.x, self.y)
 
-    def create_tiles(self, x: float, y: float) -> None:
-        self.tiles = []
+    def create_tiles(self, x: float, y: float) -> list[Tile]:
+        tiles: list[Tile] = []
         for y_offset, row in enumerate(self.shape.solid_map):
             for x_offset, is_solid in enumerate(row):
                 if not is_solid:
                     continue
-                self.tiles.append(
+                tiles.append(
                     Tile(
                         x + x_offset * Tile.DIM,
                         y + y_offset * Tile.DIM,
                         self.shape.color,
                     )
                 )
+        return tiles
 
     def get_xmin(self) -> float:
         leftmost = min(self.tiles, key=lambda t: t.x)
@@ -98,19 +110,6 @@ class Piece(aj.GameObject):
         top = min(self.tiles, key=lambda t: t.y)
         return top.y
 
-    def get_rotation(self) -> list[list[bool]]:
-        rotated_map = [row[:] for row in self.shape.solid_map]
-        n = len(rotated_map)
-        for i in range(n):
-            for j in range(i + 1, n):
-                rotated_map[i][j], rotated_map[j][i] = (
-                    rotated_map[j][i],
-                    rotated_map[i][j],
-                )
-        for row in rotated_map:
-            row.reverse()
-        return rotated_map
-
     @override
     def step(self) -> None:
         super().step()
@@ -119,94 +118,145 @@ class Piece(aj.GameObject):
         elif aj.keyboard_check_released(aj.vk_left) and self.get_xmin() > 0:
             self.move(dx=-1)
 
-        if aj.keyboard_check_released(aj.vk_up) and self.shape != SHAPE_SQUARE:
-            self.shape.solid_map = self.get_rotation()
-            for tile in self.tiles:
-                aj.instance_destroy(tile)
-            self.create_tiles(self.get_xmin(), self.get_ymin())
+    @override
+    def on_destroy(self) -> None:
+        super().on_destroy()
+        for tile in self.tiles:
+            aj.instance_destroy(tile)
+
+    def allowed_at_position(self, x: float, y: float, shape: Shape | None = None) -> bool:
+        shape = shape or self.shape
+        for y_offset, row in enumerate(shape.solid_map):
+            for x_offset, is_solid in enumerate(row):
+                if not is_solid:
+                    continue
+                tile_x = x + x_offset * Tile.DIM
+                tile_y = y + y_offset * Tile.DIM
+                if tile_y >= aj.room_height or tile_x < 0 or tile_x >= aj.room_width:
+                    return False
+                if aj.collision_rectangle(
+                    tile_x, tile_y, tile_x + Tile.DIM, tile_y + Tile.DIM, Tile, set(self.tiles)
+                ):
+                    return False
+        return True
 
     def move(self, dx: int = 0, dy: int = 0) -> bool:
-        hit_other: aj.GameObject | None = None
-        can_move = True
-        for tile in self.tiles:
-            target_x = tile.x + Tile.DIM * dx
-            target_y = tile.y + Tile.DIM * dy
-            if hit_other := tile.place_meeting(target_x, target_y, Tile):
-                if hit_other in self.tiles:
-                    continue
-                print(f"{tile} hit {hit_other}")
-                can_move = False
-                break
-
-            if target_y >= aj.room_height:
-                print(f"{tile} hit the bottom of the room")
-                can_move = False
-                break
-
-        if not can_move:
+        if not self.allowed_at_position(self.x + Tile.DIM * dx, self.y + Tile.DIM * dy):
             return False
 
+        self.x += Tile.DIM * dx
+        self.y += Tile.DIM * dy
         for tile in self.tiles:
-            tile.y += Tile.DIM * dy
             tile.x += Tile.DIM * dx
+            tile.y += Tile.DIM * dy
 
         return True
 
+    @override
+    def draw(self) -> None:
+        aj.draw_circle(self.x + 2 * Tile.DIM, self.y + 2 * Tile.DIM, 2, color=aj.c_red)
+        for y, row in enumerate(self.shape.solid_map):
+            for x, is_solid in enumerate(row):
+                color = aj.c_white if is_solid else c_gray
+                aj.draw_rectangle(
+                    self.x + x * Tile.DIM,
+                    self.y + y * Tile.DIM,
+                    Tile.DIM,
+                    Tile.DIM,
+                    color=color,
+                )
+
 
 class Manager(aj.GameObject):
-    def __init__(
-        self, x: float = 0, y: float = 0, **kwargs: Unpack[aj.GameObjectKwargs]
-    ) -> None:
+    BOARD_TILES_X = 12
+    BOARD_TILES_Y = 24
+
+    def __init__(self, x: float = 0, y: float = 0, **kwargs: Unpack[aj.GameObjectKwargs]) -> None:
         super().__init__(x, y, **kwargs)
-        self.current_piece: Piece | None = None
+
+        self.room_size: tuple[int, int] = (
+            Tile.DIM * self.BOARD_TILES_X,
+            Tile.DIM * self.BOARD_TILES_Y,
+        )
+        aj.room_set_size(*self.room_size)
+        aj.window_set_size(*self.room_size)
+
+        self.current_piece: Piece = self.spawn_piece()
         self.base_move_interval: float = 0.25
         self.set_current_move_interval()
         self.move_timer: float = self.current_move_interval
 
-    def spawn_piece(self, shape: Shape) -> None:
-        self.current_piece = Piece(shape, aj.window_width / 2, Tile.DIM)
+    def spawn_piece(self) -> Piece:
+        shape = random.choice(
+            (
+                SHAPE_STRAIGHT,
+                SHAPE_SQUARE,
+                SHAPE_T,
+                SHAPE_L,
+                SHAPE_SKEW,
+            )
+        )
+        return Piece(shape, aj.window_width / 2, Tile.DIM)
 
     def set_current_move_interval(self, fast: bool = False) -> None:
         self.current_move_interval = self.base_move_interval
         if fast:
             self.current_move_interval /= 4
 
+    def check_tetris_and_destroy(self) -> bool:
+        y = self.room_size[1] - Tile.DIM
+        bottom_row: list[aj.IGameObject] = []
+        for x in range(0, self.room_size[0], Tile.DIM):
+            tile = aj.collision_rectangle(x, y, x + Tile.DIM, y + Tile.DIM, Tile)
+            if tile is None:
+                return False
+            bottom_row.append(tile)
+
+        for tile in bottom_row:
+            aj.instance_destroy(tile)
+        return True
+
+    def shift_tiles_down(self) -> None:
+        for tile in aj.instances_iterate(Tile):
+            if tile not in self.current_piece.tiles:
+                tile.y += Tile.DIM
+
     @override
     def step(self) -> None:
         super().step()
         self.move_timer -= aj.delta_time
 
-        if aj.keyboard_check_released(aj.vk_space) and self.current_piece is None:
-            random_shape = random.choice(
-                (
-                    SHAPE_STRAIGHT,
-                    SHAPE_SQUARE,
-                    SHAPE_T,
-                    SHAPE_L,
-                    SHAPE_SKEW,
-                )
-            )
-            self.spawn_piece(random_shape)
-
         if aj.keyboard_check(aj.vk_down):
             self.set_current_move_interval(fast=True)
         elif aj.keyboard_check_released(aj.vk_down):
             self.set_current_move_interval()
+        elif aj.keyboard_check_released(aj.vk_up) and self.current_piece.shape != SHAPE_SQUARE:
+            rotated_shape = Shape(
+                self.current_piece.shape.get_rotation(), self.current_piece.shape.color
+            )
+            if not self.current_piece.allowed_at_position(
+                self.current_piece.x, self.current_piece.y, rotated_shape
+            ):
+                return
+            piece_x, piece_y = self.current_piece.x, self.current_piece.y
+            aj.instance_destroy(self.current_piece)
+            self.current_piece = Piece(rotated_shape, piece_x, piece_y)
 
         if self.move_timer <= 0:
             self.move_timer += self.current_move_interval
-            if self.current_piece is not None:
-                if not self.current_piece.move(dy=1):
-                    aj.instance_destroy(self.current_piece)  # The tiles still exist
-                    self.current_piece = None
+            if not self.current_piece.move(dy=1):
+                for tile in self.current_piece.tiles:
+                    Tile(tile.x, tile.y, tile.color)
+                aj.instance_destroy(self.current_piece)
+                self.current_piece = self.spawn_piece()
+
+                if self.check_tetris_and_destroy():
+                    self.shift_tiles_down()
 
 
 def main() -> None:
     aj.room_set_caption("Tetris")
     Manager()
-    room_size = (Tile.DIM * 12, Tile.DIM * 24)
-    aj.room_set_size(*room_size)
-    aj.window_set_size(*room_size)
     aj.game_start()
 
 

@@ -37,9 +37,7 @@ class GameObject(IGameObject):
         self.width: float = kwargs.get("width") or 0
         self.height: float = kwargs.get("height") or 0
         custom_fields = kwargs.get("customFields")
-        self.custom_fields: CustomFields = (
-            custom_fields if custom_fields is not None else {}
-        )
+        self.custom_fields: CustomFields = custom_fields if custom_fields is not None else {}
 
         _ctx.engine.add_object(self)
 
@@ -72,9 +70,7 @@ class GameObject(IGameObject):
                 and self._last_image_update > 1 / self.image_speed
             ):
                 self._last_image_update = 0
-                self.image_index = (self.image_index + 1) % len(
-                    self.sprite_index.images
-                )
+                self.image_index = (self.image_index + 1) % len(self.sprite_index.images)
 
     @override
     def draw(self) -> None:
@@ -94,13 +90,26 @@ class GameObject(IGameObject):
 
     @override
     def place_meeting(
-        self, x: float, y: float, obj: IGameObject | type[IGameObject] | UUID
-    ) -> GameObject | None:
+        self,
+        x: float,
+        y: float,
+        obj: IGameObject | type[IGameObject] | UUID,  # FIXME: shouldn't this be `str`?
+    ) -> IGameObject | None:
+        """
+        With this function you can check a position for a collision with another instance or all
+        instances of an object using the collision mask of the instance that runs the code for the
+        check. When you use this you are effectively asking Ajishio to move the instance to the
+        new position, check for a collision, move back and tell you if a collision was found or not.
+
+        This function will return the unique instance id of the object being collided. This function
+        will return `None` if no collision occurs, or the exact instance found if a collision does
+        occur.
+        """
         # Check cheapest cases first to avoid the expensive runtime Protocol
         # isinstance check that inspect.getattr_static triggers on IGameObject.
         if isinstance(obj, type):
-            for g_o in _ctx.engine.get_game_objects():
-                if isinstance(g_o, obj) and self.place_meeting(x, y, g_o):
+            for g_o in _ctx.engine.instances_iterate(obj):
+                if self.place_meeting(x, y, g_o):
                     return g_o
             return None
 
@@ -130,3 +139,7 @@ class GameObject(IGameObject):
         ):
             return o
         return None
+
+    @override
+    def on_destroy(self) -> None:
+        pass

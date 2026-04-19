@@ -89,3 +89,12 @@ class IGameObject(Protocol):
     def place_meeting(
         self, _x: float, _y: float, _obj: IGameObject | type[IGameObject] | UUID
     ) -> IGameObject | None: ...
+
+    def on_destroy(self) -> None:
+        """
+        This event is the event to be executed when an instance is destroyed. It is often overlooked
+        when adding behaviours to objects, but it can be very useful, for example by creating
+        explosion or particle effects when an enemy is killed, or for respawning a new instance of
+        the object in another part of the room, or even for adding points to a score.
+        """
+        ...

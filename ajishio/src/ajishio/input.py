@@ -42,7 +42,7 @@ def keyboard_check_released(key: int) -> bool:
 
 
 def mouse_check_button_released(mb: int) -> bool:
-    return any(event.type == pg.MOUSEBUTTONDOWN and event.button == mb for event in input.events)
+    return any(event.type == pg.MOUSEBUTTONUP and event.button == mb for event in input.events)
 
 
 def keyboard_check(key: int) -> bool:

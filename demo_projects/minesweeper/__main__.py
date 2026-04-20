@@ -1,7 +1,9 @@
 from dataclasses import dataclass
 from pathlib import Path
 import ajishio as aj
-from typing import Unpack, override
+from typing import Iterable, Unpack, override
+from random import randrange
+from enum import IntEnum, auto
 
 
 TARGET_MAX_DIMENSION = 640
@@ -16,7 +18,34 @@ class Difficulty:
     mines: int
 
 
+@dataclass
+class Cell:
+    has_mine: bool
+    flagged: bool
+    adjacent_mines: int
+    revealed: bool
+
+
 class Minesweeper(aj.GameObject):
+    class SpriteIndices(IntEnum):
+        NUMBER_0 = 0
+        NUMBER_1 = auto()
+        NUMBER_2 = auto()
+        NUMBER_3 = auto()
+        NUMBER_4 = auto()
+        NUMBER_5 = auto()
+        NUMBER_6 = auto()
+        NUMBER_7 = auto()
+        NUMBER_8 = auto()
+        UNKNOWN = auto()
+        FLAG = auto()
+        QUESTION_UP = auto()
+        QUESTION_DOWN = auto()
+        MINE = auto()
+        EXPLODED_MINE = auto()
+
+    sprite_sheet = aj.load_aseprite_sprite(Path(__file__).parent / "sprites")
+
     def __init__(self, difficulty: Difficulty, **kwargs: Unpack[aj.GameObjectKwargs]) -> None:
         super().__init__(0, 0, **kwargs)
         aj.room_set_caption(f"{difficulty.name} Minesweeper")
@@ -31,6 +60,49 @@ class Minesweeper(aj.GameObject):
         aj.window_set_size(self.cols * self.cell_size, self.rows * self.cell_size)
         self.hovered_cell: tuple[int, int] = self.get_hovered_cell()
 
+        self.grid: dict[tuple[int, int], Cell] = {}
+        for x in range(self.cols):
+            for y in range(self.rows):
+                self.grid[(x, y)] = Cell(
+                    has_mine=False,
+                    revealed=False,
+                    flagged=False,
+                    adjacent_mines=0,
+                )
+
+        self.game_over: bool = False
+
+        self.mines_locations: set[tuple[int, int]] = self.place_mines(difficulty.mines)
+        self.update_neighbors()
+
+    def place_mines(self, num: int) -> set[tuple[int, int]]:
+        mines_locations: set[tuple[int, int]] = set()
+        placed = 0
+        while placed < num:
+            x = randrange(0, self.cols)
+            y = randrange(0, self.rows)
+            cell = self.grid[(x, y)]
+            if not cell.has_mine:
+                cell.has_mine = True
+                mines_locations.add((x, y))
+                placed += 1
+        return mines_locations
+
+    def get_neighbour_locations(self, x: int, y: int) -> Iterable[tuple[int, int]]:
+        for dx in (-1, 0, 1):
+            for dy in (-1, 0, 1):
+                if dx == dy == 0:
+                    continue
+                n_x = x + dx
+                n_y = y + dy
+                if (n_x, n_y) in self.grid:
+                    yield (n_x, n_y)
+
+    def update_neighbors(self) -> None:
+        for x, y in self.mines_locations:
+            for neighbor in self.get_neighbour_locations(x, y):
+                self.grid[neighbor].adjacent_mines += 1
+
     def get_hovered_cell(self) -> tuple[int, int]:
         x = int(aj.mouse_x / self.cell_size)
         y = int(aj.mouse_y / self.cell_size)
@@ -41,18 +113,86 @@ class Minesweeper(aj.GameObject):
         super().step()
         self.hovered_cell = self.get_hovered_cell()
 
+        if self.game_over:
+            continue_keys = (aj.vk_enter, aj.vk_space, aj.vk_escape)
+            if any(aj.keyboard_check_pressed(key) for key in continue_keys):
+                MainMenu()
+                aj.instance_destroy(self)
+            return
+
+        # Mouse input for flagging/revealing
+        if aj.mouse_check_button_released(aj.mb_left):
+            self.reveal_cell(self.hovered_cell)
+        elif aj.mouse_check_button_released(aj.mb_right):
+            self.toggle_flag(self.hovered_cell)
+
+    def reveal_cell(self, location: tuple[int, int]) -> None:
+        cell = self.grid[location]
+
+        if cell.revealed or cell.flagged:
+            return
+
+        cell.revealed = True
+        if cell.has_mine:
+            self.game_over = True
+            return
+        elif self.check_win():
+            self.game_over = True
+            return
+
+        if cell.adjacent_mines == 0:
+            self.flood_fill(*location)
+
+    def toggle_flag(self, location: tuple[int, int]) -> None:
+        cell = self.grid[location]
+
+        if cell.revealed:
+            return
+
+        cell.flagged = not cell.flagged
+        self.check_win()
+
+    def check_win(self) -> None:
+        # Win if all non-mine cells are revealed and all mines are flagged
+        all_cells = self.grid.values()
+        won = all(
+            (cell.has_mine and cell.flagged) or (not cell.has_mine and cell.revealed)
+            for cell in all_cells
+        )
+        if won:
+            aj.room_set_caption("You win!")
+
+    def flood_fill(self, x: int, y: int) -> None:
+        for n_x, n_y in self.get_neighbour_locations(x, y):
+            neighbor = self.grid[(n_x, n_y)]
+            if not neighbor.revealed and not neighbor.has_mine:
+                neighbor.revealed = True
+                if neighbor.adjacent_mines == 0:
+                    self.flood_fill(n_x, n_y)
+
     @override
     def draw(self) -> None:
         super().draw()
-        w = self.cols * self.cell_size
-        h = self.rows * self.cell_size
 
-        for row in range(1, self.rows):
-            y = row * self.cell_size
-            aj.draw_line(0, y, w, y, aj.c_gray)
-        for col in range(1, self.cols):
-            x = col * self.cell_size
-            aj.draw_line(x, 0, x, h, aj.c_gray)
+        for (x, y), cell in self.grid.items():
+            subimg = self.SpriteIndices.UNKNOWN
+            if cell.revealed:
+                if cell.has_mine:
+                    subimg = self.SpriteIndices.EXPLODED_MINE
+                else:
+                    # We can do this because we strategically front-loaded the sprite sheet with
+                    # the number sprites in order
+                    subimg = cell.adjacent_mines
+            elif cell.flagged:
+                subimg = self.SpriteIndices.FLAG
+            aj.draw_sprite(
+                x * self.cell_size,
+                y * self.cell_size,
+                self.sprite_sheet,
+                subimg,
+                x_scale=self.cell_size / self.sprite_sheet.width,
+                y_scale=self.cell_size / self.sprite_sheet.height,
+            )
 
         h_x, h_y = self.hovered_cell
         aj.draw_rectangle(

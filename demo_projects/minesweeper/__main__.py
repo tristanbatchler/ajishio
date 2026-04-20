@@ -80,6 +80,14 @@ class MainMenu(aj.GameObject):
         font = aj.load_font(font_path, 24)
         aj.draw_set_font(font)
 
+        self.difficulties_y1_y2: list[tuple[float, float]] = []
+        for i, difficulty in enumerate(self.difficulties):
+            option = difficulty.name
+            text_height = aj.text_height(option)
+            y_start = aj.view_yport[aj.view_current] + 20
+            y = y_start + i * text_height * 2
+            self.difficulties_y1_y2.append((y, y + text_height))
+
     @override
     def step(self) -> None:
         super().step()
@@ -87,24 +95,29 @@ class MainMenu(aj.GameObject):
             self.cursor_index = (self.cursor_index + 1) % len(self.difficulties)
         elif aj.keyboard_check_pressed(aj.vk_up):
             self.cursor_index = (self.cursor_index - 1) % len(self.difficulties)
-        elif aj.keyboard_check_pressed(aj.vk_enter) or aj.keyboard_check_pressed(aj.vk_space):
+        elif (
+            aj.keyboard_check_pressed(aj.vk_enter)
+            or aj.keyboard_check_pressed(aj.vk_space)
+            or aj.mouse_check_button_released(aj.mb_left)
+        ):
             Minesweeper(self.difficulties[self.cursor_index])
             aj.instance_destroy(self)
+
+        for i, (y1, y2) in enumerate(self.difficulties_y1_y2):
+            if aj.mouse_y >= y1 and aj.mouse_y <= y2:
+                self.cursor_index = i
 
     @override
     def draw(self) -> None:
         x = aj.view_xport[aj.view_current] + 20
-        y_start = aj.view_yport[aj.view_current] + 20
 
-        for i, difficulty in enumerate(self.difficulties):
-            cursor = "> " if i == self.cursor_index else "  "
-            option = cursor + difficulty.name
+        for difficulty, (y1, _) in zip(self.difficulties, self.difficulties_y1_y2):
+            prefix, color = "  ", aj.c_white
+            if self.difficulties[self.cursor_index] == difficulty:
+                prefix, color = "> ", aj.c_lime
 
-            text_height = aj.text_height(option)
-
-            y = y_start + i * text_height * 2
-
-            aj.draw_text(x, y, option, aj.c_yellow)
+            entry = prefix + difficulty.name
+            aj.draw_text(x, y1, entry, color)
 
 
 class Manager(aj.GameObject):

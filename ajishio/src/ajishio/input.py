@@ -50,7 +50,12 @@ def keyboard_check(key: int) -> bool:
 
 
 def mouse_check_button(mb: int) -> bool:
-    return pg.mouse.get_pressed()[mb]
+    pressed = pg.mouse.get_pressed()
+
+    if mb in (mb_left, mb_middle, mb_right):
+        return pressed[mb - 1]
+
+    return False
 
 
 def ord(char: str) -> int:
@@ -64,6 +69,7 @@ vk_down: int = pg.K_DOWN
 vk_space: int = pg.K_SPACE
 vk_escape: int = pg.K_ESCAPE
 vk_enter: int = pg.K_RETURN
-mb_left: int = 0
-mb_middle: int = 1
-mb_right: int = 2
+
+mb_left: int = 1
+mb_middle: int = 2
+mb_right: int = 3

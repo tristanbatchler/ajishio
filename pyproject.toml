@@ -30,3 +30,8 @@ dev = [
 exclude = [
     "*/_web_build/*",
 ]
+
+[tool.basedpyright]
+ignore = [
+    "*/_web_build/*",
+]

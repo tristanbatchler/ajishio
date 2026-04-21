@@ -28,7 +28,7 @@ To verify that the installation was successful, run the following command and yo
 window pop up:
 
 ```bash
-uv run -m demo_projects.hello_world.main
+uv run demo_projects/hello_world/main.py
 ```
 
 ## Quick Start
@@ -46,36 +46,29 @@ aj.game_start()
 To run the game, execute the following command from the root of the repository:
 
 ```bash
-uv run -m <your_project_directory>.main
+uv run <your_project_directory>/main.py
 ```
-
-To see more substantial examples, check out the [`demo_projects`](/demo_projects/) directory. You can
-also run these in the same way, e.g. running the following command from the root of the repository
-will bring up a pre-made platformer game:
 
 ```bash
-uv run -m demo_projects.platformer.main
+uv run demo_projects/platformer/main.py
 ```
-
-### Demo commands at a glance
-
-- Platformer: `uv run -m demo_projects.platformer.main`
-- Pong: `uv run -m demo_projects.pong.main`
-- Snake: `uv run -m demo_projects.snake.main`
-- Space Invaders: `uv run -m demo_projects.space_invaders.main`
-- Roguelike: `uv run -m demo_projects.roguelike.main`
-- Sokoban: `uv run -m demo_projects.sokoban.main`
-- Visual Novel: `uv run -m demo_projects.visual_novel.main`
-
 ## Documentation
 View tips and tricks, as well as an API reference, which aims to be similar to the GameMaker 8.1 API: 
-[https://tristanbatchler.github.io/ajishio/](https://tristanbatchler.github.io/ajishio/)
+[https://tristanbatchler.github.io/ajishio/](https://tristanbatchler.github.io/ajishio/docs)
 
-## 🕹️ Play in your browser!
+## Demo projects
 
-You can instantly play all Ajishio demo projects in your browser, thanks to [pygbag](https://github.com/nicegui-org/pygbag) and GitHub Pages.
+This repository comes loaded with heaps of example projects both to showcase what's possible, but to 
+also provide example code snippets. To run them locally, simply run
 
-See [Web Demos](docs/web-demos.md) for the full, up-to-date list and links to play every demo. More demos will appear as their web builds are enabled and tested.
+```bash
+uv run demo_projects/sokoban/main.py # Or minesweeper, platformer, tetris, etc...
+```
+
+If you just want to have a look now, you can instantly play all Ajishio demo projects in your 
+browser, thanks to [pygbag](https://github.com/nicegui-org/pygbag) and GitHub Pages.
+
+See [Web Demos](docs/demo-projects.md) for the full, up-to-date list and links to play every demo.
 
 ## TODO
 
@@ -91,4 +84,3 @@ See [Web Demos](docs/web-demos.md) for the full, up-to-date list and links to pl
 - [x] Add library mkdocs generation and docstrings for all exposed objects
 - [x] Web export via pygbag
 - [ ] Faster collision detection using spatial quadtree
-- [ ] Support loading levels with [Tiled](https://www.mapeditor.org/)

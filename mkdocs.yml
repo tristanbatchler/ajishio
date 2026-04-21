@@ -49,6 +49,6 @@ nav:
       - Sprites & Collision: sprites.md
       - Profiling: profiling.md
       - Web Export: web-export.md
-      - Web Demos: web-demos.md
+      - Web Demos: demo-projects.md
   - API Reference: api.md   # This file is generated automatically
   - Contributing: contributing.md

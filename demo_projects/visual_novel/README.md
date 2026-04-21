@@ -15,7 +15,7 @@ A lightweight VN-style demo that uses a small custom UI layer on top of Ajishio'
 From the repo root:
 
 ```bash
-uv run -m demo_projects.visual_novel
+uv run demo_projects/visual_novel/main.py
 ```
 
 ## Notes

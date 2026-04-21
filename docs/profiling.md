@@ -13,7 +13,7 @@ main()
 ```
 
 ```bash
-uv run -m demo_projects.platformer.main --profile
+uv run demo_projects/platformer/main.py --profile
 ```
 
 This prints a summary of the top 30 hotspots sorted by cumulative time. Without `--profile` the
@@ -30,3 +30,5 @@ uv run snakeviz platformer.prof
 
 This starts a local web server and opens an interactive flame-graph in your browser. Press `Ctrl-C`
 to stop it.
+
+Profiling is not supported on the web export.

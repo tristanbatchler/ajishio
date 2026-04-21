@@ -608,7 +608,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../web-demos/" class="md-nav__link">
+      <a href="../demo-projects/" class="md-nav__link">
         
   
   
@@ -754,7 +754,7 @@ def main() -&gt; None:
 
 main()
 </code></pre>
-<pre><code class="language-bash">uv run -m demo_projects.platformer.main --profile
+<pre><code class="language-bash">uv run demo_projects/platformer/main.py --profile
 </code></pre>
 <p>This prints a summary of the top 30 hotspots sorted by cumulative time. Without <code>--profile</code> the
 decorator is a no-op and adds zero overhead.</p>
@@ -765,6 +765,7 @@ saved <code>.prof</code> file with:</p>
 </code></pre>
 <p>This starts a local web server and opens an interactive flame-graph in your browser. Press <code>Ctrl-C</code>
 to stop it.</p>
+<p>Profiling is not supported on the web export.</p>
 
 
 

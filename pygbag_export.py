@@ -148,10 +148,19 @@ def export(project_dir: Path, extra_args: list[str]) -> None:
 
     app_name = project_dir.name
 
-    subprocess.run(
-        [sys.executable, "-m", "pygbag", f"--app_name={app_name}", *extra_args, str(build_dir)],
-        check=True,
-    )
+    # Always use custom template and auto-start
+    tmpl_path = REPO_ROOT / "docs" / "assets" / "ajishio.tmpl"
+    pygbag_args = [
+        sys.executable,
+        "-m",
+        "pygbag",
+        f"--app_name={app_name}",
+        f"--template={tmpl_path}",
+        "--ume_block=0",
+        *extra_args,
+        str(build_dir),
+    ]
+    subprocess.run(pygbag_args, check=True)
 
 
 def main() -> None:

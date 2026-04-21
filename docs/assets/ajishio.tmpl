@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Ajishio Loading...</title>
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      background: #181820;
+      color: #fff;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+    #ajishio-logo {
+      width: 128px;
+      height: 128px;
+      margin-bottom: 2rem;
+      background: url('https://raw.githubusercontent.com/tristanbatchler/ajishio/main/.github/assets/ajishio_taro.png') center/contain no-repeat;
+    }
+    .loading-text {
+      font-size: 1.5rem;
+      letter-spacing: 0.05em;
+      margin-bottom: 1rem;
+    }
+    .progress {
+      width: 240px;
+      height: 8px;
+      background: #333;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 2rem;
+    }
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #6c63ff 0%, #00c3ff 100%);
+      transition: width 0.3s;
+    }
+    .ajishio-credit {
+      font-size: 0.9rem;
+      color: #aaa;
+      margin-top: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <div id="ajishio-logo"></div>
+  <div class="loading-text">Loading Ajishio game...</div>
+  <div class="progress"><div class="progress-bar" id="progress-bar"></div></div>
+  <div class="ajishio-credit">Ajishio &mdash; Powered by pygbag/WebAssembly</div>
+  <script>
+    // Simulate progress bar (pygbag will override this if possible)
+    let bar = document.getElementById('progress-bar');
+    let p = 0;
+    let interval = setInterval(() => {
+      p += Math.random() * 10;
+      if (p > 100) p = 100;
+      bar.style.width = p + '%';
+      if (p === 100) clearInterval(interval);
+    }, 120);
+  </script>
+</body>
+</html>

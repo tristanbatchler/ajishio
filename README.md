@@ -73,16 +73,9 @@ View tips and tricks, as well as an API reference, which aims to be similar to t
 
 ## 🕹️ Play in your browser!
 
-You can instantly play several Ajishio demo projects in your browser, thanks to [pygbag](https://github.com/nicegui-org/pygbag) and GitHub Pages:
+You can instantly play all Ajishio demo projects in your browser, thanks to [pygbag](https://github.com/nicegui-org/pygbag) and GitHub Pages.
 
-- [Platformer](https://tristanbatchler.github.io/ajishio/platformer/)
-- [Pong](https://tristanbatchler.github.io/ajishio/pong/)
-- [Snake](https://tristanbatchler.github.io/ajishio/snake/)
-- [Sokoban](https://tristanbatchler.github.io/ajishio/sokoban/)
-- [Visual Novel](https://tristanbatchler.github.io/ajishio/visual_novel/)
-- [Hello World](https://tristanbatchler.github.io/ajishio/hello_world/)
-
-See [WEB_DEMOS.md](WEB_DEMOS.md) for the full list and details. More demos will appear as their web builds are enabled and tested.
+See [Web Demos](docs/web-demos.md) for the full, up-to-date list and links to play every demo. More demos will appear as their web builds are enabled and tested.
 
 ## TODO
 

@@ -1,4 +1,4 @@
-name: Deploy Web Demos
+name: Deploy Docs and Web Demos
 
 on:
   push:
@@ -22,12 +22,19 @@ jobs:
       - name: Install dependencies
         run: uv sync --group dev
 
+      # Build MkDocs documentation into site/
+      - name: Build MkDocs documentation
+        env:
+          AJISHIO_DOCS: "1"
+        run: |
+          uv run mkdocs build --site-dir site
+
+      # Build web demos
       - name: Install pygbag and ffmpeg
         run: |
           python -m pip install --upgrade pip
           python -m pip install pygbag
           sudo apt-get update && sudo apt-get install -y ffmpeg
-
 
       - name: Build all demo projects for web
         run: |
@@ -37,7 +44,6 @@ jobs:
             if [ -f "$d/main.py" ]; then
               proj=$(basename "$d")
               echo "Building $proj..."
-              # Always use the export script (required)
               uv run pygbag_export.py "$d" --build || true
               # Copy build output if exists
               if [ -d "$d/build/web" ]; then
@@ -50,12 +56,17 @@ jobs:
             fi
           done
 
+      # Prepare combined deploy dir
+      - name: Prepare deploy directory
+        run: |
+          mkdir -p ./public/docs
+          mkdir -p ./public/web-demos
+          cp -r ./site/* ./public/docs/
+          cp -r ./web-demos/* ./public/web-demos/
 
-      # No need for a separate prepare step; handled above
-
+      # Deploy to GitHub Pages (docs at /docs/, demos at /web-demos/)
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ${{ github.workspace }}/web-demos
-          force_orphan: true
+          publish_dir: ./public

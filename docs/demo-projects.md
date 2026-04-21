@@ -18,6 +18,5 @@ Play Ajishio demo projects instantly in your browser! These are built automatica
 | Multiplayer     | [Play](https://tristanbatchler.github.io/ajishio/multiplayer/)           | Experimental multiplayer |
 
 > Some demos are experimental or may have limited browser support. 
----
 
 These builds use [pygbag](https://github.com/nicegui-org/pygbag) and a custom Ajishio loading screen. See the [repository](https://github.com/tristanbatchler/ajishio) for source code and instructions.

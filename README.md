@@ -54,7 +54,7 @@ uv run demo_projects/platformer/main.py
 ```
 ## Documentation
 View tips and tricks, as well as an API reference, which aims to be similar to the GameMaker 8.1 API: 
-[https://tristanbatchler.github.io/ajishio/](https://tristanbatchler.github.io/ajishio/docs)
+[https://tristanbatchler.github.io/ajishio/docs](https://tristanbatchler.github.io/ajishio/docs)
 
 ## Demo projects
 
@@ -68,7 +68,8 @@ uv run demo_projects/sokoban/main.py # Or minesweeper, platformer, tetris, etc..
 If you just want to have a look now, you can instantly play all Ajishio demo projects in your 
 browser, thanks to [pygbag](https://github.com/nicegui-org/pygbag) and GitHub Pages.
 
-See [Web Demos](docs/demo-projects.md) for the full, up-to-date list and links to play every demo.
+See [Web Demos](https://tristanbatchler.github.io/ajishio/docs/demo-projects) for the full, 
+up-to-date list and links to play every demo.
 
 ## TODO
 

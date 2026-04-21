@@ -9,12 +9,11 @@ directory (named after the project folder, e.g. `platformer.prof`):
 def main() -> None:
     aj.game_start()
 
-if __name__ == "__main__":
-    main()
+main()
 ```
 
 ```bash
-uv run -m demo_projects.platformer --profile
+uv run -m demo_projects.platformer.main --profile
 ```
 
 This prints a summary of the top 30 hotspots sorted by cumulative time. Without `--profile` the

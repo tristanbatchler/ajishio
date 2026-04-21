@@ -1,8 +1,9 @@
+from __future__ import annotations
 from collections.abc import Iterable
 import colorsys
 from pathlib import Path
 import pygame as pg
-from pygame import Color
+Color = pg.Color
 from ajishio.view import view
 from ajishio.types import GameSprite
 
@@ -32,8 +33,8 @@ def _translate_offset(x: float, y: float) -> tuple[float, float]:
     return (x + view.offset[0], y + view.offset[1])
 
 
-def make_color_hsv(hue: float, sat: float, val: float) -> pg.Color:
-    return pg.Color(*[int(c * 255) for c in colorsys.hsv_to_rgb(hue, sat, val)])
+def make_color_hsv(hue: float, sat: float, val: float) -> Color:
+    return Color(*[int(c * 255) for c in colorsys.hsv_to_rgb(hue, sat, val)])
 
 
 def load_font(font_path: Path | str, size: int) -> pg.font.Font:
@@ -50,7 +51,7 @@ class Renderer:
         self.fit_display()
         self._background_images: Iterable[pg.Surface] = []
 
-        self.draw_color: pg.Color = pg.Color(255, 255, 255)
+        self.draw_color: Color = Color(255, 255, 255)
         self.draw_font: pg.font.Font = pg.font.Font(None, 32)
         self.draw_font_fallbacks: Iterable[pg.font.Font] = []
 

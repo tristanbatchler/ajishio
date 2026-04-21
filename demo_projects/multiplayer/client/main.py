@@ -166,14 +166,12 @@ class NetworkClient(aj.GameObject):
         self.socket.close()
 
 
-if __name__ == "__main__":
-    aj.set_rooms(shared.rooms)
-    aj.register_objects(go.Floor, NetworkClient)
-    aj.room_set_caption("Multiplayer Client")
-    aj.room_set_size(shared.room_width, shared.room_height)
-    aj.window_set_size(shared.room_width * 2, shared.room_height * 2)
-    aj.view_set_wport(aj.view_current, shared.room_width)
-    aj.view_set_hport(aj.view_current, shared.room_height)
-    aj.room_set_background(shared.room_background_color)
-    aj.game_start()
-    exit()
+aj.set_rooms(shared.rooms)
+aj.register_objects(go.Floor, NetworkClient)
+aj.room_set_caption("Multiplayer Client")
+aj.room_set_size(shared.room_width, shared.room_height)
+aj.window_set_size(shared.room_width * 2, shared.room_height * 2)
+aj.view_set_wport(aj.view_current, shared.room_width)
+aj.view_set_hport(aj.view_current, shared.room_height)
+aj.room_set_background(shared.room_background_color)
+aj.game_start()

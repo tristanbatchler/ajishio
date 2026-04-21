@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Callable, cast
 
-from pygame import Color
+import pygame as _pg
+Color = _pg.Color
 
 import os as _os
 import ajishio._context as _ctx
@@ -136,6 +137,7 @@ view_hport = view.view_hport
 
 # --- Engine method delegates ---
 game_start = _engine.game_start
+async_game_start = _engine.async_game_start
 game_end = _engine.game_end
 game_restart = _engine.game_restart
 game_set_speed = _engine.game_set_speed
@@ -309,6 +311,7 @@ __all__ = [
     "load_ldtk_levels",
     # Engine methods
     "game_start",
+    "async_game_start",
     "game_end",
     "game_restart",
     "game_set_speed",

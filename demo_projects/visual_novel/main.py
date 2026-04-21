@@ -131,30 +131,24 @@ def build_script() -> list[ScriptStep]:
     ]
 
 
-def main() -> None:
-    aj.room_set_caption("Ajishio VN Demo")
-    aj.window_set_size(ROOM_WIDTH, ROOM_HEIGHT)
-    aj.room_set_size(float(ROOM_WIDTH), float(ROOM_HEIGHT))
-    aj.view_set_wport(aj.view_current, aj.room_width)
-    aj.view_set_hport(aj.view_current, aj.room_height)
+aj.room_set_caption("Ajishio VN Demo")
+aj.window_set_size(ROOM_WIDTH, ROOM_HEIGHT)
+aj.room_set_size(float(ROOM_WIDTH), float(ROOM_HEIGHT))
+aj.view_set_wport(aj.view_current, aj.room_width)
+aj.view_set_hport(aj.view_current, aj.room_height)
 
-    fonts_dir = Path(__file__).parent / "fonts"
-    primary_font = aj.load_font(fonts_dir / "NotoSans-VariableFont_wdth,wght.ttf", 22)
-    fallback_fonts = [
-        aj.load_font(fonts_dir / "NotoSansSymbols-VariableFont_wght.ttf", 22),
-        aj.load_font(fonts_dir / "NotoSansSymbols2-Regular.ttf", 22),
-    ]
-    aj.draw_set_font(primary_font, fallback_fonts)
+fonts_dir = Path(__file__).parent / "fonts"
+primary_font = aj.load_font(fonts_dir / "NotoSans-VariableFont_wdth,wght.ttf", 22)
+fallback_fonts = [
+    aj.load_font(fonts_dir / "NotoSansSymbols-VariableFont_wght.ttf", 22),
+    aj.load_font(fonts_dir / "NotoSansSymbols2-Regular.ttf", 22),
+]
+aj.draw_set_font(primary_font, fallback_fonts)
 
-    backdrop = Backdrop(aj.Color(8, 8, 18))
-    dialogue_box = DialogueBox(width=aj.room_width - 40)
-    choice_menu = ChoiceMenu(width=340)
+backdrop = Backdrop(aj.Color(8, 8, 18))
+dialogue_box = DialogueBox(width=aj.room_width - 40)
+choice_menu = ChoiceMenu(width=340)
 
-    ScriptRunner(build_script(), dialogue_box, choice_menu, backdrop.set_color)
+ScriptRunner(build_script(), dialogue_box, choice_menu, backdrop.set_color)
 
-    aj.game_start()
-
-
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
-    main()
+aj.game_start()

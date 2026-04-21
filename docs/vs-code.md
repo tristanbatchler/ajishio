@@ -19,12 +19,12 @@ You can set up a launch task to debug your game with F5. Add an entry to the
     "name": "<your project name>",
     "type": "debugpy",
     "request": "launch",
-    "module": "<your.dot.separated.project.directory>"
+    "module": "<your.dot.separated.project.directory>.main"
 }
 ```
 
 For example, if your game script is at
-`my_stuff/games/ziltoid_the_destroyer/__main__.py`, your `launch.json` should look like:
+`my_stuff/games/ziltoid_the_destroyer/main.py`, your `launch.json` should look like:
 
 ```json
 {
@@ -34,7 +34,7 @@ For example, if your game script is at
             "name": "Ziltoid the Destroyer",
             "type": "debugpy",
             "request": "launch",
-            "module": "my_stuff.games.ziltoid_the_destroyer"
+            "module": "my_stuff.games.ziltoid_the_destroyer.main"
         }
     ]
 }

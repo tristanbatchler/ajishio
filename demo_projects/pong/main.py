@@ -155,30 +155,25 @@ class Ball(aj.GameObject):
         )
 
 
-def main() -> None:
-    aj.room_set_caption("Pong")
-    wall_width: float = 5
-    paddle_height: float = 100
-    paddle_buffer: float = 100
-    Boundary(x=0, y=0, width=aj.room_width, height=wall_width)
-    Boundary(x=0, y=aj.room_height - wall_width, width=aj.room_width, height=wall_width)
-    Paddle(
-        x=paddle_buffer,
-        y=(aj.room_height - paddle_height) / 2,
-        width=wall_width,
-        height=paddle_height,
-        player=1,
-    )
-    Paddle(
-        x=aj.room_width - paddle_buffer - wall_width,
-        y=(aj.room_height - paddle_height) / 2,
-        width=wall_width,
-        height=paddle_height,
-        player=2,
-    )
-    Ball(radius=7.5)
-    aj.game_start()
-
-
-if __name__ == "__main__":
-    main()
+aj.room_set_caption("Pong")
+wall_width: float = 5
+paddle_height: float = 100
+paddle_buffer: float = 100
+Boundary(x=0, y=0, width=aj.room_width, height=wall_width)
+Boundary(x=0, y=aj.room_height - wall_width, width=aj.room_width, height=wall_width)
+Paddle(
+    x=paddle_buffer,
+    y=(aj.room_height - paddle_height) / 2,
+    width=wall_width,
+    height=paddle_height,
+    player=1,
+)
+Paddle(
+    x=aj.room_width - paddle_buffer - wall_width,
+    y=(aj.room_height - paddle_height) / 2,
+    width=wall_width,
+    height=paddle_height,
+    player=2,
+)
+Ball(radius=7.5)
+aj.game_start()

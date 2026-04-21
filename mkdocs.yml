@@ -48,5 +48,6 @@ nav:
       - Loading Rooms: rooms.md
       - Sprites & Collision: sprites.md
       - Profiling: profiling.md
+      - Web Export: web-export.md
   - API Reference: api.md   # This file is generated automatically
   - Contributing: contributing.md

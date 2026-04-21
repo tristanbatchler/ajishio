@@ -1,9 +1,12 @@
+from __future__ import annotations
 from dataclasses import dataclass
-from pathlib import Path
-import ajishio as aj
-from typing import Iterable, Unpack, override
-from random import randrange
 from enum import IntEnum, auto
+from pathlib import Path
+from random import randrange
+from collections.abc import Iterable
+from typing import Unpack, override
+
+import ajishio as aj
 
 
 TARGET_MAX_DIMENSION = 640
@@ -49,7 +52,7 @@ class Minesweeper(aj.GameObject):
     def __init__(self, difficulty: Difficulty, **kwargs: Unpack[aj.GameObjectKwargs]) -> None:
         super().__init__(0, 0, **kwargs)
         aj.room_set_caption(f"{difficulty.name} Minesweeper")
-
+        self.num_mines = difficulty.mines
         self.cols: int = difficulty.width
         self.rows: int = difficulty.height
         self.cell_size: int = max(
@@ -72,21 +75,22 @@ class Minesweeper(aj.GameObject):
 
         self.game_over: bool = False
 
-        self.mines_locations: set[tuple[int, int]] = self.place_mines(difficulty.mines)
-        self.update_neighbors()
+        self.mines_locations: set[tuple[int, int]] = set()
 
-    def place_mines(self, num: int) -> set[tuple[int, int]]:
-        mines_locations: set[tuple[int, int]] = set()
+    def place_mines(self, avoid: tuple[int, int]) -> None:
         placed = 0
-        while placed < num:
+        while placed < self.num_mines:
             x = randrange(0, self.cols)
             y = randrange(0, self.rows)
+            if (x, y) == avoid:
+                continue
             cell = self.grid[(x, y)]
             if not cell.has_mine:
                 cell.has_mine = True
-                mines_locations.add((x, y))
+                self.mines_locations.add((x, y))
                 placed += 1
-        return mines_locations
+
+        self.update_neighbors()
 
     def get_neighbour_locations(self, x: int, y: int) -> Iterable[tuple[int, int]]:
         for dx in (-1, 0, 1):
@@ -120,8 +124,9 @@ class Minesweeper(aj.GameObject):
                 aj.instance_destroy(self)
             return
 
-        # Mouse input for flagging/revealing
         if aj.mouse_check_button_released(aj.mb_left):
+            if len(self.mines_locations) == 0:
+                self.place_mines(self.hovered_cell)
             self.reveal_cell(self.hovered_cell)
         elif aj.mouse_check_button_released(aj.mb_right):
             self.toggle_flag(self.hovered_cell)
@@ -134,14 +139,20 @@ class Minesweeper(aj.GameObject):
 
         cell.revealed = True
         if cell.has_mine:
-            self.game_over = True
+            self.run_game_over_sequence()
             return
-        elif self.check_win():
-            self.game_over = True
-            return
+
+        self.check_win()
 
         if cell.adjacent_mines == 0:
             self.flood_fill(*location)
+
+    def run_game_over_sequence(self) -> None:
+        aj.room_set_caption("Game Over!")
+        self.game_over = True
+        for location in self.mines_locations:
+            self.grid[location].revealed = True
+
 
     def toggle_flag(self, location: tuple[int, int]) -> None:
         cell = self.grid[location]
@@ -161,6 +172,7 @@ class Minesweeper(aj.GameObject):
         )
         if won:
             aj.room_set_caption("You win!")
+            self.game_over = True
 
     def flood_fill(self, x: int, y: int) -> None:
         for n_x, n_y in self.get_neighbour_locations(x, y):
@@ -251,7 +263,7 @@ class MainMenu(aj.GameObject):
     def draw(self) -> None:
         x = aj.view_xport[aj.view_current] + 20
 
-        for difficulty, (y1, _) in zip(self.difficulties, self.difficulties_y1_y2):
+        for difficulty, (y1, _) in zip(self.difficulties, self.difficulties_y1_y2, strict=False):
             prefix, color = "  ", aj.c_white
             if self.difficulties[self.cursor_index] == difficulty:
                 prefix, color = "> ", aj.c_lime
@@ -266,13 +278,7 @@ class Manager(aj.GameObject):
 
         MainMenu()
 
-
-def main() -> None:
-    aj.room_set_caption("Minesweeper")
-    aj.window_set_size(400, 600)
-    MainMenu()
-    aj.game_start()
-
-
-if __name__ == "__main__":
-    main()
+aj.room_set_caption("Minesweeper")
+aj.window_set_size(400, 600)
+MainMenu()
+aj.game_start()

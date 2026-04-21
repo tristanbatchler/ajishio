@@ -305,16 +305,11 @@ class Manager(aj.GameObject):
             )
 
 
-def main() -> None:
-    aj.room_set_caption("Tetris")
-    size = (10 * Tile.DIM, 20 * Tile.DIM)
-    aj.room_set_size(*size)
-    aj.window_set_size(size[0] * 2, size[1] * 2)
-    aj.view_set_wport(aj.view_current, size[0])
-    aj.view_set_hport(aj.view_current, size[1])
-    Manager()
-    aj.game_start()
-
-
-if __name__ == "__main__":
-    main()
+aj.room_set_caption("Tetris")
+size = (10 * Tile.DIM, 20 * Tile.DIM)
+aj.room_set_size(*size)
+aj.window_set_size(size[0] * 2, size[1] * 2)
+aj.view_set_wport(aj.view_current, size[0])
+aj.view_set_hport(aj.view_current, size[1])
+Manager()
+aj.game_start()

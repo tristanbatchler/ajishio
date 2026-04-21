@@ -28,13 +28,13 @@ To verify that the installation was successful, run the following command and yo
 window pop up:
 
 ```bash
-uv run -m demo_projects.hello_world
+uv run -m demo_projects.hello_world.main
 ```
 
 ## Quick Start
 
 Inside the cloned repository, create a new directory for your project and create a new Python file 
-inside it called `__main__.py`. Getting a blank window up and running is as simple as putting the 
+inside it called `main.py`. Getting a blank window up and running is as simple as putting the 
 following code in that file:
 ```python
 import ajishio as aj
@@ -46,7 +46,7 @@ aj.game_start()
 To run the game, execute the following command from the root of the repository:
 
 ```bash
-uv run -m <your_project_directory>
+uv run -m <your_project_directory>.main
 ```
 
 To see more substantial examples, check out the [`demo_projects`](/demo_projects/) directory. You can
@@ -54,18 +54,18 @@ also run these in the same way, e.g. running the following command from the root
 will bring up a pre-made platformer game:
 
 ```bash
-uv run -m demo_projects.platformer
+uv run -m demo_projects.platformer.main
 ```
 
 ### Demo commands at a glance
 
-- Platformer: `uv run -m demo_projects.platformer`
-- Pong: `uv run -m demo_projects.pong`
-- Snake: `uv run -m demo_projects.snake`
-- Space Invaders: `uv run -m demo_projects.space_invaders`
-- Roguelike: `uv run -m demo_projects.roguelike`
-- Sokoban: `uv run -m demo_projects.sokoban`
-- Visual Novel: `uv run -m demo_projects.visual_novel`
+- Platformer: `uv run -m demo_projects.platformer.main`
+- Pong: `uv run -m demo_projects.pong.main`
+- Snake: `uv run -m demo_projects.snake.main`
+- Space Invaders: `uv run -m demo_projects.space_invaders.main`
+- Roguelike: `uv run -m demo_projects.roguelike.main`
+- Sokoban: `uv run -m demo_projects.sokoban.main`
+- Visual Novel: `uv run -m demo_projects.visual_novel.main`
 
 ## Documentation
 View tips and tricks, as well as an API reference, which aims to be similar to the GameMaker 8.1 API: 
@@ -83,5 +83,6 @@ View tips and tricks, as well as an API reference, which aims to be similar to t
 - [x] Support persistant objects
 - [x] Support easy profiling
 - [x] Add library mkdocs generation and docstrings for all exposed objects
+- [x] Web export via pygbag
 - [ ] Faster collision detection using spatial quadtree
 - [ ] Support loading levels with [Tiled](https://www.mapeditor.org/)

@@ -8,79 +8,79 @@
             "name": "Pong",
             "type": "debugpy",
             "request": "launch",
-            "module": "demo_projects.pong"
+            "module": "demo_projects.pong.main"
         },
         {
             "name": "Hello World",
             "type": "debugpy",
             "request": "launch",
-            "module": "demo_projects.hello_world"
+            "module": "demo_projects.hello_world.main"
         },
         {
             "name": "Snake",
             "type": "debugpy",
             "request": "launch",
-            "module": "demo_projects.snake"
+            "module": "demo_projects.snake.main"
         },
         {
             "name": "Platformer",
             "type": "debugpy",
             "request": "launch",
-            "module": "demo_projects.platformer"
+            "module": "demo_projects.platformer.main"
         },
         {
             "name": "Roguelike",
             "type": "debugpy",
             "request": "launch",
-            "module": "demo_projects.roguelike"
+            "module": "demo_projects.roguelike.main"
         },
         {
             "name": "Multiplayer Server",
             "type": "debugpy",
             "request": "launch",
-            "module": "demo_projects.multiplayer.server"
+            "module": "demo_projects.multiplayer.server.main"
         },
         {
             "name": "Multiplayer Client",
             "type": "debugpy",
             "request": "launch",
-            "module": "demo_projects.multiplayer.client"
+            "module": "demo_projects.multiplayer.client.main"
         },
         {
             "name": "Sokoban",
             "type": "debugpy",
             "request": "launch",
-            "module": "demo_projects.sokoban"
+            "module": "demo_projects.sokoban.main"
         },
         {
             "name": "Space Invaders",
             "type": "debugpy",
             "request": "launch",
-            "module": "demo_projects.space_invaders"
+            "module": "demo_projects.space_invaders.main"
         },
         {
             "name": "Visual Novel",
             "type": "debugpy",
             "request": "launch",
-            "module": "demo_projects.visual_novel"
+            "module": "demo_projects.visual_novel.main"
         },
         {
             "name": "Witch Game",
             "type": "debugpy",
             "request": "launch",
-            "module": "demo_projects.witch_game"
+            "module": "demo_projects.witch_game.main"
         },
         {
             "name": "Tetris",
             "type": "debugpy",
             "request": "launch",
-            "module": "demo_projects.tetris"
+            "module": "demo_projects.tetris.main"
         },
         {
             "name": "Minesweeper",
             "type": "debugpy",
             "request": "launch",
-            "module": "demo_projects.minesweeper"
+            "module": "demo_projects.minesweeper.main"
         }
     ]
 }

@@ -1,6 +1,4 @@
-import cProfile
 import inspect
-import pstats
 import sys
 from collections.abc import Callable
 from functools import wraps
@@ -27,8 +25,7 @@ def profile(fn: Callable[_P, _R]) -> Callable[_P, _R]:
         def main() -> None:
             aj.game_start()
 
-        if __name__ == "__main__":
-            main()
+        main()
     """
 
     @wraps(fn)
@@ -36,11 +33,14 @@ def profile(fn: Callable[_P, _R]) -> Callable[_P, _R]:
         if "--profile" not in sys.argv:
             return fn(*args, **kwargs)
 
+        import cProfile
+        import pstats
+
         # Derive a friendly name from the owning module's file path.
         module_file = inspect.getfile(fn)
         stem = Path(
             module_file
-        ).parent.name  # e.g. "platformer" from .../platformer/__main__.py
+        ).parent.name  # e.g. "platformer" from .../platformer/main.py
         output_path = Path.cwd() / f"{stem}.prof"
 
         profiler = cProfile.Profile()

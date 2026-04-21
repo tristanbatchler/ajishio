@@ -144,17 +144,11 @@ def spawn_wave(difficulty: int) -> None:
             Enemy(enemy_x, PADDING + Enemy.height * row * 1.5, x_velocity=speed)
 
 
-def main() -> None:
+Player()
 
-    Player()
+aj.register_objects(Player, Enemy, Bullet)
+spawn_wave(level)
 
-    aj.register_objects(Player, Enemy, Bullet)
-    spawn_wave(level)
-
-    aj.room_set_caption("Space Invaders")
-    aj.room_set_background(aj.c_teal)
-    aj.game_start()
-
-
-if __name__ == "__main__":
-    main()
+aj.room_set_caption("Space Invaders")
+aj.room_set_background(aj.c_teal)
+aj.game_start()

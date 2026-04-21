@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Container, Iterable, Callable
 from logging import Logger
 from typing import TYPE_CHECKING, cast
@@ -7,7 +8,7 @@ from uuid import UUID
 from ajishio.input import input
 from ajishio.view import view
 from ajishio.types import CollisionMask, GameLevel, IGameObject
-from ajishio.rendering import Renderer
+from ajishio.rendering import Renderer, Color
 import pygame as pg
 import sys
 import logging
@@ -32,7 +33,7 @@ class Engine:
 
         self.room_set_size(view.view_wport[view.view_current], view.view_hport[view.view_current])
         self.game_set_speed(60)
-        self.room_set_background(pg.Color(0, 0, 0))
+        self.room_set_background(Color(0, 0, 0))
 
         self._clock: pg.time.Clock = pg.time.Clock()
         self._last_render_time: float = 0
@@ -351,6 +352,65 @@ class Engine:
 
         pg.quit()
         sys.exit()
+
+    async def async_game_start(self) -> None:
+        """Async version of game_start for pygbag/WASM compatibility.
+        Yields control to the browser event loop every frame."""
+        if len(self._rooms) > 0:
+            self.room_goto(0)
+
+        self._game_running = True
+        while self._game_running:
+            try:
+                input.events += pg.event.get()
+
+                if any(event.type == pg.QUIT for event in input.events):
+                    self.game_end()
+
+                self.delta_time = self._clock.tick(self.room_speed) / 1000
+                self.fps_real = self._clock.get_fps()
+
+                if self.room_speed == 0:
+                    await asyncio.sleep(0)
+                    continue
+                self._last_render_time += self.delta_time
+                if self._last_render_time >= 1 / self.room_speed:
+                    self._last_render_time %= 1 / self.room_speed
+                    self.renderer.fit_display()
+                    self.renderer.fill_background_color(self.room_background_color)
+                    self.renderer.draw_background_images()
+
+                    self._add_pending_objects()
+                    self._free_destroyed_objects()
+
+                    for obj in self._game_objects.values():
+                        obj.step()
+
+                    draw_buffer = sorted(
+                        self._game_objects.values(),
+                        key=lambda obj: obj.depth,
+                        reverse=True,
+                    )
+
+                    for obj in draw_buffer:
+                        obj.draw()
+
+                    input.prev_events = input.events.copy()
+                    input.events.clear()
+
+                    pg.display.update()
+                    self.renderer.draw_display()
+
+                self._audio_playing = [
+                    audio for audio in self._audio_playing if not audio.is_finished(self.delta_time)
+                ]
+
+            except KeyboardInterrupt:
+                self._game_running = False
+
+            await asyncio.sleep(0)
+
+        pg.quit()
 
     def get_game_objects(self) -> Iterable[IGameObject]:
         return self._game_objects.values()

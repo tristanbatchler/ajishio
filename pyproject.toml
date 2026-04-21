@@ -25,3 +25,8 @@ dev = [
     "ruff>=0.15.11",
     "snakeviz>=2.2.2",
 ]
+
+[tool.ruff]
+exclude = [
+    "*/_web_build/*",
+]

@@ -149,7 +149,7 @@ def export(project_dir: Path, extra_args: list[str]) -> None:
     app_name = project_dir.name
 
     # Always use custom template and auto-start
-    tmpl_path = REPO_ROOT / "docs" / "assets" / "ajishio.tmpl"
+    tmpl_path = REPO_ROOT / "ajishio.tmpl"
     pygbag_args = [
         sys.executable,
         "-m",

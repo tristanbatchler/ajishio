@@ -1,0 +1,204 @@
+<html lang="en-us">
+<script src="{{cookiecutter.cdn}}pythons.js"
+        type=module
+        id="site"
+        data-python="python{{cookiecutter.PYBUILD}}"
+        data-LINES=42
+        data-COLUMNS=132
+        data-os="vtx,snd,gui"
+        async defer>#<!--
+
+print("Loading {{cookiecutter.title}}")
+
+import asyncio
+import platform
+from pathlib import Path
+
+async def custom_site():
+    import embed
+
+    # clean background
+    platform.document.body.style.background = "#0b0f14"
+
+    bundle = "{{cookiecutter.archive}}"
+    appdir = Path(f"/data/data/{bundle}")
+    appdir.mkdir()
+
+    # unpack
+    import tarfile
+    async with platform.fopen("{{cookiecutter.archive}}.tar.gz", "rb") as archive:
+        tar = tarfile.open(fileobj=archive, mode="r:gz")
+        tar.extractall(path=appdir.as_posix(), filter='tar')
+        tar.close()
+
+    platform.run_main(PyConfig, loaderhome=appdir / "assets", loadermain=None)
+
+    while embed.counter() < 0:
+        await asyncio.sleep(.1)
+
+    main = appdir / "assets" / "main.py"
+
+    # only show click prompt if actually required
+    if not platform.window.MM.UME:
+        platform.window.infobox.style.display = "block"
+        while not platform.window.MM.UME:
+            await asyncio.sleep(.1)
+    else:
+        platform.window.infobox.style.display = "none"
+
+    await TopLevel_async_handler.start_toplevel(
+        platform.shell,
+        console=window.python.config.debug
+    )
+
+    await shell.source(main)
+
+    # remove splash completely
+    platform.window.transfer.remove()
+    platform.window.infobox.remove()
+
+    platform.window.config.gui_divider = 1
+    platform.window.window_resize()
+
+    shell.interactive()
+
+asyncio.run(custom_site())
+
+# -->
+</script>
+
+<head>
+<title>{{cookiecutter.title}}</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+html, body {
+    margin: 0;
+    padding: 0;
+    background: #0b0f14;
+    color: #e6edf3;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    overflow: hidden;
+}
+
+/* canvas */
+canvas.emscripten {
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    border: none;
+    background: transparent;
+}
+
+/* splash overlay */
+#transfer {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #0b0f14;
+    z-index: 10;
+}
+
+/* centered stack */
+#splash {
+    text-align: center;
+}
+
+/* logo */
+#logo {
+    width: 96px;
+    height: 96px;
+    margin-bottom: 20px;
+    image-rendering: pixelated;
+}
+
+/* title */
+#title {
+    font-size: 16px;
+    letter-spacing: 6px;
+    margin-bottom: 6px;
+}
+
+/* subtitle */
+#subtitle {
+    font-size: 12px;
+    color: #8b949e;
+}
+
+/* progress */
+#progress {
+    margin-top: 18px;
+    width: 160px;
+    height: 2px;
+}
+
+/* click prompt */
+#infobox {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 11px;
+    color: #8b949e;
+    display: none;
+}
+</style>
+
+<script>
+config = {
+    xtermjs : "{{cookiecutter.xtermjs}}",
+    _sdl2 : "canvas",
+    user_canvas : 0,
+    user_canvas_managed : 0,
+    gui_divider : 2,
+    ume_block : {{cookiecutter.ume_block}},
+    can_close : {{cookiecutter.can_close}},
+    archive : "{{cookiecutter.archive}}",
+    gui_debug : 2,
+    cdn : "{{cookiecutter.cdn}}",
+    autorun : {{cookiecutter.autorun}},
+    PYBUILD : "{{cookiecutter.PYBUILD}}",
+    fb_ar : 1.77,
+    fb_width : "{{cookiecutter.width}}",
+    fb_height : "{{cookiecutter.height}}"
+}
+</script>
+
+</head>
+
+<body>
+
+<!-- splash -->
+<div id="transfer">
+    <div id="splash">
+        <img id="logo"
+             src="https://raw.githubusercontent.com/tristanbatchler/ajishio/main/.github/assets/ajishio_taro.png">
+
+        <div id="title">AJISHIO</div>
+        <div id="subtitle">{{cookiecutter.title}}</div>
+
+        <progress value="0" max="100" id="progress"></progress>
+    </div>
+</div>
+
+<canvas id="canvas" class="emscripten" width="1" height="1"></canvas>
+
+<canvas id="canvas3d" class="emscripten"
+    width="{{cookiecutter.width}}"
+    height="{{cookiecutter.height}}"
+    hidden>
+</canvas>
+
+<div id="infobox">click to start</div>
+
+<script>
+async function custom_onload(debug_hidden) {
+    transfer.hidden = debug_hidden
+}
+</script>
+
+</body>
+</html>

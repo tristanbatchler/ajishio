@@ -2,20 +2,21 @@
 
 Play Ajishio demo projects instantly in your browser! These are built automatically from the latest `main` branch and hosted on GitHub Pages.
 
-| Demo            | Play Link                                                                 | Description |
-|-----------------|--------------------------------------------------------------------------|-------------|
-| Platformer      | [Play](https://tristanbatchler.github.io/ajishio/platformer/)            | Platformer with LDtk and Aseprite integration |
-| Pong            | [Play](https://tristanbatchler.github.io/ajishio/pong/)                  | Classic Pong |
-| Snake           | [Play](https://tristanbatchler.github.io/ajishio/snake/)                 | Classic Snake |
-| Sokoban         | [Play](https://tristanbatchler.github.io/ajishio/sokoban/)               | Push boxes to targets |
-| Visual Novel    | [Play](https://tristanbatchler.github.io/ajishio/visual_novel/)          | Lightweight VN demo |
-| Hello World     | [Play](https://tristanbatchler.github.io/ajishio/hello_world/)           | Minimal Ajishio setup |
-| Minesweeper     | [Play](https://tristanbatchler.github.io/ajishio/minesweeper/)           | Minesweeper clone |
-| Tetris          | [Play](https://tristanbatchler.github.io/ajishio/tetris/)                | Tetris clone |
-| Roguelike       | [Play](https://tristanbatchler.github.io/ajishio/roguelike/)             | Roguelike demo |
-| Witch Game      | [Play](https://tristanbatchler.github.io/ajishio/witch_game/)            | Action platformer |
-| Space Invaders  | [Play](https://tristanbatchler.github.io/ajishio/space_invaders/)        | Space Invaders clone |
-| Multiplayer     | [Play](https://tristanbatchler.github.io/ajishio/multiplayer/)           | Experimental multiplayer |
+| Demo               | Play Link                                                                           | Description                                   |
+|--------------------|-------------------------------------------------------------------------------------|-----------------------------------------------|
+| Platformer         | [Play](https://tristanbatchler.github.io/ajishio/web-demos/platformer/)             | Platformer with LDtk and Aseprite integration |
+| Pong               | [Play](https://tristanbatchler.github.io/ajishio/web-demos/pong/)                   | Classic Pong                                  |
+| Snake              | [Play](https://tristanbatchler.github.io/ajishio/web-demos/snake/)                  | Classic Snake                                 |
+| Sokoban            | [Play](https://tristanbatchler.github.io/ajishio/web-demos/sokoban/)                | Push boxes to targets                         |
+| Visual Novel       | [Play](https://tristanbatchler.github.io/ajishio/web-demos/visual_novel/)           | Lightweight VN demo                           |
+| Hello World        | [Play](https://tristanbatchler.github.io/ajishio/web-demos/hello_world/)            | Minimal Ajishio setup                         |
+| Minesweeper        | [Play](https://tristanbatchler.github.io/ajishio/web-demos/minesweeper/)            | Minesweeper clone                             |
+| Tetris             | [Play](https://tristanbatchler.github.io/ajishio/web-demos/tetris/)                 | Tetris clone                                  |
+| Roguelike          | [Play](https://tristanbatchler.github.io/ajishio/web-demos/roguelike/)              | Roguelike demo                                |
+| Witch Game         | [Play](https://tristanbatchler.github.io/ajishio/web-demos/witch_game/)             | Action platformer                             |
+| Space Invaders     | [Play](https://tristanbatchler.github.io/ajishio/web-demos/space_invaders/)         | Space Invaders clone                          |
+| Multiplayer server | [Play](https://tristanbatchler.github.io/ajishio/web-demos/multiplayer/server/)     | Experimental multiplayer demo server          |
+| Multiplayer client | [Play](https://tristanbatchler.github.io/ajishio/web-demos/multiplayer/client/)     | Experimental multiplayer demo client          |
 
 > Some demos are experimental or may have limited browser support. 
 

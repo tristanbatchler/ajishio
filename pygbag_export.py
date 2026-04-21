@@ -144,7 +144,7 @@ def export(project_dir: Path, extra_args: list[str]) -> None:
     patch_main_py(build_dir / "main.py")
 
     print(f"Assembled pygbag project in {build_dir}")
-    print(f"Running pygbag...")
+    print("Running pygbag...")
 
     app_name = project_dir.name
 

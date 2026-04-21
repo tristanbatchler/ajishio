@@ -1,6 +1,6 @@
 import math
 from random import uniform, choice
-from typing import Literal
+from typing import Literal, override
 import ajishio as aj
 
 
@@ -8,16 +8,19 @@ class Wall(aj.GameObject):
     def __init__(
         self, width: float, height: float, x: float = 0, y: float = 0, **_: object
     ) -> None:
-        super().__init__(x, y)
-        self.collision_mask = aj.CollisionMask(bbtop=0, bbleft=0, bbright=width, bbbottom=height)
+        super().__init__(
+            x, y, collision_mask=aj.CollisionMask(bbtop=0, bbleft=0, bbright=width, bbbottom=height)
+        )
         self.width: float = width
         self.height: float = height
 
+    @override
     def draw(self) -> None:
         aj.draw_rectangle(self.x, self.y, self.width, self.height, False)
 
 
 class Boundary(Wall):
+    @override
     def draw(self) -> None:
         super().draw()
 
@@ -39,6 +42,7 @@ class Paddle(Wall):
         self.up_key: int = ord("w") if player == 1 else aj.vk_up
         self.down_key: int = ord("s") if player == 1 else aj.vk_down
 
+    @override
     def step(self) -> None:
         self.y_vel = (
             aj.keyboard_check(self.down_key) - aj.keyboard_check(self.up_key)

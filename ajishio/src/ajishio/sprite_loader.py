@@ -1,7 +1,7 @@
 import json
 from ajishio.types import GameSprite
 from pathlib import Path
-from typing import TypedDict
+from typing import TypedDict, cast
 
 import pygame as pg
 
@@ -24,8 +24,7 @@ class SpriteInfo(TypedDict):
 def load_aseprite_sprites(sprites_directory: Path) -> dict[str, GameSprite]:
     alphabetical_sprite_dirs: list[Path] = sorted(sprites_directory.iterdir())
     return {
-        sprite_dir.name: load_aseprite_sprite(sprite_dir)
-        for sprite_dir in alphabetical_sprite_dirs
+        sprite_dir.name: load_aseprite_sprite(sprite_dir) for sprite_dir in alphabetical_sprite_dirs
     }
 
 
@@ -35,7 +34,7 @@ def load_aseprite_sprite(sprite_dir: Path) -> GameSprite:
     png_path: Path = next(sprite_dir.glob("*.png"))
 
     json_path: Path = next(sprite_dir.glob("*.json"))
-    sprite_info: SpriteInfo = json.loads(json_path.read_text())
+    sprite_info = cast(SpriteInfo, json.loads(json_path.read_text()))
     frames: dict[str, FrameData] = sprite_info["frames"]
 
     sprite_width: int = 0
@@ -48,9 +47,7 @@ def load_aseprite_sprite(sprite_dir: Path) -> GameSprite:
         sprite_width = max(sprite_width, frame_width)
         sprite_height = max(sprite_height, frame_height)
         with open(png_path, "rb") as f:
-            images.append(
-                pg.image.load(f).subsurface(pg.Rect(x, y, frame_width, frame_height))
-            )
+            images.append(pg.image.load(f).subsurface(pg.Rect(x, y, frame_width, frame_height)))
 
     return GameSprite(images, sprite_width, sprite_height)
 

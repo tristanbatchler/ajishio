@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import cast
 import pygame as pg
 
 
@@ -16,33 +17,38 @@ input = Input()
 
 
 def keyboard_check_pressed(key: int) -> bool:
-    pressed_now: bool = any(event.type == pg.KEYDOWN and event.key == key for event in input.events)
+    pressed_now: bool = any(
+        event.type == pg.KEYDOWN and cast(int, event.key) == key for event in input.events
+    )
     if input.prev_events is None:
         return pressed_now
     pressed_before: bool = any(
-        event.type == pg.KEYDOWN and event.key == key for event in input.prev_events
+        event.type == pg.KEYDOWN and cast(int, event.key) == key for event in input.prev_events
     )
     return pressed_now and not pressed_before
 
 
 def mouse_check_button_pressed(mb: int) -> bool:
     pressed_now: bool = any(
-        event.type == pg.MOUSEBUTTONDOWN and event.button == mb for event in input.events
+        event.type == pg.MOUSEBUTTONDOWN and cast(int, event.button) == mb for event in input.events
     )
     if input.prev_events is None:
         return pressed_now
     pressed_before: bool = any(
-        event.type == pg.MOUSEBUTTONDOWN and event.button == mb for event in input.prev_events
+        event.type == pg.MOUSEBUTTONDOWN and cast(int, event.button) == mb
+        for event in input.prev_events
     )
     return pressed_now and not pressed_before
 
 
 def keyboard_check_released(key: int) -> bool:
-    return any(event.type == pg.KEYUP and event.key == key for event in input.events)
+    return any(event.type == pg.KEYUP and cast(int, event.key) == key for event in input.events)
 
 
 def mouse_check_button_released(mb: int) -> bool:
-    return any(event.type == pg.MOUSEBUTTONUP and event.button == mb for event in input.events)
+    return any(
+        event.type == pg.MOUSEBUTTONUP and cast(int, event.button) == mb for event in input.events
+    )
 
 
 def keyboard_check(key: int) -> bool:

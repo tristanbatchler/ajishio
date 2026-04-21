@@ -70,14 +70,14 @@ class PhysicsObject(aj.GameObject):
 
         if self.place_meeting(self.x + self.x_velocity, self.y, Floor):
             while not self.place_meeting(self.x + aj.sign(self.x_velocity), self.y, Floor):
-                self.x += aj.sign(self.x_velocity)
+                self.x += aj.sign(self.x_velocity)  # pyright: ignore[reportUnannotatedClassAttribute]
             self.x_velocity = 0
         else:
             self.x += self.x_velocity
 
         if self.place_meeting(self.x, self.y + self.y_velocity, Floor):
             while not self.place_meeting(self.x, self.y + aj.sign(self.y_velocity), Floor):
-                self.y += aj.sign(self.y_velocity)
+                self.y += aj.sign(self.y_velocity)  # pyright: ignore[reportUnannotatedClassAttribute]
             self.y_velocity = 0
         else:
             self.y += self.y_velocity
@@ -116,7 +116,7 @@ class Player(PhysicsObject):
         x_input: int = aj.keyboard_check(aj.vk_right) - aj.keyboard_check(aj.vk_left)
 
         if x_input != 0:
-            self.x_velocity += x_input * self.acceleration
+            self.x_velocity += x_input * self.acceleration  # pyright: ignore[reportUnannotatedClassAttribute]
         else:
             self.x_velocity -= aj.sign(self.x_velocity) * self.acceleration
 
@@ -128,7 +128,7 @@ class Player(PhysicsObject):
         # Initiate jump
         if self.place_meeting(self.x, self.y + 1, Floor) and aj.keyboard_check_pressed(aj.vk_space):
             aj.audio_play_sound(sounds["jump"], gain=0.2)
-            self.y_velocity = self.jump_height
+            self.y_velocity = self.jump_height  # pyright: ignore[reportUnannotatedClassAttribute]
 
         # Decrease jump height if player releases jump key
         if (
@@ -155,8 +155,8 @@ class Player(PhysicsObject):
 
         if aj.keyboard_check_released(ord("r")):
             aj.room_restart()
-            self.x = self.room_start_x
-            self.y = self.room_start_y
+            self.x = self.room_start_x  # pyright: ignore[reportUnannotatedClassAttribute]
+            self.y = self.room_start_y  # pyright: ignore[reportUnannotatedClassAttribute]
 
     def move_through_doorway(self, doorway: Doorway) -> None:
         if doorway.to_doorway_iid is None:
@@ -234,8 +234,8 @@ class Camera(aj.GameObject):
         if player is None:
             return
 
-        self.x = aj.lerp(self.x, player.x, 0.1)
-        self.y = aj.lerp(self.y, player.y, 0.1)
+        self.x = aj.lerp(self.x, player.x, 0.1)  # pyright: ignore[reportUnannotatedClassAttribute]
+        self.y = aj.lerp(self.y, player.y, 0.1)  # pyright: ignore[reportUnannotatedClassAttribute]
 
         half_width: float = aj.view_wport[aj.view_current] // 2
         half_height: float = aj.view_hport[aj.view_current] // 2

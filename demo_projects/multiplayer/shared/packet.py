@@ -57,6 +57,7 @@ class PlayerPositionPacket(Packet):
         self.x: float = x
         self.y: float = y
 
+    @override
     def pack(self) -> bytes:
         return self.header + struct.pack("!ff", self.x, self.y)
 

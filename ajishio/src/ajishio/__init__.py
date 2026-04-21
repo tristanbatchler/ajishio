@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Callable, cast
 
 import pygame as _pg
-Color = _pg.Color
 
 import os as _os
 import ajishio._context as _ctx
@@ -23,6 +22,7 @@ from ajishio.types import (
     GameObjectKwargs,
 )
 from ajishio.game_sound import GameSound
+from ajishio.rendering import Color
 
 # --- Input ---
 from ajishio.input import (
@@ -83,6 +83,7 @@ from ajishio.rendering import (
     load_font,
 )
 
+
 # --- Asset loaders ---
 from ajishio.sprite_loader import (
     load_aseprite_sprites,
@@ -99,8 +100,8 @@ if _os.environ.get("AJISHIO_DOCS"):
         def __getattr__(self, name: str) -> Callable[..., None]:
             return lambda *args, **kwargs: None
 
-    _renderer: Renderer = cast(Renderer, _Dummy())
-    _engine: Engine = cast(Engine, _Dummy())
+    _renderer: Renderer = cast(Renderer, cast(object, _Dummy()))
+    _engine: Engine = cast(Engine, cast(object, _Dummy()))
 else:
     import pygame as _pg
 
@@ -191,11 +192,11 @@ _LIVE_VIEW_ATTRS = frozenset(
 def __getattr__(name: str) -> object:
     if name in _LIVE_ENGINE_ATTRS:
         try:
-            return getattr(_engine, name)  # type: ignore[return-value]
+            return getattr(_engine, name)  # pyright: ignore[reportAny]
         except AttributeError:
             raise AttributeError(f"module 'ajishio' has no attribute {name!r}")
     if name in _LIVE_VIEW_ATTRS:
-        return getattr(view, name)  # type: ignore[return-value]
+        return getattr(view, name)  # pyright: ignore[reportAny]
     raise AttributeError(f"module 'ajishio' has no attribute {name!r}")
 
 
@@ -204,12 +205,10 @@ def __dir__() -> list[str]:
 
 
 if TYPE_CHECKING:
-    import pygame as pg
-
     room_width: float
     room_height: float
     room_speed: float
-    room_background_color: pg.Color
+    room_background_color: Color
     delta_time: float
     fps_real: float
     room: int

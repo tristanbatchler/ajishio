@@ -1,4 +1,6 @@
-from __future__ import annotations
+from ajishio.types import GameSprite
+
+
 from dataclasses import dataclass
 from enum import IntEnum, auto
 from pathlib import Path
@@ -47,12 +49,12 @@ class Minesweeper(aj.GameObject):
         MINE = auto()
         EXPLODED_MINE = auto()
 
-    sprite_sheet = aj.load_aseprite_sprite(Path(__file__).parent / "sprites")
+    sprite_sheet: GameSprite = aj.load_aseprite_sprite(Path(__file__).parent / "sprites")
 
     def __init__(self, difficulty: Difficulty, **kwargs: Unpack[aj.GameObjectKwargs]) -> None:
         super().__init__(0, 0, **kwargs)
         aj.room_set_caption(f"{difficulty.name} Minesweeper")
-        self.num_mines = difficulty.mines
+        self.num_mines: int = difficulty.mines
         self.cols: int = difficulty.width
         self.rows: int = difficulty.height
         self.cell_size: int = max(
@@ -120,7 +122,7 @@ class Minesweeper(aj.GameObject):
         if self.game_over:
             continue_keys = (aj.vk_enter, aj.vk_space, aj.vk_escape)
             if any(aj.keyboard_check_pressed(key) for key in continue_keys):
-                MainMenu()
+                _ = MainMenu()
                 aj.instance_destroy(self)
             return
 
@@ -152,7 +154,6 @@ class Minesweeper(aj.GameObject):
         self.game_over = True
         for location in self.mines_locations:
             self.grid[location].revealed = True
-
 
     def toggle_flag(self, location: tuple[int, int]) -> None:
         cell = self.grid[location]
@@ -252,7 +253,7 @@ class MainMenu(aj.GameObject):
             or aj.keyboard_check_pressed(aj.vk_space)
             or aj.mouse_check_button_released(aj.mb_left)
         ):
-            Minesweeper(self.difficulties[self.cursor_index])
+            _ = Minesweeper(self.difficulties[self.cursor_index])
             aj.instance_destroy(self)
 
         for i, (y1, y2) in enumerate(self.difficulties_y1_y2):
@@ -276,9 +277,10 @@ class Manager(aj.GameObject):
     def __init__(self, x: float = 0, y: float = 0, **kwargs: Unpack[aj.GameObjectKwargs]) -> None:
         super().__init__(x, y, **kwargs)
 
-        MainMenu()
+        _ = MainMenu()
+
 
 aj.room_set_caption("Minesweeper")
 aj.window_set_size(400, 600)
-MainMenu()
+_ = MainMenu()
 aj.game_start()

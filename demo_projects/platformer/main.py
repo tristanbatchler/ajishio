@@ -105,7 +105,7 @@ class Player(PhysicsObject):
 
         bg_music: aj.GameSound | None = sounds.get("8_bit_ice_cave_lofi")
         if bg_music is not None and not aj.audio_is_playing(bg_music):
-            aj.audio_play_sound(bg_music, loop=True)
+            aj.audio_play_sound(bg_music, loop=True, gain=0.3)
 
         self.room_start_x: float = x
         self.room_start_y: float = y
@@ -127,7 +127,7 @@ class Player(PhysicsObject):
 
         # Initiate jump
         if self.place_meeting(self.x, self.y + 1, Floor) and aj.keyboard_check_pressed(aj.vk_space):
-            aj.audio_play_sound(sounds["jump"], gain=0.4)
+            aj.audio_play_sound(sounds["jump"], gain=0.2)
             self.y_velocity = self.jump_height
 
         # Decrease jump height if player releases jump key
@@ -149,7 +149,7 @@ class Player(PhysicsObject):
                 self.move_through_doorway(doorway_hit)
 
         if self.place_meeting(self.x, self.y, Enemy):
-            aj.audio_play_sound(sounds["die"])
+            aj.audio_play_sound(sounds["die"], gain=0.3)
             coins_collected.clear()
             aj.game_restart()
 
@@ -203,6 +203,17 @@ class Player(PhysicsObject):
             aj.view_xport[aj.view_current] + 10,
             aj.view_yport[aj.view_current] + 10,
             str(self.score),
+            color=aj.c_yellow,
+        )
+
+        fps_counter = f"{aj.fps_real:.1f} FPS"
+        aj.draw_text(
+            aj.view_xport[aj.view_current]
+            + aj.view_wport[aj.view_current]
+            - 10
+            - aj.text_width(fps_counter),
+            aj.view_yport[aj.view_current] + 10,
+            fps_counter,
             color=aj.c_yellow,
         )
 
@@ -292,14 +303,12 @@ class Coin(aj.GameObject):
         if player_hit and isinstance(player_hit, Player):
             aj.instance_destroy(self)
             player_hit.score += 1
-            aj.audio_play_sound(sounds["coin"])
+            aj.audio_play_sound(sounds["coin"], gain=0.3)
             assert self.iid is not None, f"Coin at ({self.x}, {self.y}) has no instance ID"
             coins_collected.add(self.iid)
 
 
-levels: list[aj.GameLevel] = aj.load_ldtk_levels(
-    project_dir / "room_data" / "world" / "simplified"
-)
+levels: list[aj.GameLevel] = aj.load_ldtk_levels(project_dir / "room_data" / "world" / "simplified")
 
 aj.set_rooms(levels)
 aj.register_objects(Floor, Player, Camera, Enemy, Coin, Doorway)

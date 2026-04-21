@@ -1,0 +1,49 @@
+name: Deploy Web Demos
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Set up Python
+        run: uv python install 3.14
+
+      - name: Install dependencies
+        run: uv sync --group dev
+
+      - name: Build all demo projects for web
+        run: |
+          for d in demo_projects/*; do
+            if [ -f "$d/main.py" ]; then
+              uv run pygbag_export.py "$d" --build
+            fi
+          done
+
+      - name: Prepare web build artifacts
+        run: |
+          mkdir -p web-demos
+          for d in demo_projects/*; do
+            if [ -d "$d/_web_build" ]; then
+              proj=$(basename "$d")
+              mkdir -p "web-demos/$proj"
+              cp -r "$d/_web_build"/* "web-demos/$proj/"
+            fi
+          done
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./web-demos
+          force_orphan: true

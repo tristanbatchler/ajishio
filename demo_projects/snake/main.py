@@ -1,21 +1,30 @@
+from typing import Unpack, final, override
 import ajishio as aj
 from random import choice, randrange
 
 
 class GridAlignedObject(aj.GameObject):
-    def __init__(self, x: float = 0, y: float = 0, **_: object) -> None:
-        super().__init__(x, y)
+    x: float
+    y: float
 
-        self.collision_mask = aj.CollisionMask(
+    def __init__(self, x: float = 0, y: float = 0, **kwargs: Unpack[aj.GameObjectKwargs]) -> None:
+        super().__init__(x, y, **kwargs)
+
+        self.collision_mask: aj.CollisionMask | None = aj.CollisionMask(
             bbtop=0, bbleft=0, bbright=GRID_SIZE, bbbottom=GRID_SIZE
         )
 
-        self.grid_x: int = -1
-        self.grid_y: int = -1
+        # ✅ Initialize everything here
+        self.grid_x: int = 0
+        self.grid_y: int = 0
 
-        self.previous_grid_x: int
-        self.previous_grid_y: int
+        self.previous_grid_x: int = 0
+        self.previous_grid_y: int = 0
 
+        self.previous_x: float = x
+        self.previous_y: float = y
+
+    @override
     def step(self) -> None:
         self.previous_grid_x = self.grid_x
         self.previous_grid_y = self.grid_y
@@ -39,6 +48,7 @@ class GridAlignedObject(aj.GameObject):
         aj.draw_rectangle(self.x, self.y, GRID_SIZE, GRID_SIZE, color=color)
 
 
+@final
 class Apple(GridAlignedObject):
     def __init__(self) -> None:
         super().__init__()
@@ -46,6 +56,7 @@ class Apple(GridAlignedObject):
         self.grid_y = randrange(0, NUM_ROWS)
         self.update_position()
 
+    @override
     def draw(self) -> None:
         self.draw_self(color=aj.c_red)
 
@@ -63,6 +74,7 @@ class SnakeHead(GridAlignedObject):
 
         self.tail_segments: list[SnakeTailSegment] = [SnakeTailSegment(self, i) for i in range(3)]
 
+    @override
     def step(self) -> None:
         super().step()
 
@@ -91,12 +103,13 @@ class SnakeHead(GridAlignedObject):
             aj.game_set_speed(aj.room_speed * 1.05)
             self.tail_segments.append(SnakeTailSegment(self, len(self.tail_segments)))
             aj.instance_destroy(hit_apple)
-            Apple()
+            _ = Apple()
 
         if aj.GameObject.place_meeting(self, self.x, self.y, SnakeTailSegment):
             global game_over
             game_over = True
 
+    @override
     def draw(self) -> None:
         self.draw_self()
         if game_over:
@@ -110,6 +123,7 @@ class SnakeHead(GridAlignedObject):
             aj.game_set_speed(0)
 
 
+@final
 class SnakeTailSegment(GridAlignedObject):
     def __init__(self, head: SnakeHead, index: int) -> None:
         super().__init__()
@@ -117,6 +131,7 @@ class SnakeTailSegment(GridAlignedObject):
         self.head: SnakeHead = head
         self.index: int = index
 
+    @override
     def step(self) -> None:
         super().step()
         in_front: SnakeHead | SnakeTailSegment = (
@@ -126,6 +141,7 @@ class SnakeTailSegment(GridAlignedObject):
         self.grid_y = in_front.previous_grid_y
         self.update_position()
 
+    @override
     def draw(self) -> None:
         self.draw_self(color=aj.c_ltgray)
 
@@ -137,8 +153,8 @@ game_over: bool = False
 
 aj.room_set_caption("Snake")
 aj.room_set_background(aj.c_purple)
-SnakeHead()
-Apple()
+_ = SnakeHead()
+_ = Apple()
 
 # Note: setting the game speed like this is not recommended, as it can lead to inconsistent input handling
 aj.game_set_speed(5)

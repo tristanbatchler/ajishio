@@ -77,7 +77,7 @@ SHAPE_SKEW = Shape(
 
 
 class Tile(aj.GameObject):
-    DIM = 16  # Size in pixels of the tile
+    DIM: int = 16  # Size in pixels of the tile
 
     def __init__(self, x: float, y: float, color: aj.Color) -> None:
         super().__init__(x, y, collision_mask=aj.CollisionMask(bbright=self.DIM, bbbottom=self.DIM))
@@ -87,11 +87,15 @@ class Tile(aj.GameObject):
     def draw(self) -> None:
         aj.draw_rectangle(self.x, self.y, self.DIM, self.DIM, color=self.color)
 
+    @override
     def __repr__(self) -> str:
         return f"<Tile at ({self.x}, {self.y})>"
 
 
 class Piece(aj.GameObject):
+    x: float
+    y: float
+
     def __init__(self, shape: Shape, x: float, y: float) -> None:
         super().__init__(x, y)
         self.shape: Shape = shape
@@ -131,9 +135,9 @@ class Piece(aj.GameObject):
             aj.keyboard_check_released(aj.vk_right)
             and self.get_xmax() < aj.view_wport[aj.view_current]
         ):
-            self.move(dx=1)
+            _ = self.move(dx=1)
         elif aj.keyboard_check_released(aj.vk_left) and self.get_xmin() > 0:
-            self.move(dx=-1)
+            _ = self.move(dx=-1)
 
     @override
     def on_destroy(self) -> None:
@@ -175,6 +179,8 @@ class Piece(aj.GameObject):
 
 
 class Manager(aj.GameObject):
+    current_move_interval: float
+
     def __init__(self, x: float = 0, y: float = 0, **kwargs: Unpack[aj.GameObjectKwargs]) -> None:
         super().__init__(x, y, **kwargs)
 
@@ -184,6 +190,7 @@ class Manager(aj.GameObject):
         self.move_timer: float = self.current_move_interval
         self.game_over: bool = False
         self.score: int = 0
+        self.depth: int = -999
 
     def spawn_piece(self) -> Piece | None:
         shape = random.choice(
@@ -243,7 +250,7 @@ class Manager(aj.GameObject):
 
         if aj.keyboard_check_released(ord("r")):
             aj.game_restart()
-            Manager()
+            _ = Manager()
         elif aj.keyboard_check(aj.vk_down):
             self.set_current_move_interval(fast=True)
         elif aj.keyboard_check_released(aj.vk_down):
@@ -273,7 +280,7 @@ class Manager(aj.GameObject):
             self.move_timer += self.current_move_interval
             if not self.current_piece.move(dy=1):
                 for tile in self.current_piece.tiles:
-                    Tile(tile.x, tile.y, tile.color)
+                    _ = Tile(tile.x, tile.y, tile.color)
                 tiles_from_bottom_to_check = int(self.current_piece.y / Tile.DIM)
                 aj.instance_destroy(self.current_piece)
                 self.clear_full_rows(tiles_from_bottom_to_check)
@@ -311,5 +318,5 @@ aj.room_set_size(*size)
 aj.window_set_size(size[0] * 2, size[1] * 2)
 aj.view_set_wport(aj.view_current, size[0])
 aj.view_set_hport(aj.view_current, size[1])
-Manager()
+_ = Manager()
 aj.game_start()

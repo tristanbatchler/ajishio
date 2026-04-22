@@ -40,7 +40,7 @@ def get_original_definition(obj: object) -> str | None:
     """
     # Unwrap any decorators
     while hasattr(obj, "__wrapped__"):
-        obj = getattr(obj, "__wrapped__")
+        obj = getattr(obj, "__wrapped__")  # pyright: ignore[reportAny]
 
     # If it's a bound method, get the unbound function from the class
     if inspect.ismethod(obj) and hasattr(obj, "__self__"):
@@ -83,7 +83,7 @@ def generate_api_md() -> str:
         obj = getattr(ajishio, name, None)
         if obj is None:
             continue
-        module = get_source_module(obj)
+        module = get_source_module(obj)  # pyright: ignore[reportAny]
         if module is None:
             module = "other"
         grouped.setdefault(module, []).append((name, obj))
@@ -135,7 +135,7 @@ def generate_api_md() -> str:
     return "\n".join(lines)
 
 
-with mkdocs_gen_files.open("api.md", "w") as f:
-    f.write(generate_api_md())
+with mkdocs_gen_files.open("api.md", "w") as f:  # pyright: ignore[reportAny]
+    f.write(generate_api_md())  # pyright: ignore[reportAny]
 
-mkdocs_gen_files.set_edit_path("api.md", "scripts/gen_api_ref.py")
+mkdocs_gen_files.set_edit_path("api.md", "scripts/gen_api_ref.py")  # pyright: ignore[reportAny]

@@ -1,30 +1,29 @@
+from typing import Unpack, final, override
 import ajishio as aj
 from pathlib import Path
 
 
 class MessageBox(aj.GameObject):
-    def __init__(self, message: str, x: float = 0, y: float = 0, **_: object) -> None:
-        super().__init__(x, y)
-        self.message = message
-        self.depth = -999
+    def __init__(
+        self, message: str, x: float = 0, y: float = 0, **kwargs: Unpack[aj.GameObjectKwargs]
+    ) -> None:
+        super().__init__(x, y, **kwargs)
+        self.depth: int = -999
+        self.message: str = message
 
+    @override
     def step(self) -> None:
         dismiss_keys = aj.vk_enter, aj.vk_space, aj.vk_escape
         for key in dismiss_keys:
             if aj.keyboard_check_released(key):
                 aj.instance_destroy(self)
 
+    @override
     def draw(self) -> None:
         text_width = aj.text_width(self.message)
         text_height = aj.text_height(self.message)
-        x = (
-            aj.view_xport[aj.view_current]
-            + (aj.view_wport[aj.view_current] - text_width) / 2
-        )
-        y = (
-            aj.view_yport[aj.view_current]
-            + (aj.view_hport[aj.view_current] - text_height) / 2
-        )
+        x = aj.view_xport[aj.view_current] + (aj.view_wport[aj.view_current] - text_width) / 2
+        y = aj.view_yport[aj.view_current] + (aj.view_hport[aj.view_current] - text_height) / 2
 
         # Draw a semi-transparent background
         aj.draw_rectangle(
@@ -39,15 +38,19 @@ class MessageBox(aj.GameObject):
         aj.draw_text(x, y, self.message, aj.c_yellow)
 
 
+@final
 class Player(aj.GameObject):
-    def __init__(self, radius: float, x: float = 0, y: float = 0, **_: object) -> None:
-        super().__init__(x, y)
-        self.radius = radius
+    def __init__(
+        self, radius: float, x: float = 0, y: float = 0, **kwargs: Unpack[aj.GameObjectKwargs]
+    ) -> None:
+        super().__init__(x, y, **kwargs)
+        self.radius: float = radius
         try:
             self.sprite_index: aj.GameSprite | None = sprites["player"]
         except KeyError:
             raise ValueError("Player sprite not found in sprites dictionary")
 
+    @override
     def step(self) -> None:
         # Lock input if a message box is active
         if aj.instance_exists(MessageBox):
@@ -83,6 +86,7 @@ class Player(aj.GameObject):
 
         self.x, self.y = target_pos
 
+    @override
     def draw(self) -> None:
         if self.sprite_index is None:
             return
@@ -106,6 +110,7 @@ class Player(aj.GameObject):
 
 
 class Wall(aj.GameObject):
+    @override
     def draw(self) -> None:
         aj.draw_rectangle(
             self.x * level.grid_size,
@@ -117,10 +122,14 @@ class Wall(aj.GameObject):
 
 
 class Crate(Wall):
+    x: float
+    y: float
+
     def __init__(self, x: float = 0, y: float = 0, **_: object) -> None:
         super().__init__(x, y)
-        self.depth = -1  # Ensure crates are drawn on top of everything else
+        self.depth: int = -1  # Ensure crates are drawn on top of everything else
 
+    @override
     def draw(self) -> None:
         x = self.x * level.grid_size + level.half_grid_size
         y = self.y * level.grid_size + level.half_grid_size
@@ -137,7 +146,7 @@ class Crate(Wall):
         if target_pos in level.walls or target_pos in level.crates:
             return False
 
-        level.crates.pop((int(self.x), int(self.y)), None)
+        _ = level.crates.pop((int(self.x), int(self.y)), None)
         level.crates[target_pos] = self
         self.x, self.y = target_pos
         level.check_completion()
@@ -145,6 +154,7 @@ class Crate(Wall):
 
 
 class Goal(aj.GameObject):
+    @override
     def draw(self) -> None:
         aj.draw_rectangle(
             self.x * level.grid_size,
@@ -162,14 +172,14 @@ class Level:
         self.goals: dict[tuple[int, int], Goal] = {}
         self.crates: dict[tuple[int, int], Crate] = {}
 
-        self._levels_file = levels_file
-        self._index = 1
+        self._levels_file: Path = levels_file
+        self._index: int = 1
         self.width: int = 0
         self.height: int = 0
         self.grid_size: int = 0
         self.half_grid_size: int = 0
-        self._levels_data = self._parse_levels_file()
-        self._max_level = len(self._levels_data)
+        self._levels_data: dict[int, list[str]] = self._parse_levels_file()
+        self._max_level: int = len(self._levels_data)
         self._load_level()
 
     def _parse_levels_file(self) -> dict[int, list[str]]:
@@ -188,7 +198,7 @@ class Level:
                     if current_level > 0 and current_lines:
                         # Remove empty lines from end
                         while current_lines and not current_lines[-1].strip():
-                            current_lines.pop()
+                            _ = current_lines.pop()
                         levels[current_level] = current_lines
 
                     # Start new level (increment counter since levels don't have explicit numbers)
@@ -206,7 +216,7 @@ class Level:
         # Don't forget the last level
         if current_level > 0 and current_lines:
             while current_lines and not current_lines[-1].strip():
-                current_lines.pop()
+                _ = current_lines.pop()
             levels[current_level] = current_lines
 
         return levels
@@ -319,9 +329,9 @@ class Level:
 
     def check_completion(self) -> None:
         if all((x, y) in self.goals for x, y in self.crates):
-            MessageBox(f"Level {self._index} completed!")
+            _ = MessageBox(f"Level {self._index} completed!")
             if not self.next_level():
-                MessageBox("Congratulations! You've completed all levels!")
+                _ = MessageBox("Congratulations! You've completed all levels!")
                 aj.game_end()
 
 
@@ -336,6 +346,6 @@ aj.register_objects(Player, Wall, Goal, Crate)
 
 level = Level(game_dir / "levels.txt")
 
-MessageBox(f"Starting {level.get_level_info()}")
+_ = MessageBox(f"Starting {level.get_level_info()}")
 
 aj.game_start()

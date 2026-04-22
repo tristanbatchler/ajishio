@@ -1,3 +1,4 @@
+from typing import final, override
 import ajishio as aj
 import random
 
@@ -5,6 +6,7 @@ PADDING: int = 64
 level: int = 1
 
 
+@final
 class Player(aj.GameObject):
     width = 32
     height = 32
@@ -18,13 +20,14 @@ class Player(aj.GameObject):
         self.bullet_speed = 10.0
         self.lives: int = 3
 
+    @override
     def step(self) -> None:
         x_input = aj.keyboard_check(aj.vk_right) - aj.keyboard_check(aj.vk_left)
 
         self.x += x_input * self.speed
 
         if aj.keyboard_check_released(aj.vk_space):
-            Bullet(
+            _ = Bullet(
                 self.x + Player.width / 2,
                 self.y,
                 -self.bullet_speed,
@@ -35,6 +38,7 @@ class Player(aj.GameObject):
             aj.instance_destroy(self)
             aj.game_set_speed(0)
 
+    @override
     def draw(self) -> None:
         aj.draw_rectangle(self.x, self.y, Player.width, Player.height, color=aj.c_lime)
 
@@ -67,15 +71,20 @@ class Player(aj.GameObject):
 
 
 class Enemy(aj.GameObject):
-    width = 32.0
-    height = 32.0
+    width: float = 32.0
+    height: float = 32.0
+    x: float
+    y: float
 
     def __init__(self, x: float, y: float, x_velocity: float, **_: object) -> None:
         super().__init__(x, y)
-        self.x_velocity = x_velocity
-        self.bullet_speed = 8.0
-        self.collision_mask = aj.CollisionMask(0, 0, Enemy.width, Enemy.height)
+        self.x_velocity: float = x_velocity
+        self.bullet_speed: float = 8.0
+        self.collision_mask: aj.CollisionMask | None = aj.CollisionMask(
+            0, 0, Enemy.width, Enemy.height
+        )
 
+    @override
     def step(self) -> None:
         if not (0 <= self.x <= aj.room_width - Enemy.width):
             self.x_velocity *= -1
@@ -84,7 +93,7 @@ class Enemy(aj.GameObject):
         self.x += self.x_velocity
 
         if random.random() < 0.0005:
-            Bullet(
+            _ = Bullet(
                 self.x,
                 self.y + Enemy.width / 2.0,
                 y_velocity=self.bullet_speed,
@@ -95,22 +104,27 @@ class Enemy(aj.GameObject):
             aj.instance_destroy(player)
             aj.game_set_speed(0)
 
+    @override
     def draw(self) -> None:
         aj.draw_rectangle(self.x, self.y, Enemy.width, Enemy.height, color=aj.c_purple)
 
 
 class Bullet(aj.GameObject):
-    width = 4
-    height = 8
+    width: float = 4.0
+    height: float = 8.0
+    y: float
 
     def __init__(
         self, x: float, y: float, y_velocity: float, hurts_player: bool, **_: object
     ) -> None:
         super().__init__(x, y)
-        self.y_velocity = y_velocity
-        self.hurts_player = hurts_player
-        self.collision_mask = aj.CollisionMask(0, 0, Bullet.width, Bullet.height)
+        self.y_velocity: float = y_velocity
+        self.hurts_player: bool = hurts_player
+        self.collision_mask: aj.CollisionMask | None = aj.CollisionMask(
+            0, 0, Bullet.width, Bullet.height
+        )
 
+    @override
     def step(self) -> None:
         self.y += self.y_velocity
         if not (0 <= self.y <= aj.room_height - Bullet.height):
@@ -121,9 +135,7 @@ class Bullet(aj.GameObject):
             assert isinstance(player, Player)
             player.lives -= 1
 
-        elif not self.hurts_player and (
-            enemy := self.place_meeting(self.x, self.y, Enemy)
-        ):
+        elif not self.hurts_player and (enemy := self.place_meeting(self.x, self.y, Enemy)):
             aj.instance_destroy(self)
             aj.instance_destroy(enemy)
             if not aj.instance_exists(Enemy):
@@ -131,6 +143,7 @@ class Bullet(aj.GameObject):
                 level += 1
                 spawn_wave(level)
 
+    @override
     def draw(self) -> None:
         aj.draw_rectangle(self.x, self.y, Bullet.width, Bullet.height, color=aj.c_black)
 
@@ -138,13 +151,11 @@ class Bullet(aj.GameObject):
 def spawn_wave(difficulty: int) -> None:
     speed = 2 ** (difficulty / 5.0)  # Gets exponentially harder each wave
     for row in range(3):
-        for enemy_x in range(
-            PADDING, int(aj.room_width) - PADDING, round(1.5 * Enemy.width)
-        ):
-            Enemy(enemy_x, PADDING + Enemy.height * row * 1.5, x_velocity=speed)
+        for enemy_x in range(PADDING, int(aj.room_width) - PADDING, round(1.5 * Enemy.width)):
+            _ = Enemy(enemy_x, PADDING + Enemy.height * row * 1.5, x_velocity=speed)
 
 
-Player()
+_ = Player()
 
 aj.register_objects(Player, Enemy, Bullet)
 spawn_wave(level)

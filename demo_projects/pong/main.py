@@ -1,18 +1,15 @@
 import math
 from random import uniform, choice
-from typing import Literal, override
+from typing import Literal, final, override, Unpack
 import ajishio as aj
 
 
 class Wall(aj.GameObject):
-    def __init__(
-        self, width: float, height: float, x: float = 0, y: float = 0, **_: object
-    ) -> None:
-        super().__init__(
-            x, y, collision_mask=aj.CollisionMask(bbtop=0, bbleft=0, bbright=width, bbbottom=height)
+    def __init__(self, x: float = 0, y: float = 0, **kwargs: Unpack[aj.GameObjectKwargs]) -> None:
+        super().__init__(x, y, **kwargs)
+        self.collision_mask: aj.CollisionMask | None = aj.CollisionMask(
+            bbtop=0, bbleft=0, bbright=self.width, bbbottom=self.height
         )
-        self.width: float = width
-        self.height: float = height
 
     @override
     def draw(self) -> None:
@@ -25,19 +22,15 @@ class Boundary(Wall):
         super().draw()
 
 
+@final
 class Paddle(Wall):
     def __init__(
-        self,
-        player: int,
-        width: float,
-        height: float,
-        x: float = 0,
-        y: float = 0,
-        **_: object,
+        self, player: int, x: float = 0, y: float = 0, **kwargs: Unpack[aj.GameObjectKwargs]
     ) -> None:
-        super().__init__(width, height, x, y)
+        super().__init__(x, y, **kwargs)
         self.speed: float = 5
         self.y_vel: float = 0
+        self.target_y: float = y
 
         self.up_key: int = ord("w") if player == 1 else aj.vk_up
         self.down_key: int = ord("s") if player == 1 else aj.vk_down
@@ -56,12 +49,15 @@ class Paddle(Wall):
             self.y = self.target_y
 
 
+@final
 class Ball(aj.GameObject):
-    def __init__(self, radius: float, x: float = 0, y: float = 0, **_: object) -> None:
-        super().__init__(x, y)
+    def __init__(
+        self, radius: float, x: float = 0, y: float = 0, **kwargs: Unpack[aj.GameObjectKwargs]
+    ) -> None:
+        super().__init__(x, y, **kwargs)
         self.radius: float = radius
 
-        self.collision_mask = aj.CollisionMask(
+        self.collision_mask: aj.CollisionMask | None = aj.CollisionMask(
             bbleft=-self.radius,
             bbtop=-self.radius,
             bbright=self.radius,
@@ -83,6 +79,7 @@ class Ball(aj.GameObject):
         self.y_dir: float
         self.reset()
 
+    @override
     def step(self) -> None:
         x_vel: float = self.x_dir * self.speed
         y_vel: float = self.y_dir * self.speed
@@ -145,6 +142,7 @@ class Ball(aj.GameObject):
             raise ValueError("sign must be -1 or 1")
         self.x_dir = sign * math.sqrt(1 - self.y_dir**2)
 
+    @override
     def draw(self) -> None:
         aj.draw_circle(self.x, self.y, self.radius, aj.make_color_hsv(self.color_hue_angle, 1, 1))
         aj.draw_text(20, 20, str(self.score[1]))
@@ -163,21 +161,21 @@ aj.room_set_caption("Pong")
 wall_width: float = 5
 paddle_height: float = 100
 paddle_buffer: float = 100
-Boundary(x=0, y=0, width=aj.room_width, height=wall_width)
-Boundary(x=0, y=aj.room_height - wall_width, width=aj.room_width, height=wall_width)
-Paddle(
+_ = Boundary(x=0, y=0, width=aj.room_width, height=wall_width)
+_ = Boundary(x=0, y=aj.room_height - wall_width, width=aj.room_width, height=wall_width)
+_ = Paddle(
     x=paddle_buffer,
     y=(aj.room_height - paddle_height) / 2,
     width=wall_width,
     height=paddle_height,
     player=1,
 )
-Paddle(
+_ = Paddle(
     x=aj.room_width - paddle_buffer - wall_width,
     y=(aj.room_height - paddle_height) / 2,
     width=wall_width,
     height=paddle_height,
     player=2,
 )
-Ball(radius=7.5)
+_ = Ball(radius=7.5)
 aj.game_start()

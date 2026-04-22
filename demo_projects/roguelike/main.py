@@ -1,5 +1,5 @@
 import ajishio as aj
-from typing import Unpack, cast
+from typing import Unpack, cast, final, override
 from pathlib import Path
 
 GRID_SIZE = 32
@@ -8,7 +8,7 @@ GRID_SIZE = 32
 class Wall(aj.GameObject):
     def __init__(self, x: float, y: float, **kwargs: Unpack[aj.GameObjectKwargs]) -> None:
         super().__init__(x, y, **kwargs)
-        self.collision_mask = aj.CollisionMask(
+        self.collision_mask: aj.CollisionMask | None = aj.CollisionMask(
             bbleft=0, bbtop=0, bbright=self.width, bbbottom=self.height
         )
 
@@ -19,7 +19,7 @@ class Doorway(aj.GameObject):
         if GRID_SIZE not in (self.width, self.height):
             raise ValueError("Doorway must be a single tile in width or height")
 
-        self.collision_mask = aj.CollisionMask(
+        self.collision_mask: aj.CollisionMask | None = aj.CollisionMask(
             bbleft=0, bbtop=0, bbright=self.width, bbbottom=self.height
         )
 
@@ -34,6 +34,7 @@ class Doorway(aj.GameObject):
             self.to_doorway_iid = None
 
 
+@final
 class Player(aj.GameObject):
     persistent: bool = True
 
@@ -44,7 +45,7 @@ class Player(aj.GameObject):
         self.grid_y: int = int(y / GRID_SIZE)
         self.target_grid_x: int = self.grid_x
         self.target_grid_y: int = self.grid_y
-        self.collision_mask = aj.CollisionMask(
+        self.collision_mask: aj.CollisionMask | None = aj.CollisionMask(
             bbleft=0, bbtop=0, bbright=self.sprite_width, bbbottom=self.sprite_height
         )
         self.last_x_direction: int = 0
@@ -92,6 +93,7 @@ class Player(aj.GameObject):
         self.x = self.grid_x * GRID_SIZE
         self.y = self.grid_y * GRID_SIZE
 
+    @override
     def step(self) -> None:
         super().step()
 

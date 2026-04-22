@@ -20,6 +20,7 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+from typing import cast, override
 
 REPO_ROOT = Path(__file__).resolve().parent
 AJISHIO_SRC = REPO_ROOT / "ajishio" / "src" / "ajishio"
@@ -57,6 +58,7 @@ def _is_game_start_call(node: ast.AST) -> bool:
 class _GameStartRewriter(ast.NodeTransformer):
     """Rewrite `aj.game_start()` → `asyncio.run(aj.async_game_start())`."""
 
+    @override
     def visit_Expr(self, node: ast.Expr) -> ast.AST:
         if _is_game_start_call(node.value):
             assert isinstance(node.value, ast.Call)
@@ -104,10 +106,10 @@ def patch_main_py(path: Path) -> None:
         tree.body.insert(insert_idx, node)
 
     # Rewrite aj.game_start() → asyncio.run(aj.async_game_start())
-    tree = _GameStartRewriter().visit(tree)
+    tree = _GameStartRewriter().visit(tree)  # pyright: ignore[reportAny]
 
-    ast.fix_missing_locations(tree)
-    path.write_text(ast.unparse(tree))
+    ast.fix_missing_locations(tree)  # pyright: ignore[reportAny]
+    _ = path.write_text(ast.unparse(tree))  # pyright: ignore[reportAny]
 
 
 def export(project_dir: Path, extra_args: list[str]) -> None:
@@ -129,12 +131,12 @@ def export(project_dir: Path, extra_args: list[str]) -> None:
             continue
         dest = build_dir / item.name
         if item.is_dir():
-            shutil.copytree(item, dest, ignore=shutil.ignore_patterns("__pycache__"))
+            _ = shutil.copytree(item, dest, ignore=shutil.ignore_patterns("__pycache__"))
         else:
-            shutil.copy2(item, dest)
+            _ = shutil.copy2(item, dest)
 
     # Bundle ajishio library
-    shutil.copytree(
+    _ = shutil.copytree(
         AJISHIO_SRC,
         build_dir / "ajishio",
         ignore=shutil.ignore_patterns("__pycache__", "*.pyc", "py.typed"),
@@ -160,14 +162,15 @@ def export(project_dir: Path, extra_args: list[str]) -> None:
         *extra_args,
         str(build_dir),
     ]
-    subprocess.run(pygbag_args, check=True)
+    _ = subprocess.run(pygbag_args, check=True)
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Export an ajishio project for pygbag")
-    parser.add_argument("project", type=Path, help="Path to the project directory")
+    _ = parser.add_argument("project", type=Path, help="Path to the project directory")
     args, extra = parser.parse_known_args()
-    export(args.project, extra)
+    project = cast(Path, args.project)
+    export(project, extra)
 
 
 if __name__ == "__main__":

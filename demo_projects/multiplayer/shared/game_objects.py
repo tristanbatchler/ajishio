@@ -1,23 +1,22 @@
-from typing import Unpack, override
+from typing import Unpack, final, override
 import ajishio as aj
 from demo_projects.multiplayer.shared import sprites
 
 
-class PlayerSpawner(aj.GameObject):
-    def __init__(self, x: float, y: float, **kwargs: Unpack[aj.GameObjectKwargs]) -> None:
-        super().__init__(x, y, **kwargs)
+class PlayerSpawner(aj.GameObject): ...
 
 
 class Floor(aj.GameObject):
-    def __init__(self, x: float, y: float, **kwargs: Unpack[aj.GameObjectKwargs]) -> None:
+    def __init__(self, x: float = 0, y: float = 0, **kwargs: Unpack[aj.GameObjectKwargs]) -> None:
         super().__init__(x, y, **kwargs)
         self.collision_mask: aj.CollisionMask | None = aj.CollisionMask(
             bbtop=0, bbleft=0, bbright=self.width, bbbottom=self.height
         )
 
 
+@final
 class Player(aj.GameObject):
-    def __init__(self, x: float, y: float, **kwargs: Unpack[aj.GameObjectKwargs]) -> None:
+    def __init__(self, x: float = 0, y: float = 0, **kwargs: Unpack[aj.GameObjectKwargs]) -> None:
         super().__init__(x, y, **kwargs)
         self.sprite_index: aj.GameSprite | None = sprites.get("player")
         self.image_speed: float = 10

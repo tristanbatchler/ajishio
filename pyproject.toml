@@ -28,10 +28,10 @@ dev = [
 
 [tool.ruff]
 exclude = [
-    "*/_web_build/*",
+    "**/_web_build/",
 ]
 
 [tool.basedpyright]
 ignore = [
-    "*/_web_build/*",
+    "**/_web_build/",
 ]

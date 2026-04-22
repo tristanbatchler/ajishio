@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
+from typing import override
 
 import ajishio as aj
 from demo_projects.visual_novel.ui.primitives import (
@@ -23,7 +24,7 @@ class DialogueLine:
 class DialogueBox(aj.GameObject):
     def __init__(self, width: float) -> None:
         super().__init__(0, 0)
-        self.width = width
+        self.width: float = width
         self.margin: float = 20
         self.line_height: float = 22
         self.type_rate: float = 55.0  # characters per second
@@ -31,7 +32,7 @@ class DialogueBox(aj.GameObject):
         self.current_line: DialogueLine | None = None
         self.lines_wrapped: list[str] = []
         self.finished: bool = True
-        self.style = PanelStyle()
+        self.style: PanelStyle = PanelStyle()
 
     def show_line(self, line: DialogueLine) -> None:
         self.current_line = line
@@ -55,9 +56,7 @@ class DialogueBox(aj.GameObject):
             self.finished = True
 
     def advance_requested(self) -> bool:
-        return aj.keyboard_check_pressed(aj.vk_space) or aj.keyboard_check_pressed(
-            aj.vk_enter
-        )
+        return aj.keyboard_check_pressed(aj.vk_space) or aj.keyboard_check_pressed(aj.vk_enter)
 
     def reveal_all(self) -> None:
         total_length = self._total_chars()
@@ -67,6 +66,7 @@ class DialogueBox(aj.GameObject):
     def _total_chars(self) -> int:
         return sum(len(line) for line in self.lines_wrapped)
 
+    @override
     def draw(self) -> None:
         ox = aj.view_xport[aj.view_current]
         oy = aj.view_yport[aj.view_current]

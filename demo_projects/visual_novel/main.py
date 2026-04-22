@@ -1,17 +1,16 @@
-from __future__ import annotations
-
 import logging
 from pathlib import Path
+from typing import override
 
 import ajishio as aj
-from demo_projects.visual_novel.ui.choices import ChoiceMenu, ChoiceOption
+from demo_projects.visual_novel.ui.choices import ChoiceMenu
+from demo_projects.visual_novel.ui.core import ChoiceOption, ScriptStep
 from demo_projects.visual_novel.ui.dialogue import DialogueBox
 from demo_projects.visual_novel.ui.script import (
     BackgroundStep,
     ChoiceStep,
     SayStep,
     ScriptRunner,
-    ScriptStep,
     WaitStep,
 )
 
@@ -24,11 +23,12 @@ ROOM_HEIGHT = 540
 class Backdrop(aj.GameObject):
     def __init__(self, color: aj.Color) -> None:
         super().__init__(0, 0)
-        self.color = color
+        self.color: aj.Color = color
 
     def set_color(self, color: aj.Color) -> None:
         self.color = color
 
+    @override
     def draw(self) -> None:
         aj.draw_rectangle(0, 0, aj.room_width, aj.room_height, color=self.color)
 
@@ -56,17 +56,13 @@ def build_script() -> list[ScriptStep]:
                 ),
             ]
         return [
-            SayStep(
-                "Narrator", "No eyes on you. The vault door hums open—clean entry."
-            ),
+            SayStep("Narrator", "No eyes on you. The vault door hums open—clean entry."),
         ]
 
     def over_explain() -> list[ScriptStep]:
         add_suspicion(1)
         return [
-            SayStep(
-                "You", "Absolutely, sir. The superintendent requested a dawn audit."
-            ),
+            SayStep("You", "Absolutely, sir. The superintendent requested a dawn audit."),
             SayStep("Guard", "Funny. That audit never hit my roster."),
             WaitStep(0.6),
         ] + resolve_outcome()
@@ -85,9 +81,7 @@ def build_script() -> list[ScriptStep]:
             ChoiceStep(
                 "The guard squints at the laminate.",
                 [
-                    ChoiceOption(
-                        "Over-explain the maintenance order", callback=over_explain
-                    ),
+                    ChoiceOption("Over-explain the maintenance order", callback=over_explain),
                     ChoiceOption("Keep it short and confident", callback=short_answer),
                 ],
             ),
@@ -118,9 +112,7 @@ def build_script() -> list[ScriptStep]:
         ChoiceStep(
             "How do you get inside?",
             [
-                ChoiceOption(
-                    "Flash a forged badge at the front desk", callback=badge_entry
-                ),
+                ChoiceOption("Flash a forged badge at the front desk", callback=badge_entry),
                 ChoiceOption("Crawl through a service tunnel", callback=tunnel_entry),
                 ChoiceOption("Trigger a fire alarm distraction", callback=alarm_entry),
             ],
@@ -149,6 +141,6 @@ backdrop = Backdrop(aj.Color(8, 8, 18))
 dialogue_box = DialogueBox(width=aj.room_width - 40)
 choice_menu = ChoiceMenu(width=340)
 
-ScriptRunner(build_script(), dialogue_box, choice_menu, backdrop.set_color)
+_ = ScriptRunner(build_script(), dialogue_box, choice_menu, backdrop.set_color)
 
 aj.game_start()

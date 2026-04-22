@@ -2,8 +2,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from typing import Iterable
-
+from collections.abc import Iterable
 import ajishio as aj
 
 _logger = logging.getLogger(__name__)

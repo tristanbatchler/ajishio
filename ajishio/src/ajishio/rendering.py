@@ -64,8 +64,7 @@ class Renderer:
     def draw_display(self) -> None:
         if self._screen is None:
             return
-        scaled_display: pg.Surface = pg.transform.scale(self.display, self._screen.get_size())
-        _ = self._screen.blit(scaled_display, (0, 0))
+        _ = pg.transform.scale(self.display, self._screen.get_size(), self._screen)
 
     def fit_display(self) -> None:
         self.display: Surface = pg.Surface(
@@ -165,12 +164,14 @@ class Renderer:
         draw_x: float = x - offset_x * scale_x_abs
         draw_y: float = y - offset_y * scale_y_abs
         draw_x, draw_y = _translate_offset(draw_x, draw_y)
+
         image_index = image_index % len(sprite_index.images)
         image = sprite_index.images[image_index]
+
         if rotation != 0.0:
             image = pg.transform.rotate(image, rotation)
 
-        if x_scale != 1.0 or y_scale != 1.0:
+        if scale_x_abs != 1.0 or scale_y_abs != 1.0:
             image = pg.transform.scale(
                 image,
                 (
@@ -178,10 +179,14 @@ class Renderer:
                     int(image.get_height() * scale_y_abs),
                 ),
             )
+
+        if x_scale < 0 or y_scale < 0:
             image = pg.transform.flip(image, x_scale < 0, y_scale < 0)
+
         image.set_alpha(int(alpha * 255))
         if color != c_white:
             _ = image.fill(color, special_flags=pg.BLEND_MULT)
+
         _ = self.display.blit(image, (draw_x, draw_y))
 
     def draw_set_font(

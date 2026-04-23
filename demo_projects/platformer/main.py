@@ -308,15 +308,23 @@ class Coin(aj.GameObject):
             coins_collected.add(self.iid)
 
 
-levels: list[aj.GameLevel] = aj.load_ldtk_levels(project_dir / "room_data" / "world" / "simplified")
+@aj.profile
+def main() -> None:
+    levels: list[aj.GameLevel] = aj.load_ldtk_levels(
+        project_dir / "room_data" / "world" / "simplified"
+    )
 
-aj.set_rooms(levels)
-aj.register_objects(Floor, Player, Camera, Enemy, Coin, Doorway)
+    aj.set_rooms(levels)
+    aj.register_objects(Floor, Player, Camera, Enemy, Coin, Doorway)
 
-aj.room_set_caption("Platformer")
-aspect_ratio: float = levels[0].level_size[0] / levels[0].level_size[1]
-aj.window_set_size(960, int(960 / aspect_ratio))
+    aj.room_set_caption("Platformer")
+    aspect_ratio: float = levels[0].level_size[0] / levels[0].level_size[1]
+    aj.window_set_size(960, int(960 / aspect_ratio))
 
-aj.room_set_background(aj.Color(135, 206, 235))
+    aj.room_set_background(aj.Color(135, 206, 235))
 
-aj.game_start()
+    aj.game_start()
+
+
+if __name__ == "__main__":
+    main()

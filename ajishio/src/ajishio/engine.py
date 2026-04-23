@@ -12,6 +12,7 @@ from ajishio.rendering import Renderer, Color
 import pygame as pg
 import sys
 import logging
+from fastquadtree import RectQuadTreeObjects
 
 if TYPE_CHECKING:
     from ajishio.game_sound import GameSound
@@ -42,6 +43,7 @@ class Engine:
         self._game_objects_to_add: list[IGameObject] = []
         self._game_running: bool = False
         self._object_registry: dict[str, type[IGameObject]] = {}
+        self._spatial_index: RectQuadTreeObjects | None = None
 
         self._rooms: list[GameLevel] = []
         self._audio_playing: list[GameSound] = []
@@ -131,6 +133,57 @@ class Engine:
         self.room_speed = speed
         if speed != 0:
             self.delta_time = 1 / self.room_speed  # seconds
+
+    def _get_obj_aabb(self, obj: IGameObject) -> tuple[float, float, float, float] | None:
+        """Return (left, top, right, bottom) world AABB for obj, or None if no collision mask."""
+        msk = obj.collision_mask
+        if msk is None:
+            return None
+        return (
+            obj.x + msk.bbleft,
+            obj.y + msk.bbtop,
+            obj.x + msk.bbright,
+            obj.y + msk.bbbottom,
+        )
+
+    def _rebuild_spatial_index(self) -> None:
+        margin = 2_000.0
+        bounds = (-margin, -margin, self.room_width + margin, self.room_height + margin)
+        self._spatial_index = RectQuadTreeObjects(bounds, capacity=16, max_depth=10)
+
+        def is_inside(rect: tuple[float, float, float, float]) -> bool:
+            l, t, r, b = rect
+            bl, bt, br, bb = bounds
+            return l >= bl and r <= br and t >= bt and b <= bb
+
+        for obj in self._game_objects.values():
+            if obj in self._game_objects_to_destroy:
+                continue
+            aabb = self._get_obj_aabb(obj)
+            if aabb is not None and is_inside(aabb):
+                _ = self._spatial_index.insert(aabb, obj)
+
+        for obj in self._game_objects_to_add:
+            aabb = self._get_obj_aabb(obj)
+            if aabb is not None and is_inside(aabb):
+                _ = self._spatial_index.insert(aabb, obj)
+
+    def collision_rectangle_list(
+        self, left: float, top: float, right: float, bottom: float
+    ) -> list[IGameObject]:
+        """
+        This function checks a rectangular area for a collision with all instances. It returns the
+        list of all instances in the supplied rectangular region.
+
+        This function is the same as the collision_rectangle() function, only instead of just
+        detecting one instance at a time, it will detect multiple instances. You supply the x/y
+        positions of the top left and bottom right of the area to check.
+        """
+        if self._spatial_index is None:
+            return []
+        # RectQuadTreeObjects.query returns a list of objects directly
+        items = self._spatial_index.query((left, top, right, bottom))
+        return [cast(IGameObject, item.obj) for item in items]
 
     def window_set_size(self, w: int, h: int) -> None:
         view.window_set_size(w, h)
@@ -234,11 +287,12 @@ class Engine:
             return self.instance_position(x, y, target)
 
         if isinstance(obj, type):
-            all_objects = list(self._game_objects.values()) + self._game_objects_to_add
-            for g_o in all_objects:
+            # Create a tiny rectangle around the point
+            query_rect = (x - epsilon, y - epsilon, x + epsilon, y + epsilon)
+            candidates = self.collision_rectangle_list(*query_rect)
+            for g_o in candidates:
                 if g_o in self._game_objects_to_destroy or g_o.collision_mask is None:
                     continue
-
                 if isinstance(g_o, obj):
                     msk = g_o.collision_mask
                     if (
@@ -246,6 +300,7 @@ class Engine:
                         and g_o.y + msk.bbtop <= y <= g_o.y + msk.bbbottom
                     ):
                         return g_o
+            return None
 
         return None
 
@@ -267,17 +322,25 @@ class Engine:
         This function will return the unique id of the instance being collided with. If no
         collisions are found, noone is returned.
         """
+        left, right = (x1, x2) if x1 < x2 else (x2, x1)
+        top, bottom = (y1, y2) if y1 < y2 else (y2, y1)
+
         if isinstance(obj, type):
-            for g_o in self.instances_iterate(obj):
-                if self.collision_rectangle(x1, y1, x2, y2, g_o, not_these):
-                    return g_o
+            candidates = self.collision_rectangle_list(left, top, right, bottom)
+            for g_o in candidates:
+                if not_these is not None and g_o in not_these:
+                    continue
+                if isinstance(g_o, obj):
+                    # precise check (reuse the concrete instance branch)
+                    if self.collision_rectangle(left, top, right, bottom, g_o, not_these):
+                        return g_o
             return None
 
         if isinstance(obj, UUID):
             game_obj = self.get_game_object_by_id(obj)
             if game_obj is None:
                 return None
-            return self.collision_rectangle(x1, y1, x2, y2, game_obj, not_these)
+            return self.collision_rectangle(left, top, right, bottom, game_obj, not_these)
 
         if not_these is not None and obj in not_these:
             return None
@@ -289,10 +352,10 @@ class Engine:
             return None
 
         if (
-            x1 < o.x + o_msk.bbright
-            and x2 > o.x + o_msk.bbleft
-            and y1 < o.y + o_msk.bbbottom
-            and y2 > o.y + o_msk.bbtop
+            left < obj.x + o_msk.bbright
+            and right > obj.x + o_msk.bbleft
+            and top < obj.y + o_msk.bbbottom
+            and bottom > obj.y + o_msk.bbtop
         ):
             return o
         return None
@@ -323,6 +386,8 @@ class Engine:
 
                     self._add_pending_objects()
                     self._free_destroyed_objects()
+
+                    self._rebuild_spatial_index()
 
                     for obj in self._game_objects.values():
                         obj.step()
@@ -382,6 +447,8 @@ class Engine:
 
                     self._add_pending_objects()
                     self._free_destroyed_objects()
+
+                    self._rebuild_spatial_index()
 
                     for obj in self._game_objects.values():
                         obj.step()

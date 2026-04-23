@@ -162,6 +162,7 @@ instance_position = _engine.instance_position
 instance_find = _engine.instance_find
 instances_iterate = _engine.instances_iterate
 collision_rectangle = _engine.collision_rectangle
+collision_rectangle_list = _engine.collision_rectangle_list
 audio_play_sound = _engine.audio_play_sound
 audio_is_playing = _engine.audio_is_playing
 
@@ -331,6 +332,7 @@ __all__ = [
     "instance_find",
     "instances_iterate",
     "collision_rectangle",
+    "collision_rectangle_list",
     "audio_play_sound",
     "audio_is_playing",
     # Live properties (resolved via __getattr__)

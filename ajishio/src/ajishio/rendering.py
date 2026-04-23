@@ -67,10 +67,13 @@ class Renderer:
         _ = pg.transform.scale(self.display, self._screen.get_size(), self._screen)
 
     def fit_display(self) -> None:
-        self.display: Surface = pg.Surface(
-            (view.view_wport[view.view_current], view.view_hport[view.view_current]),
-            flags=pg.SRCALPHA,
-        )
+        w = int(view.view_wport[view.view_current])
+        h = int(view.view_hport[view.view_current])
+
+        self.display: Surface = pg.Surface((w, h))
+
+        if self._screen is not None:
+            self.display = self.display.convert()
 
     def fill_background_color(self, color: pg.Color) -> None:
         _ = self.display.fill(color)

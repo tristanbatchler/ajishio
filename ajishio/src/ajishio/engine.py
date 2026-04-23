@@ -9,7 +9,7 @@ from ajishio.input import input
 from ajishio.view import view
 from ajishio.types import CollisionMask, GameLevel, IGameObject
 from ajishio.rendering import Renderer, Color
-from ajishio import pyqtree
+import ajishio.pyqtree as pyqtree
 import pygame as pg
 import sys
 import logging
@@ -182,8 +182,7 @@ class Engine:
         if self._spatial_index is None:
             return []
         # RectQuadTreeObjects.query returns a list of objects directly
-        items = self._spatial_index.intersect((left, top, right, bottom))
-        return items
+        return cast(list[IGameObject], self._spatial_index.intersect((left, top, right, bottom)))  # pyright: ignore[reportUnknownMemberType]
 
     def window_set_size(self, w: int, h: int) -> None:
         view.window_set_size(w, h)

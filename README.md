@@ -84,4 +84,4 @@ up-to-date list and links to play every demo.
 - [x] Support easy profiling
 - [x] Add library mkdocs generation and docstrings for all exposed objects
 - [x] Web export via pygbag
-- [ ] Faster collision detection using spatial quadtree
+- [x] Faster collision detection using spatial quadtree

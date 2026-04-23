@@ -106,31 +106,55 @@ class GameObject(IGameObject):
         occur.
         """
         # Check cheapest cases first to avoid the expensive runtime Protocol
-        # isinstance check that inspect.getattr_static triggers on IGameObject.
+        # Type branch: quadtree
         if isinstance(obj, type):
-            for g_o in _ctx.engine.instances_iterate(obj):
-                if self.place_meeting(x, y, g_o):
+            # Compute the AABB of self at the hypothetical position (x, y)
+            s_msk = self.collision_mask
+            if s_msk is None:
+                return None
+            temp_left = x + s_msk.bbleft
+            temp_top = y + s_msk.bbtop
+            temp_right = x + s_msk.bbright
+            temp_bottom = y + s_msk.bbbottom
+
+            # Get candidates from engine's quadtree
+            candidates = _ctx.engine.collision_rectangle_list(
+                temp_left, temp_top, temp_right, temp_bottom
+            )
+
+            for g_o in candidates:
+                if g_o is self:
+                    continue
+                if not isinstance(g_o, obj):
+                    continue
+                o_msk = g_o.collision_mask
+                if o_msk is None:
+                    continue
+                # Precise AABB check
+                if (
+                    temp_left < g_o.x + o_msk.bbright
+                    and temp_right > g_o.x + o_msk.bbleft
+                    and temp_top < g_o.y + o_msk.bbbottom
+                    and temp_bottom > g_o.y + o_msk.bbtop
+                ):
                     return g_o
             return None
 
+        # UUID branch
         if isinstance(obj, UUID):
             game_obj = _ctx.engine.get_game_object_by_id(obj)
             if game_obj is None:
                 return None
             return self.place_meeting(x, y, game_obj)
 
-        # obj is a concrete game object instance; all stored objects are GameObjects
-        # assert isinstance(obj, GameObject)
+        # Concrete instance branch
         if not isinstance(obj, GameObject):
             return None
-
         o = obj
-        s_msk: CollisionMask | None = self.collision_mask
-        o_msk: CollisionMask | None = o.collision_mask
-
+        s_msk = self.collision_mask
+        o_msk = o.collision_mask
         if s_msk is None or o_msk is None:
             return None
-
         if (
             x + s_msk.bbleft < o.x + o_msk.bbright
             and x + s_msk.bbright > o.x + o_msk.bbleft
@@ -143,3 +167,14 @@ class GameObject(IGameObject):
     @override
     def on_destroy(self) -> None:
         pass
+
+    def _get_aabb(self) -> tuple[float, float, float, float] | None:
+        msk = self.collision_mask
+        if msk is None:
+            return None
+        return (
+            self.x + msk.bbleft,
+            self.y + msk.bbtop,
+            self.x + msk.bbright,
+            self.y + msk.bbbottom,
+        )

@@ -7,28 +7,11 @@ name = "ajishio"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
-    { name = "fastquadtree" },
     { name = "pygame-ce" },
 ]
 
 [package.metadata]
-requires-dist = [
-    { name = "fastquadtree", specifier = ">=2.1.1" },
-    { name = "pygame-ce" },
-]
-
-[[package]]
-name = "fastquadtree"
-version = "2.1.1"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/57/01/561421dcc185bce07c5152350772e46842d95d329b27833bd1f84841af28/fastquadtree-2.1.1.tar.gz", hash = "sha256:93e89ea1faa60a3632179d5c72a89e7f9620568432a7149ee6a9211e76c19382", size = 910157, upload-time = "2026-01-22T04:35:55.367Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/48/3b/dfd3f63a84245be2bfabf54d7c646945830767ff949cd71ada4083889fac/fastquadtree-2.1.1-cp39-abi3-macosx_10_12_x86_64.macosx_11_0_arm64.macosx_10_12_universal2.whl", hash = "sha256:764ef73d54b9a434bb51afd1dc06c3818a8a160ef2d4451e169827f6d126d1b0", size = 737016, upload-time = "2026-01-22T04:36:01.429Z" },
-    { url = "https://files.pythonhosted.org/packages/60/59/e8e2af051d06493e1ae34e21d901795173b8e56ec480a21e708ad409d0f2/fastquadtree-2.1.1-cp39-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:983dfc7eb08f0ee8fa7123b6dd7ba96a470cfd772e4ef75829bba74651c7098c", size = 397608, upload-time = "2026-01-22T04:35:59.057Z" },
-    { url = "https://files.pythonhosted.org/packages/4b/3a/1b88b5cad06b966462dcab292a8fe184c177ec2471631b829bf7b6364196/fastquadtree-2.1.1-cp39-abi3-manylinux_2_28_armv7l.whl", hash = "sha256:30892a8de067967a3de766e098f3ee1af462304181f106899ef678aa6e646cd3", size = 445050, upload-time = "2026-01-22T04:35:50.918Z" },
-    { url = "https://files.pythonhosted.org/packages/bc/5c/c9263654394af4f0843fe092195c9bd4db1bdfb40797fa8244cf2e95273d/fastquadtree-2.1.1-cp39-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:65dff748eff1ecf7e81e5f9e9e0a89fcf787ca667e2fbcdcfeeeff129d0981e5", size = 422748, upload-time = "2026-01-22T04:35:52.402Z" },
-    { url = "https://files.pythonhosted.org/packages/85/ac/8d84d2a75ee8c244d27c36c2959d21beb29a1340c83b1b5981d3fa7f58d4/fastquadtree-2.1.1-cp39-abi3-win_amd64.whl", hash = "sha256:90bda4f1f3f74d0bbefd37d81f27f16a9ea16e1313fad860bd0de14e0ab183d9", size = 310687, upload-time = "2026-01-22T04:35:56.614Z" },
-]
+requires-dist = [{ name = "pygame-ce" }]
 
 [[package]]
 name = "pygame-ce"

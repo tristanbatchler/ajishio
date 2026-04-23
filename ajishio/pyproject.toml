@@ -8,7 +8,6 @@ version = "0.1.0"
 description = "A stripped-down pygame-based 2D game engine for creating 2D games."
 requires-python = ">=3.14"
 dependencies = [
-    "fastquadtree>=2.1.1",
     "pygame-ce",
 ]
 
@@ -18,3 +17,13 @@ package-dir = { "" = "src" }
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["ajishio*"]
+
+[tool.ruff]
+exclude = [
+    "src/ajishio/pyqtree.py",
+]
+
+[tool.basedpyright]
+ignore = [
+    "src/ajishio/pyqtree.py",
+]

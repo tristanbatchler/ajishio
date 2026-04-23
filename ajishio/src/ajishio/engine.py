@@ -9,10 +9,10 @@ from ajishio.input import input
 from ajishio.view import view
 from ajishio.types import CollisionMask, GameLevel, IGameObject
 from ajishio.rendering import Renderer, Color
+from ajishio import pyqtree
 import pygame as pg
 import sys
 import logging
-from fastquadtree import RectQuadTreeObjects
 
 if TYPE_CHECKING:
     from ajishio.game_sound import GameSound
@@ -43,7 +43,7 @@ class Engine:
         self._game_objects_to_add: list[IGameObject] = []
         self._game_running: bool = False
         self._object_registry: dict[str, type[IGameObject]] = {}
-        self._spatial_index: RectQuadTreeObjects | None = None
+        self._spatial_index: pyqtree.Index | None = None
 
         self._rooms: list[GameLevel] = []
         self._audio_playing: list[GameSound] = []
@@ -149,24 +149,24 @@ class Engine:
     def _rebuild_spatial_index(self) -> None:
         margin = 2_000.0
         bounds = (-margin, -margin, self.room_width + margin, self.room_height + margin)
-        self._spatial_index = RectQuadTreeObjects(bounds, capacity=16, max_depth=10)
+        self._spatial_index = pyqtree.Index(bbox=bounds)
 
         def is_inside(rect: tuple[float, float, float, float]) -> bool:
-            l, t, r, b = rect
+            lf, tp, rt, bm = rect
             bl, bt, br, bb = bounds
-            return l >= bl and r <= br and t >= bt and b <= bb
+            return lf >= bl and rt <= br and tp >= bt and bm <= bb
 
         for obj in self._game_objects.values():
             if obj in self._game_objects_to_destroy:
                 continue
             aabb = self._get_obj_aabb(obj)
             if aabb is not None and is_inside(aabb):
-                _ = self._spatial_index.insert(aabb, obj)
+                self._spatial_index.insert(obj, aabb)  # pyright: ignore[reportUnknownMemberType]
 
         for obj in self._game_objects_to_add:
             aabb = self._get_obj_aabb(obj)
             if aabb is not None and is_inside(aabb):
-                _ = self._spatial_index.insert(aabb, obj)
+                self._spatial_index.insert(obj, aabb)  # pyright: ignore[reportUnknownMemberType]
 
     def collision_rectangle_list(
         self, left: float, top: float, right: float, bottom: float
@@ -182,8 +182,8 @@ class Engine:
         if self._spatial_index is None:
             return []
         # RectQuadTreeObjects.query returns a list of objects directly
-        items = self._spatial_index.query((left, top, right, bottom))
-        return [cast(IGameObject, item.obj) for item in items]
+        items = self._spatial_index.intersect((left, top, right, bottom))
+        return items
 
     def window_set_size(self, w: int, h: int) -> None:
         view.window_set_size(w, h)

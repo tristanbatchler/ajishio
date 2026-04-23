@@ -3,5 +3,4 @@ Name: ajishio
 Version: 0.1.0
 Summary: A stripped-down pygame-based 2D game engine for creating 2D games.
 Requires-Python: >=3.14
-Requires-Dist: fastquadtree>=2.1.1
 Requires-Dist: pygame-ce

@@ -29,9 +29,11 @@ dev = [
 [tool.ruff]
 exclude = [
     "**/_web_build/",
+    "ajishio/src/ajishio/pyqtree.py",
 ]
 
 [tool.basedpyright]
 ignore = [
     "**/_web_build/",
+    "ajishio/src/ajishio/pyqtree.py",
 ]

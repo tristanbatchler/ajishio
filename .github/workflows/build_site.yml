@@ -40,19 +40,17 @@ jobs:
         run: |
           set -e
           mkdir -p $GITHUB_WORKSPACE/web-demos
-          for d in $GITHUB_WORKSPACE/demo_projects/*; do
-            if [ -f "$d/main.py" ]; then
-              proj=$(basename "$d")
-              echo "Building $proj..."
-              uv run pygbag_export.py "$d" --build || true
-              # Copy build output if exists
-              if [ -d "$d/build/web" ]; then
-                mkdir -p "$GITHUB_WORKSPACE/web-demos/$proj"
-                cp -r "$d/build/web"/* "$GITHUB_WORKSPACE/web-demos/$proj/"
-              elif [ -d "$d/_web_build/build/web" ]; then
-                mkdir -p "$GITHUB_WORKSPACE/web-demos/$proj"
-                cp -r "$d/_web_build/build/web"/* "$GITHUB_WORKSPACE/web-demos/$proj/"
-              fi
+          find "$GITHUB_WORKSPACE/demo_projects" -type d -name _web_build -prune -o -type f -name main.py -print0 | while IFS= read -r -d '' main; do
+            proj_dir=$(dirname "$main")
+            proj=${proj_dir#"$GITHUB_WORKSPACE/demo_projects/"}
+            echo "Building $proj..."
+            uv run pygbag_export.py "$proj_dir" --build || true
+            if [ -d "$proj_dir/build/web" ]; then
+              mkdir -p "$GITHUB_WORKSPACE/web-demos/$proj"
+              cp -r "$proj_dir/build/web"/* "$GITHUB_WORKSPACE/web-demos/$proj/"
+            elif [ -d "$proj_dir/_web_build/build/web" ]; then
+              mkdir -p "$GITHUB_WORKSPACE/web-demos/$proj"
+              cp -r "$proj_dir/_web_build/build/web"/* "$GITHUB_WORKSPACE/web-demos/$proj/"
             fi
           done
 

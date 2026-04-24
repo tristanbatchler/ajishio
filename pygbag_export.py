@@ -113,6 +113,7 @@ def patch_main_py(path: Path) -> None:
 
 
 def export(project_dir: Path, extra_args: list[str]) -> None:
+    project_dir = project_dir.resolve()
     if not project_dir.is_dir():
         sys.exit(f"Error: {project_dir} is not a directory")
     if not (project_dir / "main.py").exists():
@@ -141,6 +142,23 @@ def export(project_dir: Path, extra_args: list[str]) -> None:
         build_dir / "ajishio",
         ignore=shutil.ignore_patterns("__pycache__", "*.pyc", "py.typed"),
     )
+
+    # Preserve demo_projects package contents for nested shared modules
+    project_rel = project_dir.relative_to(REPO_ROOT)
+    if project_rel.parts[0] == "demo_projects":
+        demo_subdir = project_rel.parts[1]
+        demo_root = REPO_ROOT / "demo_projects" / demo_subdir
+        demo_dest = build_dir / "demo_projects" / demo_subdir
+        demo_dest.parent.mkdir(parents=True, exist_ok=True)
+        if demo_dest.exists():
+            shutil.rmtree(demo_dest)
+        _ = shutil.copytree(
+            demo_root,
+            demo_dest,
+            ignore=shutil.ignore_patterns("__pycache__", "_web_build", "build"),
+        )
+        _ = (build_dir / "demo_projects" / "__init__.py").write_text("")
+        _ = (build_dir / "demo_projects" / demo_subdir / "__init__.py").write_text("")
 
     # Patch main.py for pygbag compatibility
     patch_main_py(build_dir / "main.py")

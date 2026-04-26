@@ -28,7 +28,7 @@ To verify that the installation was successful, run the following command and yo
 window pop up:
 
 ```bash
-uv run demo_projects/hello_world/main.py
+uv run -m demo_projects.hello_world.main
 ```
 
 ## Quick Start
@@ -46,11 +46,11 @@ aj.game_start()
 To run the game, execute the following command from the root of the repository:
 
 ```bash
-uv run <your_project_directory>/main.py
+uv run -m <your_dot_separated_project_directory>.main
 ```
 
 ```bash
-uv run demo_projects/platformer/main.py
+uv run -m demo_projects.platformer.main
 ```
 ## Documentation
 View tips and tricks, as well as an API reference, which aims to be similar to the GameMaker 8.1 API: 
@@ -62,7 +62,7 @@ This repository comes loaded with heaps of example projects both to showcase wha
 also provide example code snippets. To run them locally, simply run
 
 ```bash
-uv run demo_projects/sokoban/main.py # Or minesweeper, platformer, tetris, etc...
+uv run -m demo_projects.sokoban.main # Or minesweeper, platformer, tetris, etc...
 ```
 
 If you just want to have a look now, you can instantly play all Ajishio demo projects in your 

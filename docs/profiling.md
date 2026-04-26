@@ -13,7 +13,7 @@ main()
 ```
 
 ```bash
-uv run demo_projects/platformer/main.py --profile
+uv run -m demo_projects.platformer.main --profile
 ```
 
 This prints a summary of the top 30 hotspots sorted by cumulative time. Without `--profile` the

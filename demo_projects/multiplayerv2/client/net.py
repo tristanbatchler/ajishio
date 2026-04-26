@@ -1,41 +1,47 @@
-from typing import Callable
-from collections.abc import Awaitable
+from typing import Callable, cast
+from collections.abc import Coroutine, Awaitable
+from asyncio import Task
 
 import json
 import sys
 import time
 import asyncio
+import socket
+
+
+def should_exit() -> bool:
+    return False
+
+
+def sleep0() -> Awaitable[None]:
+    return asyncio.sleep(0)
+
+
+def run_task(coro: Coroutine[None, None, None]) -> Task[None]:
+    return asyncio.create_task(coro)
+
 
 _IS_BROWSER = sys.platform == "emscripten"
+
 if _IS_BROWSER:
     import aio
+
+    def should_exit() -> bool:
+        return aio.exit
+
+    def sleep0() -> Awaitable[None]:
+        return aio.sleep(0)
+
+    def run_task(coro: Coroutine[None, None, None]) -> Task[None]:
+        return aio.create_task(coro)
 
 
 type JSONValue = str | int | float | bool | None | dict[str, JSONValue] | list[JSONValue]
 JSON = dict[str, JSONValue]
 
 
-def should_exit() -> bool:
-    if _IS_BROWSER:
-        return aio.exit
-    return False
-
-
-def sleep0() -> Awaitable[None]:
-    if _IS_BROWSER:
-        return aio.sleep(0)
-    return asyncio.sleep(0)
-
-
-def run_task(coro):
-    if _IS_BROWSER:
-        return aio.create_task(coro)
-    return asyncio.create_task(coro)
-
-
-async def aio_sock_open(sock, host: str, port: int):
+async def aio_sock_open(sock: socket.socket, host: str, port: int):
     import aio
-    import socket
 
     if getattr(aio.cross, "simulator", False):
         if "/" in host:
@@ -83,7 +89,7 @@ class Transport:
 
                 if hasattr(js, "WebSocket"):
                     print("NET DEBUG: browser JS WebSocket available")
-                    self.ws = js.eval(f"new WebSocket({json.dumps(self.url)})")
+                    self.ws = cast(js.WebSocket, js.eval(f"new WebSocket({json.dumps(self.url)})"))
                     self.ws.binaryType = "arraybuffer"
                     self.opened = False
                     self.open_error = None

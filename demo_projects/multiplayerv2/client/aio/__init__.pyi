@@ -1,8 +1,9 @@
-from collections.abc import Awaitable
-from typing import TypeVar
-import cross as cross
 from asyncio import Task
+from collections.abc import Awaitable
 from contextvars import Context
+from typing import TypeVar
+
+from . import cross as cross
 
 def sleep(delay: float) -> Awaitable[None]: ...
 

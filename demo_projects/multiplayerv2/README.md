@@ -1,70 +1,30 @@
-# pygame-browser-socket-demo
+# multiplayerv2
 
-A minimal full-stack example of a **Python (pygbag) browser client** communicating with a **custom asyncio TCP server** using a simple JSONL protocol.
-
-This project demonstrates how to build multiplayer networking in the browser without WebSockets, using raw TCP sockets bridged through `pygbag`.
-
----
-
-## 🧠 What This Project Is
-
-This is a **browser-native Python networking experiment**:
-
-* Python compiled to WebAssembly (via `pygbag`)
-* Raw TCP connection from the browser
-* JSONL (newline-delimited JSON) protocol
-* Minimal asyncio server backend
-
-It is intentionally small, low-level, and hackable.
+A minimal full-stack example of a Python client communicating with a
+WebSocket server using JSON messages. Runs natively on desktop and
+compiles to WebAssembly for the browser via pygbag — same codebase, no
+source changes required.
 
 ---
 
-## ⚠️ Key Constraint (Read This First)
-
-### This is NOT WebSockets
-
-Even though it runs in a browser:
-
-* ❌ No `ws://`
-* ❌ No WebSocket upgrade handshake
-* ❌ No browser WebSocket API usage
-
-Instead:
+## Project Structure
 
 ```
-pygbag_net → aio_sock → raw TCP socket → asyncio server
-```
-
-### Your server must:
-
-* Be a plain TCP server
-* Accept newline-delimited JSON messages (`\n`)
-* Ignore binary/TLS noise safely
-* Never assume perfect message framing
-
----
-
-## ⚠️ Runtime Abstraction Layer
-
-This project intentionally avoids depending on `pygbag` internals.
-
-* `asyncio` is the scheduling model and event loop semantics
-* `aio` is a platform compatibility shim for browser or desktop runtimes
-* `GameClient` and the transport layer are runtime-agnostic
-* `pygbag.aio` is not part of the public architecture and should be avoided in application logic
-
----
-
-## 📁 Project Structure
-
-```
-client/   → pygbag browser client (WASM Python)
-server/   → asyncio TCP JSONL server
+multiplayerv2/
+├── client/
+│   ├── main.py          Game entry point (pygame UI, keyboard input)
+│   ├── net.py           Transport + GameClient (cross-platform networking)
+│   ├── js.pyi           Type stub for the browser js module
+│   └── aio/
+│       ├── __init__.pyi Type stub for pygbag's aio runtime shim
+│       └── cross.pyi    Type stub for aio.cross (platform detection)
+└── server/
+    └── main.py          asyncio WebSocket echo server
 ```
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### 1. Start the server
 
@@ -76,215 +36,160 @@ uv run main.py
 Expected output:
 
 ```
-echo server on 0.0.0.0:8765
+websocket server on 0.0.0.0:8765
 ```
 
----
+### 2a. Run the desktop client
 
-### 2. Start the browser client
+```bash
+cd client
+uv run main.py
+```
+
+### 2b. Run the browser client
 
 ```bash
 cd client
 pygbag .
 ```
 
-Then open:
+Then open `http://localhost:8000`.
+
+---
+
+## Expected Behaviour
+
+Type letters and press Enter to send a message to the server. The server
+echoes it back and it appears on screen.
+
+### Server logs
 
 ```
-http://localhost:8000
+SERVER DEBUG: connected ('127.0.0.1', 54252)
+SERVER DEBUG: sent welcome
+SERVER DEBUG: recv {'t': 'hello', 'nick': 'Player1'}
+SERVER DEBUG: echoed message
+SERVER DEBUG: recv {'t': 'message', 'text': 'hello'}
+SERVER DEBUG: echoed message
+```
+
+### Client UI
+
+```
+Type something and press Enter to send it to the server.
+Input: hello
+Server: {"t": "welcome", "message": "Welcome to the echo server!"}
+You: hello
+Server: {"t": "echo", "data": {"t": "message", "text": "hello"}}
 ```
 
 ---
 
-## 🧪 Expected Behaviour
+## Protocol
 
-When working correctly:
-
-### Server logs:
-
-```
-connected: ('127.0.0.1', 54252)
-recv: {'t': 'hello', 'nick': 'u_12345'}
-```
-
-### Client logs:
-
-```
-CONNECTED: {'t': 'connected', 'nick': 'u_12345'}
-JOINED: lobby
-STATE: {...}
-SYNC: {...}
-```
-
----
-
-## 🔌 Protocol Overview
-
-All communication uses **JSONL over TCP**:
-
-* One JSON object per line
-* UTF-8 encoding
-* `\n` terminated messages
-
-### Example message
+Messages are JSON objects sent over WebSocket frames. There is no
+newline framing — each WebSocket frame carries exactly one JSON object.
 
 ```json
-{"t":"state","room":"lobby","data":{"x":10,"y":20}}
+{"t": "hello",   "nick": "Player1"}
+{"t": "message", "text": "hello"}
+{"t": "ping"}
+```
+
+The server responds with:
+
+```json
+{"t": "welcome", "message": "Welcome to the echo server!"}
+{"t": "echo",    "data": { ... }}
+{"t": "error",   "message": "invalid json"}
 ```
 
 ---
 
-## 🧩 Components
+## Transport
 
-### Client (pygbag)
+The transport layer (`net.py`) selects a connection strategy at runtime:
 
-Runs in the browser:
+| Path | When | How |
+|---|---|---|
+| **A** — JS WebSocket | Browser, preferred | `js.eval("new WebSocket(url)")` via pygbag's injected `js` module |
+| **B** — Raw socket | Browser, fallback | `socket.socket()` tunnelled through pygbag's WebSocket-to-TCP proxy on port +20000 |
+| **C** — `websockets` | Desktop | `await websockets.connect(url)` via the `websockets` library |
 
-* Uses `GameClient`
-* Handles socket buffering
-* Emits event-based messages (`state`, `sync`, etc.)
-* Runs in a cooperative async loop
+All three paths funnel received messages into the same `inbox: list[str]`,
+so `GameClient` is identical on every platform.
 
----
+### The +20000 port mapping (Path B only)
 
-### Transport Layer (`pygbag_net`)
-
-Handles:
-
-* raw socket connection
-* buffering partial TCP frames
-* JSON decoding
-* newline framing
-* event dispatch
+When using the raw socket fallback in the browser, pygbag's dev server
+proxies WebSocket connections on port `N+20000` to plain TCP on port `N`.
+`net.py` applies this offset automatically. Path A (JS WebSocket) connects
+directly to `ws://localhost:8765` and bypasses the proxy entirely.
 
 ---
 
-### Server (asyncio TCP)
+## Components
 
-Minimal backend:
+### `GameClient` (`net.py`)
 
-* Accepts TCP connections
-* Reads JSONL messages
-* Echoes or broadcasts data
-* No game logic required
+The public API for game code:
 
----
+```python
+client = GameClient(nick="Player1")
+await client.connect()        # connects and sends hello
 
-## 🔁 Data Flow
-
-```
-Browser (pygbag)
-      ↓
-GameClient
-      ↓
-Transport (aio_sock)
-      ↓
-TCP socket stream
-      ↓
-Asyncio server
+client.on("echo", handler)    # register an event handler
+client.poll()                 # call once per frame to dispatch messages
+client.send({"t": "ping"})    # send an arbitrary message
+client.send_ping()            # convenience helpers
+client.send_join("lobby")
+client.send_state({...})
+client.send_sync({...})
 ```
 
----
+`poll()` must be called every frame. Without it no messages are processed
+and no handlers fire.
 
-## 🧠 Design Philosophy
+### `Transport` (`net.py`)
 
-This project intentionally avoids “modern abstractions”:
+Owned by `GameClient`. Manages the connection and `inbox`. Not intended
+to be used directly by game code.
 
-* No WebSockets
-* No RPC frameworks
-* No binary protocols
-* No dependency-heavy networking stacks
+### Server (`server/main.py`)
 
-Instead:
-
-> raw TCP + JSONL + event loop = predictable browser networking
-
----
-
-## ⚠️ Known Gotchas
-
-### 1. Binary noise is normal
-
-You may see:
-
-```
-BINARY: 16030106c6...
-```
-
-This is:
-
-* TLS probes
-* browser networking artifacts
-* partial socket data
-
-Ignore it safely.
+A minimal `websockets.serve` echo server. On connect it sends a welcome
+message, then echoes every subsequent message back as
+`{"t": "echo", "data": <original>}`.
 
 ---
 
-### 2. You MUST use JSONL
+## Runtime Notes
 
-Every message must end in:
+The browser build uses two modules that pygbag injects at runtime —
+`aio` (an asyncio shim) and `js` (a proxy to the browser's `window`
+global). These have no PyPI equivalents and do not exist on desktop. The
+`.pyi` stub files in `client/` teach the type checker about their
+interfaces.
 
-```
-\n
-```
-
-Without it:
-
-* messages merge
-* client buffers stall
-* events break silently
+See [INTERNALS.md](INTERNALS.md) for a full technical reference covering
+the injected modules, the three transport paths, the type-checking
+setup, and known gotchas.
 
 ---
 
-### 3. You must call `poll()`
+## Known Gotchas
 
-The client is not fully async-driven.
+**`poll()` is required.** The client is not purely event-driven. If you
+forget to call `poll()` each frame, no messages are processed.
 
-If you don’t poll:
+**One message per `recv()`.** The raw socket path reads up to 4096 bytes
+per call with no JSONL framing. Large messages or message bursts can
+cause parsing failures. Keep messages small.
 
-* no messages are processed
-* events stop entirely
+**`on_message` callbacks must not `await`.** In the browser, JS event
+callbacks fire synchronously between Python event loop ticks. Awaiting
+inside them will raise a runtime error.
 
----
-
-### 4. This is not a reliable transport
-
-Expect:
-
-* partial packets
-* merged frames
-* delayed delivery
-* occasional disconnects
-
-This is normal for browser sockets.
-
----
-
-## 🔜 Where This Goes Next
-
-This repo is the foundation for a real multiplayer system.
-
-Possible extensions:
-
-* room-based routing
-* authoritative server state
-* input prediction
-* delta sync / snapshots
-* compression layer
-* reconnect + resync logic
-
----
-
-## 🧪 Why This Exists
-
-Because in `pygbag`:
-
-> networking is not “plug and play WebSockets” — it’s a constrained TCP emulation layer
-
-This project shows the **smallest working end-to-end loop** between:
-
-* browser Python
-* raw sockets
-* asyncio server
-* structured game messages
+**Test in a real browser.** The desktop pygbag simulator does not fully
+replicate the browser environment, particularly around WebSocket
+availability and the port proxy.

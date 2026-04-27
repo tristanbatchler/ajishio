@@ -1,9 +1,16 @@
 import asyncio
-from string import ascii_letters
-import ajishio as aj
+from string import ascii_lowercase, digits
 from typing import Unpack, override
 
+import ajishio as aj
 from demo_projects.multiplayerv2.client.net import GameClient
+from demo_projects.multiplayerv2.client.packets import ChatMessage
+
+# Printable characters we accept as input.
+# ord() matches pygame key codes for this range of ASCII.
+_TYPEABLE = ascii_lowercase + digits + " !?.,'-"
+
+_K_BACKSPACE = 8  # pygame.K_BACKSPACE
 
 
 class Manager(aj.GameObject):
@@ -18,46 +25,44 @@ class Manager(aj.GameObject):
         self.client: GameClient = client
         self.message_log: list[str] = []
         self.input_buffer: str = ""
-        self.keepalive_interval: float = 5.0
-        self.keepalive_timer: float = self.keepalive_interval
 
     @override
     def step(self) -> None:
         super().step()
 
+        # Receive and decode incoming packets
         incoming = self.client.recv()
         if incoming:
-            self.message_log.append(f"Server: {incoming.decode()}")
+            print(f"GOT A PACKET!!!!!: {incoming!r}")
+            msg = ChatMessage.decode(incoming)
+            if msg:
+                self.message_log.append(msg.text)
 
-        for ch in ascii_letters:
+        # Text input
+        for ch in _TYPEABLE:
             if aj.keyboard_check_pressed(ord(ch)):
                 self.input_buffer += ch
 
-        if aj.keyboard_check_pressed(aj.vk_enter):
-            self.message_log.append(f"You: {self.input_buffer}")
-            self.client.send({"t": "message", "text": self.input_buffer})
-            self.input_buffer = ""
+        if aj.keyboard_check_pressed(_K_BACKSPACE) and self.input_buffer:
+            self.input_buffer = self.input_buffer[:-1]
 
-        self.keepalive_timer -= aj.delta_time
-        if self.keepalive_timer <= 0:
-            self.client.send_ping()
-            self.keepalive_timer = self.keepalive_interval
+        if aj.keyboard_check_pressed(aj.vk_enter) and self.input_buffer.strip():
+            self.client.send(ChatMessage(text=self.input_buffer).encode())
+            self.input_buffer = ""
 
     @override
     def draw(self) -> None:
         super().draw()
-        aj.draw_text(10, 10, "Type something and press Enter to send it to the server.")
-        aj.draw_text(10, 30, f"Input: {self.input_buffer}")
-        for i, msg in enumerate(self.message_log[-10:]):
-            aj.draw_text(10, 50 + i * 20, msg)
+        aj.draw_text(10, 10, "Chatroom — type and press Enter to send")
+        aj.draw_text(10, 30, f"> {self.input_buffer}_")
+        for i, line in enumerate(self.message_log[-10:]):
+            aj.draw_text(10, 60 + i * 20, line)
 
 
-async def main():
-    client = GameClient(nick="Player1")
+async def main() -> None:
+    client = GameClient()
     await client.connect()
-
     _ = Manager(client)
-
     await aj.async_game_start()
 
 

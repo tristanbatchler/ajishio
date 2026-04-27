@@ -2,10 +2,9 @@ import asyncio
 import json
 import socket
 import sys
-import time
 from asyncio import Task
-from collections.abc import Awaitable, Coroutine
-from typing import TYPE_CHECKING, Any, Callable, cast
+from collections.abc import Awaitable, Callable, Coroutine
+from typing import TYPE_CHECKING, Any, cast
 
 if TYPE_CHECKING:
     import js
@@ -47,14 +46,6 @@ if _IS_BROWSER:
 
     def run_task(coro: Coroutine[Any, Any, None]) -> Task[None]:  # pyright: ignore[reportExplicitAny]
         return aio.create_task(coro)
-
-
-# ---------------------------------------------------------------------------
-# JSON type aliases
-# ---------------------------------------------------------------------------
-
-type JSONValue = str | int | float | bool | None | dict[str, JSONValue] | list[JSONValue]
-type JSON = dict[str, JSONValue]
 
 
 # ---------------------------------------------------------------------------
@@ -122,6 +113,20 @@ class Transport:
         self.open_error: str | None = None
         self.closed: bool = False
 
+        # Strong references to Python callback functions used by the browser
+        # WebSocket event system.
+        #
+        # Why needed:
+        # JavaScript stores proxy wrappers around Python callables. If Python no
+        # longer references the original function, it may be garbage-collected,
+        # causing onmessage/onopen/etc to silently stop firing.
+        #
+        # Keeping them on self ties callback lifetime to the Transport object.
+        self._on_open: Callable[[js.Event], None] | None = None
+        self._on_message: Callable[[js.MessageEvent], None] | None = None
+        self._on_error: Callable[[js.Event], None] | None = None
+        self._on_close: Callable[[js.Event], None] | None = None
+
     @staticmethod
     def _parse_url(url: str) -> tuple[str, int]:
         if url.startswith("ws://") or url.startswith("wss://"):
@@ -169,13 +174,23 @@ class Transport:
                     self.opened = True
 
                 def on_message(event: "js.MessageEvent") -> None:
+                    print("NET DEBUG: JS websocket message", event)
                     payload = event.data
                     print("NET DEBUG: JS websocket onmessage", payload)
+
                     if isinstance(payload, str):
                         self.inbox.append(payload)
                     else:
-                        # Binary ArrayBuffer proxy → decode via .to_py()
-                        self.inbox.append(payload.to_py())
+                        try:
+                            py_payload = payload.to_py()
+                        except Exception as exc:
+                            print("NET DEBUG: payload.to_py failed", exc)
+                            return
+
+                        if isinstance(py_payload, bytes):
+                            self.inbox.append(py_payload.decode("utf-8", "replace"))
+                        else:
+                            self.inbox.append(str(py_payload))
 
                 def on_error(event: "js.Event") -> None:
                     print("NET DEBUG: JS websocket onerror", event)
@@ -185,10 +200,16 @@ class Transport:
                     print("NET DEBUG: JS websocket onclose", event)
                     self.closed = True
 
-                self._js_ws.onopen = on_open
-                self._js_ws.onmessage = on_message
-                self._js_ws.onerror = on_error
-                self._js_ws.onclose = on_close
+                # IMPORTANT: retain callback refs
+                self._on_open = on_open
+                self._on_message = on_message
+                self._on_error = on_error
+                self._on_close = on_close
+
+                self._js_ws.onopen = self._on_open
+                self._js_ws.onmessage = self._on_message
+                self._js_ws.onerror = self._on_error
+                self._js_ws.onclose = self._on_close
 
                 for _ in range(200):
                     if self.opened or self.open_error:
@@ -282,7 +303,7 @@ class Transport:
     # Send / recv / close
     # ------------------------------------------------------------------
 
-    def send(self, data: str) -> None:
+    def send(self, data: str | bytes) -> None:
         print(f"NET DEBUG: send() _IS_BROWSER={_IS_BROWSER} len={len(data)} data={data}")
         if _IS_BROWSER:
             if self._js_ws is not None:
@@ -297,7 +318,8 @@ class Transport:
                 print("NET DEBUG: send() socket not open")
                 return
             try:
-                _ = self.sock.send(data.encode("utf-8"))
+                raw = data if isinstance(data, bytes) else data.encode("utf-8")
+                _ = self.sock.send(raw)
                 print("NET DEBUG: send() browser socket send complete")
             except OSError as exc:
                 print("NET DEBUG: send error:", exc)
@@ -345,7 +367,10 @@ class Transport:
         # Desktop path: messages arrive via _reader_desktop into inbox.
         if not self.inbox:
             return None
-        return self.inbox.pop(0).encode("utf-8")
+        msg = self.inbox.pop(0)
+        if isinstance(msg, bytes):
+            return msg
+        return msg.encode("utf-8")
 
     def close(self) -> None:
         if _IS_BROWSER:
@@ -369,73 +394,31 @@ class Transport:
 
 
 class GameClient:
-    def __init__(self, host: str = "ws://localhost:8765", nick: str | None = None) -> None:
+    """Thin, protocol-agnostic wrapper around ``Transport``.
+
+    Sends and receives raw strings/bytes only.  All packet encoding and
+    decoding is the responsibility of the caller.
+    """
+
+    def __init__(self, host: str = "ws://localhost:8765") -> None:
         self.transport: Transport = Transport(host)
-        self.buffer: str = ""
-        self.handlers: dict[str, list[Callable[[JSON], None]]] = {}
         self.connected: bool = False
-        self.nick: str = nick or f"u_{int(time.time() * 1000) % 100000}"
-        self.room: str | None = None
 
     async def connect(self) -> None:
         await self.transport.connect()
         self.connected = True
-        self.send({"t": "hello", "nick": self.nick})
 
-    def on(self, t: str, fn: Callable[[JSON], None]) -> None:
-        self.handlers.setdefault(t, []).append(fn)
-
-    def _emit(self, msg: JSON) -> None:
-        t = msg.get("t")
-        if not isinstance(t, str):
-            return
-        for handler in self.handlers.get(t, []):
-            try:
-                handler(msg)
-            except Exception as exc:
-                print("handler error:", exc)
-
-    def poll(self) -> None:
-        if not self.connected:
-            return
-
-        data = self.transport.recv()
-        if data is None or data == b"":
-            return
-
-        self.buffer = data.decode("utf-8", "replace")
-        print(f"NET DEBUG: poll() decoded buffer={self.buffer}")
-        try:
-            msg: JSON = cast(JSON, json.loads(self.buffer))
-        except json.JSONDecodeError as exc:
-            print("NET DEBUG: poll() json decode failed", exc)
-            return
-
-        print(f"NET DEBUG: poll() dispatch msg={msg}")
-        self._emit(msg)
-
-    def send(self, obj: JSON) -> None:
-        self.transport.send(json.dumps(obj))
-
-    def send_join(self, room: str) -> None:
-        self.room = room
-        self.send({"t": "join", "room": room})
-
-    def send_state(self, data: JSON) -> None:
-        self.send({"t": "state", "room": self.room, "data": data})
-
-    def send_sync(self, data: JSON) -> None:
-        self.send({"t": "sync", "room": self.room, "data": data})
-
-    def send_ping(self) -> None:
-        self.send({"t": "ping"})
+    def send(self, data: str) -> None:
+        """Send a raw string to the server."""
+        self.transport.send(data)
 
     def recv(self) -> bytes | None:
+        """Return the next queued message as raw bytes, or None if inbox is empty."""
         return self.transport.recv()
 
     async def run(self) -> None:
+        """Yield to the event loop each frame. Use as a background task."""
         while not should_exit():
-            self.poll()
             await sleep0()
 
     def close(self) -> None:

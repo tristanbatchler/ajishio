@@ -5,4 +5,7 @@
         100
     ],
     "ruff.lineLength": 100,
+    "python.analysis.diagnosticSeverityOverrides": {
+        "reportMissingModuleSource": "none"
+    }
 }

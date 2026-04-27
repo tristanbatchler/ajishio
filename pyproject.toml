@@ -35,6 +35,8 @@ exclude = [
 ]
 
 [tool.basedpyright]
+reportMissingModuleSource = "none"
+stubPath = "ajishio/typings"
 ignore = [
     "**/_web_build/",
     "ajishio/src/ajishio/pyqtree.py",

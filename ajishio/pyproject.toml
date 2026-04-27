@@ -25,7 +25,7 @@ exclude = [
 ]
 
 [tool.basedpyright]
-stubPath = "src/stubs"
+reportMissingModuleSource = "none"
 ignore = [
     "src/ajishio/pyqtree.py",
 ]

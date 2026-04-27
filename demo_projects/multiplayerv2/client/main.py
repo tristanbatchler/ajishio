@@ -6,7 +6,6 @@ from string import ascii_lowercase, digits
 from typing import Unpack, override
 
 import ajishio as aj
-from demo_projects.multiplayerv2.client.net import GameClient
 from demo_projects.multiplayerv2.client.packets import ChatMessage
 from pathlib import Path
 
@@ -18,13 +17,13 @@ _TYPEABLE = ascii_lowercase + digits + " !?.,'-"
 class Manager(aj.GameObject):
     def __init__(
         self,
-        client: GameClient,
+        client: aj.GameNetClient,
         x: float = 0,
         y: float = 0,
         **kwargs: Unpack[aj.GameObjectKwargs],
     ) -> None:
         super().__init__(x, y, **kwargs)
-        self.client: GameClient = client
+        self.client: aj.GameNetClient = client
         self.message_log: list[str] = []
         self.input_buffer: str = ""
         self.cursor_visible: bool = True
@@ -75,7 +74,7 @@ class Manager(aj.GameObject):
 
 
 async def main() -> None:
-    client = GameClient()
+    client = aj.GameNetClient()
     await client.connect()
     _ = Manager(client)
     await aj.async_game_start()

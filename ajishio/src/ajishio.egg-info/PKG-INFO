@@ -4,3 +4,4 @@ Version: 0.1.0
 Summary: A stripped-down pygame-based 2D game engine for creating 2D games.
 Requires-Python: >=3.14
 Requires-Dist: pygame-ce
+Requires-Dist: websockets>=16.0

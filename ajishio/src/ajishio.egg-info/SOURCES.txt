@@ -6,6 +6,7 @@ src/ajishio/game_object.py
 src/ajishio/game_sound.py
 src/ajishio/input.py
 src/ajishio/level_loader.py
+src/ajishio/net.py
 src/ajishio/py.typed
 src/ajishio/pyqtree.py
 src/ajishio/rendering.py

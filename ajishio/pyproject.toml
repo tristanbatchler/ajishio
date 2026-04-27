@@ -9,6 +9,7 @@ description = "A stripped-down pygame-based 2D game engine for creating 2D games
 requires-python = ">=3.14"
 dependencies = [
     "pygame-ce",
+    "websockets>=16.0",
 ]
 
 [tool.setuptools]
@@ -24,6 +25,7 @@ exclude = [
 ]
 
 [tool.basedpyright]
+stubPath = "src/stubs"
 ignore = [
     "src/ajishio/pyqtree.py",
 ]

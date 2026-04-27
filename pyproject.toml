@@ -5,6 +5,7 @@ description = "Workspace for the Ajishio 2D game engine and demo projects."
 requires-python = ">=3.14"
 dependencies = [
     "ajishio",
+    "basedpyright>=1.39.3",
     "pygbag>=0.9.3",
     "websockets>=16.0",
 ]

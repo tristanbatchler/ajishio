@@ -23,6 +23,7 @@ from ajishio.types import (
 )
 from ajishio.game_sound import GameSound
 from ajishio.rendering import Color
+from ajishio.net import GameNetClient
 
 # --- Input ---
 from ajishio.input import (
@@ -233,6 +234,7 @@ __all__ = [
     "CustomFields",
     "GameObjectKwargs",
     "GameSound",
+    "GameNetClient",
     "Color",
     # Input
     "keyboard_check",

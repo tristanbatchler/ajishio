@@ -156,7 +156,7 @@ class Transport:
     async def _connect_browser(self) -> None:
         # Prefer the native JS WebSocket API (available in real browser contexts).
         try:
-            import js  # noqa: PLC0415
+            import js
 
             if hasattr(js, "WebSocket"):
                 print("NET DEBUG: browser JS WebSocket available")
@@ -239,7 +239,7 @@ class Transport:
         _ = run_task(self._reader_browser())
 
     async def _connect_desktop(self) -> None:
-        import websockets  # noqa: PLC0415
+        import websockets
 
         print("NET DEBUG: desktop websocket connect")
         self._desktop_ws = await websockets.connect(self.url)
@@ -267,7 +267,7 @@ class Transport:
 
     async def _reader_browser(self) -> None:
         """Pump data from the raw fallback socket into ``inbox``."""
-        import select  # noqa: PLC0415
+        import select
 
         while True:
             if self.sock is None:
@@ -345,7 +345,7 @@ class Transport:
             # Raw socket fallback: read directly (non-blocking, no background task).
             if self.sock is None:
                 return None
-            import select  # noqa: PLC0415
+            import select
 
             try:
                 ready, _, _ = select.select([self.sock], [], [], 0)
@@ -389,11 +389,11 @@ class Transport:
 
 
 # ---------------------------------------------------------------------------
-# GameClient
+# GameNetClient
 # ---------------------------------------------------------------------------
 
 
-class GameClient:
+class GameNetClient:
     """Thin, protocol-agnostic wrapper around ``Transport``.
 
     Sends and receives raw strings/bytes only.  All packet encoding and

@@ -338,8 +338,11 @@ Python code
 - Messages arrive via callback (`on_message`) and are buffered in `self.inbox`.
 - `send()` is synchronous from Python's perspective — the browser handles
   buffering and async delivery internally.
-- Binary frames arrive as `ArrayBuffer` proxies and must be decoded via
-  `.to_py()`.
+- `Transport.send()` accepts both `str` and `bytes`.  Bytes are passed
+  directly to the JS WebSocket (which sends them as a binary frame).
+- Binary frames arrive as `ArrayBuffer` proxies.  `to_py()` is called on
+  the proxy and may return either `str` or `bytes` depending on the frame
+  content and pygbag version.  Both cases are handled in `on_message`.
 
 **Why JS WebSocket instead of Python `websockets`?**  
 The `websockets` library requires a proper event loop that can do real async
@@ -439,9 +442,10 @@ And in reverse for recv.
 
 When using `js.WebSocket` (Path A), you connect directly to a `ws://` URL.
 The browser's WebSocket speaks to a server that understands WebSocket framing.
-If your server only speaks raw TCP, you need a WebSocket wrapper or you use
-Path B.  This demo's server is a plain asyncio TCP server, so Path B
-(raw socket + proxy) is the correct approach when needed.
+This demo's server (`server/main.py`) is a `websockets.serve` WebSocket server,
+so Path A is the primary connection method.  Path B (raw socket + proxy) is
+only used as a fallback when `js.WebSocket` is unavailable (e.g., in the
+pygbag desktop simulator).
 
 ---
 
@@ -548,17 +552,21 @@ co-location with `net.py` is enough.
 
 Documents the subset of the browser `window` global that this codebase uses:
 
-- `js.WebSocket` — the browser WebSocket class.  Note that `onopen`,
-  `onmessage`, `onerror`, `onclose` are typed as nullable callable handlers.
-  Setting them to Python functions is how you register event listeners.
+- `js.WebSocket` — the browser WebSocket class.  `send()` accepts both `str`
+  (text frame) and `bytes` (binary frame) — this has been verified at runtime
+  through the Emscripten bridge.  `onopen`, `onmessage`, `onerror`, `onclose`
+  are typed as nullable callable handlers; setting them to Python functions is
+  how you register event listeners.
 - `js.Event` — the base event type passed to `onopen`, `onerror`, `onclose`.
   The `type: str` attribute gives the event type name.
 - `js.MessageEvent` — the event passed to `onmessage`.  The `data` attribute
   is either a plain `str` (text frames) or a `BinaryData` proxy (binary frames,
   i.e., ArrayBuffer).
 - `js.MessageEvent.BinaryData` — the Pyodide proxy around a JS `ArrayBuffer`.
-  Its only useful method from Python is `.to_py() -> str`, which decodes the
-  buffer.
+  Its only useful method from Python is `.to_py()`, which converts the buffer
+  to a Python value.  In practice this returns either `str` or `bytes`
+  depending on the frame content and pygbag version — the `on_message` handler
+  checks both cases explicitly.
 - `js.eval(code: str) -> JSObject` — the JS escape hatch.
 - `JSObject = object` — used as a stand-in for the opaque proxy type.
 
@@ -647,6 +655,64 @@ the type checker "trust me, this is a `js.WebSocket`".  This is safe because
 the surrounding `if hasattr(js, "WebSocket"):` guard confirms the class exists
 and `new WebSocket(url)` always returns a `WebSocket` instance in JS.
 
+### Keeping JS callbacks alive: the GC trap
+
+This was discovered by observing that `on_message` silently never fired in the
+real browser, even though DevTools confirmed the WebSocket was receiving frames.
+
+When you write:
+
+```python
+def on_message(event): ...
+self._js_ws.onmessage = on_message
+```
+
+the assignment goes through the Emscripten bridge.  JavaScript does not receive
+the Python function itself — it receives a **proxy wrapper** object.  The proxy
+holds a weak handle back into the Python heap.  If Python's garbage collector
+later reclaims the original callable (because nothing else references it), the
+proxy becomes a dangling pointer.  JavaScript still believes the handler is
+registered, but calling it either does nothing or crashes silently.
+
+The fix is to keep a strong Python reference on the `Transport` instance for
+as long as the socket exists:
+
+```python
+# In Transport.__init__:
+self._on_open:    "Callable[[js.Event], None] | None"    = None
+self._on_message: "Callable[[js.MessageEvent], None] | None" = None
+self._on_error:   "Callable[[js.Event], None] | None"    = None
+self._on_close:   "Callable[[js.Event], None] | None"    = None
+```
+
+Then in `_connect_browser`, after defining the closures, store them **before**
+assigning to the JS object:
+
+```python
+self._on_open    = on_open
+self._on_message = on_message
+self._on_error   = on_error
+self._on_close   = on_close
+
+self._js_ws.onopen    = self._on_open
+self._js_ws.onmessage = self._on_message
+self._js_ws.onerror   = self._on_error
+self._js_ws.onclose   = self._on_close
+```
+
+Now the `Transport` object owns a live reference to every callback.  As long
+as `Transport` is alive, the callbacks cannot be garbage collected, and the
+JavaScript proxy remains valid.
+
+**Symptom checklist** — if you see this bug in the future:
+
+- WebSocket connects successfully (`onopen` fired, `self.opened` is `True`).
+- Messages are visible in the browser's DevTools Network tab.
+- Python's `on_message` never runs; `self.inbox` stays empty.
+- No exceptions anywhere.
+
+The cause is almost always a missing strong reference to the callback.
+
 ---
 
 ## 12. Platform Abstraction Helpers
@@ -682,77 +748,83 @@ expected and intentional here.
 
 ---
 
-## 13. The `GameClient` API
+## 13. The `GameClient` API and `packets.py`
 
-`GameClient` is the public API that game code interacts with.  It owns a
-`Transport` and provides a higher-level event-oriented interface.
+`GameClient` is a thin, protocol-agnostic wrapper around `Transport`.  It
+sends and receives raw strings only.  All encoding and decoding of packet
+contents is the responsibility of the caller — deliberately kept out of the
+transport layer so that the wire format can change without touching `net.py`.
 
-### Connecting
-
-```python
-client = GameClient(host="ws://localhost:8765", nick="Player1")
-await client.connect()
-# Sends {"t": "hello", "nick": "Player1"} automatically on connect.
-```
-
-### Sending messages
-
-All messages are JSON objects.  Use the typed helpers:
+### API surface
 
 ```python
-client.send_join("lobby")          # {"t": "join", "room": "lobby"}
-client.send_state({"x": 10})       # {"t": "state", "room": ..., "data": ...}
-client.send_sync({"score": 42})    # {"t": "sync", "room": ..., "data": ...}
-client.send_ping()                  # {"t": "ping"}
-client.send({"t": "custom", ...})   # arbitrary message
+client = GameClient(host="ws://localhost:8765")
+await client.connect()          # opens the transport connection
+
+client.send(data: str)          # send a raw encoded string
+client.recv() -> bytes | None   # pop the next message, or None if inbox empty
+await client.run()              # yield each frame; use as a background task
+client.close()                  # close the connection
 ```
 
-### Receiving messages — event handlers
+`client.connected` is `True` after `connect()` returns successfully.
 
-Register typed event handlers before connecting:
+### The `packets.py` pattern
+
+All wire-format decisions live in `packets.py`, not in `net.py` or game code.
+Each packet type is a frozen dataclass with `encode() -> str` and a
+`@classmethod decode(bytes) -> T | None`:
 
 ```python
-def on_state(msg: JSON) -> None:
-    print("got state:", msg["data"])
+# packets.py
+@dataclass(frozen=True)
+class ChatMessage:
+    text: str
 
-client.on("state", on_state)
+    def encode(self) -> str:
+        return json.dumps({"t": "chat", "text": self.text})
+
+    @classmethod
+    def decode(cls, data: bytes) -> "ChatMessage | None":
+        ...  # returns None on any parse error, never raises
 ```
 
-Handlers are called synchronously inside `poll()`.
-
-### Polling
-
-`poll()` must be called regularly — it drains the transport's inbox, decodes
-JSON, and dispatches to handlers.  Call it once per game frame:
+Game code uses the two together:
 
 ```python
-# In your game loop / step() method:
-client.poll()
+# Sending
+client.send(ChatMessage(text=self.input_buffer).encode())
+
+# Receiving — call once per frame in step()
+raw = client.recv()
+if raw:
+    msg = ChatMessage.decode(raw)
+    if msg:
+        self.message_log.append(msg.text)
 ```
 
-Or run the built-in async loop:
+`recv()` returns `None` when the inbox is empty, so the `if raw:` guard is
+sufficient.  `ChatMessage.decode` returns `None` for anything that is not a
+valid chat packet, so unknown message types are silently ignored without
+raising exceptions.
+
+### Why `recv()` returns `bytes`
+
+`Transport.inbox` stores decoded `str` values.  `recv()` re-encodes them to
+`bytes` (via `.encode("utf-8")`) so that callers always receive a consistent
+`bytes | None` type regardless of transport path — keeping the API stable even
+if the underlying inbox representation changes.
+
+### Background loop
 
 ```python
 asyncio.create_task(client.run())
-# client.run() calls poll() every frame and exits when should_exit() is True.
 ```
 
-### The inbox model
-
-The transport accumulates incoming messages in `self.transport.inbox: list[str]`.
-`poll()` pops one message per call.  If multiple messages arrive in one frame,
-they will be processed on successive frames.  For high-frequency data this is
-usually fine; for latency-sensitive state sync you may want to drain the entire
-inbox per frame:
-
-```python
-def poll_all(client: GameClient) -> None:
-    while True:
-        data = client.transport.recv()
-        if not data:
-            break
-        # ... parse and dispatch data
-```
+`run()` is a coroutine that yields once per event loop tick via `sleep0()` and
+exits when `should_exit()` returns `True`.  It does no message processing —
+call `client.recv()` yourself in `step()` rather than relying on a background
+loop for message delivery.
 
 ---
 
@@ -793,37 +865,35 @@ in your uv cache at `.cache/uv/archive-v0/<hash>/pygbag/`.
 ### Browser, JS WebSocket path (Path A)
 
 ```
-Game code calls client.send(msg)
-    → json.dumps(msg)
+Game code calls client.send(ChatMessage(...).encode())
     → transport.send(str)
-    → self._js_ws.send(str)          ← sync, returns None
+    → self._js_ws.send(str)          ← sync, JS handles async delivery
     → browser WebSocket API
     → server
 
 Server sends data
     → browser WebSocket API
-    → on_message(event) callback     ← called by JS event loop
-    → event.data (str or BinaryData)
-    → self.inbox.append(str)         ← buffered
+    → on_message(event) callback     ← fired by JS event loop
+    → event.data: str or BinaryData proxy
+    → str: inbox.append(str)
+    → BinaryData: payload.to_py() → str or bytes → inbox.append(str)
 
-Game code calls client.poll()
+Game code calls client.recv() in step()
     → transport.recv()
-    → inbox.pop(0).encode("utf-8")   ← bytes to GameClient
-    → json.loads(buffer)
-    → client._emit(msg)
-    → registered handlers called
+    → inbox.pop(0).encode("utf-8")   ← bytes returned to caller
+    → caller: ChatMessage.decode(bytes) → ChatMessage | None
 ```
 
 ### Browser, raw socket path (Path B)
 
 ```
-Game code calls client.send(msg)
-    → json.dumps(msg)
+Game code calls client.send(ChatMessage(...).encode())
     → transport.send(str)
-    → self.sock.send(bytes)          ← returns int (bytes written)
+    → raw = str.encode("utf-8")
+    → self.sock.send(raw)            ← returns int (bytes written)
     → WASM socket bridge
     → JS WebSocket frame to port N+20000
-    → pygbag proxy (strips WS framing)
+    → pygbag dev proxy (strips WS framing)
     → TCP to server on port N
 
 Server sends data
@@ -837,28 +907,31 @@ Server sends data
         → data.decode("utf-8", "replace")
         → self.inbox.append(str)
 
-Game code calls client.poll()
-    → same as above from inbox.pop(0)
+Game code calls client.recv() in step()
+    → transport.recv()
+    → inbox.pop(0).encode("utf-8")   ← bytes returned to caller
+    → caller: ChatMessage.decode(bytes) → ChatMessage | None
 ```
 
 ### Desktop, websockets path (Path C)
 
 ```
-Game code calls client.send(msg)
-    → json.dumps(msg)
+Game code calls client.send(ChatMessage(...).encode())
     → transport.send(str)
-    → run_task(self._desktop_ws.send(str))   ← schedules async send coroutine
+    → run_task(self._desktop_ws.send(str))   ← schedules async coroutine
     → asyncio event loop delivers bytes to server
 
 Server sends data
     → asyncio event loop receives bytes
     → _reader_desktop() coroutine
         → async for msg in self._desktop_ws:
-        → isinstance(msg, bytes): decode
+        → isinstance(msg, bytes): decode to str
         → self.inbox.append(str)
 
-Game code calls client.poll()
-    → same as above from inbox.pop(0)
+Game code calls client.recv() in step()
+    → transport.recv()
+    → inbox.pop(0).encode("utf-8")   ← bytes returned to caller
+    → caller: ChatMessage.decode(bytes) → ChatMessage | None
 ```
 
 ---
@@ -916,7 +989,33 @@ only appear at runtime, not during type checking.  Only use `cast` when you
 have verified the actual runtime type via `hasattr`, `isinstance`, or a logical
 guarantee (like `if hasattr(js, "WebSocket"):` before casting to `js.WebSocket`).
 
-### 8. The simulator does not emulate everything
+### 9. JS callback garbage collection (the silent `on_message` trap)
+
+If you assign Python functions to `js.WebSocket` event properties and then
+messages stop arriving silently — even though DevTools shows them — the cause
+is almost certainly garbage collection.
+
+When you do `self._js_ws.onmessage = on_message`, JavaScript receives a
+**proxy wrapper** around the Python callable, not the callable itself.  If
+Python drops its reference to the original function, the GC reclaims it.
+JavaScript still holds the proxy, but calling it does nothing.
+
+**Fix**: store strong references to every callback on the `Transport` instance:
+
+```python
+self._on_open    = on_open
+self._on_message = on_message
+self._on_error   = on_error
+self._on_close   = on_close
+
+self._js_ws.onopen    = self._on_open
+self._js_ws.onmessage = self._on_message
+```
+
+As long as `Transport` is alive, the callbacks cannot be collected.  See §11
+for the full explanation and type annotations.
+
+### 10. The simulator does not emulate everything
 
 The desktop pygbag simulator runs your code in a desktop Python process with a
 simulated browser-like environment.  But it does not run a real browser, so:
@@ -926,6 +1025,26 @@ simulated browser-like environment.  But it does not run a real browser, so:
 - Performance characteristics are completely different.
 
 Always validate in a real browser before shipping.
+
+### 11. `to_py()` does not always return `str`
+
+The `js.MessageEvent.BinaryData.to_py()` method converts a JavaScript
+`ArrayBuffer` to a Python value.  The stub declares it as `-> str` for
+simplicity, but in practice it can return `bytes` depending on the frame
+content and the pygbag/Emscripten version in use.
+
+The `on_message` handler accounts for both:
+
+```python
+py_payload = payload.to_py()
+if isinstance(py_payload, bytes):
+    self.inbox.append(py_payload.decode("utf-8", "replace"))
+else:
+    self.inbox.append(str(py_payload))
+```
+
+If you ever update the stub to `-> str | bytes`, remove the `str()` fallback
+and let the type checker guide the narrowing.
 
 ---
 

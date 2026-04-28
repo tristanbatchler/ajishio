@@ -1,7 +1,12 @@
-from typing import Callable
+from __future__ import annotations
 
-JSValue = str | int | float | bool | None | dict[str, "JSValue"] | list["JSValue"]
+from typing import Callable, Protocol
+
+JSValue = str | int | float | bool | None | dict[str, JSValue] | list[JSValue]
 JSObject = object
+
+class JSFunction(Protocol):
+    def __call__(self, *args: JSObject) -> JSObject: ...
 
 class Event:
     type: str
@@ -9,11 +14,23 @@ class Event:
     currentTarget: JSObject
     isTrusted: bool
 
-class MessageEvent(Event):
-    class BinaryData:
-        def to_py(self) -> str: ...
+class ArrayBuffer:
+    """Opaque JS ArrayBuffer proxy.
 
-    data: BinaryData | str
+    In pygbag, this does not reliably expose a callable `.to_py()`.
+    Convert it from real code with JS, e.g.:
+    `Array.from(new Uint8Array(buffer))`.
+    """
+
+class Uint8Array:
+    """Opaque JS Uint8Array proxy.
+
+    Do not assume `.to_py()` exists or is callable in pygbag.
+    Prefer constructing/reading via `js.eval(...)` helpers.
+    """
+
+class MessageEvent(Event):
+    data: str | ArrayBuffer
     origin: str
     lastEventId: str
     ports: list[JSObject] | JSObject | None
@@ -39,10 +56,9 @@ class WebSocket:
     onclose: EventHandler | None
 
     def __init__(self, url: str) -> None: ...
-    def send(self, data: str | bytes) -> None: ...
+    def send(self, data: str | JSObject) -> None: ...
     def close(self) -> None: ...
 
-
-def eval(code: str) -> JSObject: ...
+def eval(code: str) -> JSObject | JSFunction: ...
 
 console: JSObject

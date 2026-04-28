@@ -108,7 +108,7 @@ class Transport:
         # Browser fallback ─ raw TCP socket via pygbag proxy
         self.sock: socket.socket | None = None
 
-        self.inbox: list[str] = []
+        self.inbox: list[bytes] = []
         self.opened: bool = False
         self.open_error: str | None = None
         self.closed: bool = False
@@ -158,6 +158,15 @@ class Transport:
         try:
             import js
 
+            def _arraybuffer_to_bytes(payload: js.ArrayBuffer) -> bytes:
+                csv = cast(
+                    js.JSFunction, js.eval("(x) => Array.from(new Uint8Array(x)).join(',')")
+                )(payload)
+                text = str(csv)
+                if not text:
+                    return b""
+                return bytes(int(part) for part in text.split(","))
+
             if hasattr(js, "WebSocket"):
                 print("NET DEBUG: browser JS WebSocket available")
                 self._js_ws = cast(
@@ -169,34 +178,25 @@ class Transport:
                 self.open_error = None
                 self.closed = False
 
-                def on_open(event: "js.Event") -> None:
+                def on_open(event: js.Event) -> None:
                     print("NET DEBUG: JS websocket open", event)
                     self.opened = True
 
-                def on_message(event: "js.MessageEvent") -> None:
+                def on_message(event: js.MessageEvent) -> None:
                     print("NET DEBUG: JS websocket message", event)
                     payload = event.data
                     print("NET DEBUG: JS websocket onmessage", payload)
 
                     if isinstance(payload, str):
-                        self.inbox.append(payload)
+                        self.inbox.append(payload.encode("utf-8"))
                     else:
-                        try:
-                            py_payload = payload.to_py()
-                        except Exception as exc:
-                            print("NET DEBUG: payload.to_py failed", exc)
-                            return
+                        self.inbox.append(_arraybuffer_to_bytes(payload))
 
-                        if isinstance(py_payload, bytes):
-                            self.inbox.append(py_payload.decode("utf-8", "replace"))
-                        else:
-                            self.inbox.append(str(py_payload))
-
-                def on_error(event: "js.Event") -> None:
+                def on_error(event: js.Event) -> None:
                     print("NET DEBUG: JS websocket onerror", event)
                     self.open_error = event.type
 
-                def on_close(event: "js.Event") -> None:
+                def on_close(event: js.Event) -> None:
                     print("NET DEBUG: JS websocket onclose", event)
                     self.closed = True
 
@@ -259,9 +259,9 @@ class Transport:
                 print("NET DEBUG: desktop ws msg type=", type(msg), "value=", msg)
                 # websockets yields str for text frames, bytes for binary frames.
                 if isinstance(msg, bytes):
-                    self.inbox.append(msg.decode("utf-8", "replace"))
-                else:
                     self.inbox.append(msg)
+                else:
+                    self.inbox.append(msg.encode("utf-8"))
         except Exception as exc:
             print("NET DEBUG: desktop websocket reader exception", exc)
 
@@ -297,7 +297,7 @@ class Transport:
                 return
 
             print("NET DEBUG: browser socket recv", data)
-            self.inbox.append(data.decode("utf-8", "replace"))
+            self.inbox.append(data)
 
     # ------------------------------------------------------------------
     # Send / recv / close
@@ -305,10 +305,19 @@ class Transport:
 
     def send(self, data: str | bytes) -> None:
         print(f"NET DEBUG: send() _IS_BROWSER={_IS_BROWSER} len={len(data)} data={data}")
+
         if _IS_BROWSER:
             if self._js_ws is not None:
                 try:
-                    self._js_ws.send(data)
+                    import js
+
+                    if isinstance(data, bytes):
+                        csv = ",".join(str(b) for b in data)
+                        byte_array = js.eval(f"new Uint8Array([{csv}])")
+                        self._js_ws.send(byte_array)
+                    else:
+                        self._js_ws.send(data)
+
                     print("NET DEBUG: send() browser JS websocket send complete")
                 except Exception as exc:
                     print("NET DEBUG: send() browser JS websocket error", exc)
@@ -317,6 +326,7 @@ class Transport:
             if self.sock is None:
                 print("NET DEBUG: send() socket not open")
                 return
+
             try:
                 raw = data if isinstance(data, bytes) else data.encode("utf-8")
                 _ = self.sock.send(raw)
@@ -328,6 +338,7 @@ class Transport:
         if self._desktop_ws is None:
             print("NET DEBUG: send() websocket not open")
             return
+
         _ = run_task(self._desktop_ws.send(data))
         print("NET DEBUG: send() websocket send scheduled")
 
@@ -335,16 +346,7 @@ class Transport:
         print("NET DEBUG: flush()")
 
     def recv(self) -> bytes | None:
-        if _IS_BROWSER:
-            if self._js_ws is not None:
-                # JS WebSocket path: messages arrive via on_message into inbox.
-                if not self.inbox:
-                    return None
-                return self.inbox.pop(0).encode("utf-8")
-
-            # Raw socket fallback: read directly (non-blocking, no background task).
-            if self.sock is None:
-                return None
+        if _IS_BROWSER and self._js_ws is None and self.sock is not None:
             import select
 
             try:
@@ -364,13 +366,10 @@ class Transport:
                 print("recv error:", exc)
                 return b""
 
-        # Desktop path: messages arrive via _reader_desktop into inbox.
         if not self.inbox:
             return None
-        msg = self.inbox.pop(0)
-        if isinstance(msg, bytes):
-            return msg
-        return msg.encode("utf-8")
+
+        return self.inbox.pop(0)
 
     def close(self) -> None:
         if _IS_BROWSER:
@@ -408,8 +407,8 @@ class GameNetClient:
         await self.transport.connect()
         self.connected = True
 
-    def send(self, data: str) -> None:
-        """Send a raw string to the server."""
+    def send(self, data: str | bytes) -> None:
+        """Send a raw string or bytes to the server."""
         self.transport.send(data)
 
     def recv(self) -> bytes | None:

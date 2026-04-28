@@ -1,35 +1,14 @@
 from __future__ import annotations
+
+import base64
 import enum
-from abc import ABC, abstractmethod
 import struct
-from typing import cast, override
+from dataclasses import dataclass
+from typing import ClassVar, Protocol, cast
 from uuid import UUID
 
 
-def unpack(data: bytes) -> Packet:
-    header_byte, body = data[0], data[1:]
-    match MessageType(header_byte):
-        case MessageType.PLAYER_POSITION:
-            return PlayerPositionPacket.unpack(body)
-        case MessageType.PLAYER_ID:
-            return PlayerIdPacket.unpack(body)
-        case MessageType.PLAYER_X_INPUT:
-            return PlayerXInputPacket.unpack(body)
-        case MessageType.PLAYER_JUMP:
-            return PlayerJumpPacket.unpack(body)
-        case MessageType.OTHER_PLAYER_POSITION:
-            return OtherPlayerPositionPacket.unpack(body)
-        case MessageType.CONNECTION_REQUEST:
-            return ConnectionRequestPacket.unpack(body)
-        case MessageType.PLAYER_DISCONNECT:
-            return PlayerDisconnectPacket.unpack(body)
-        case MessageType.POSITION_SYNC_REQUEST:
-            return PositionSyncRequestPacket.unpack(body)
-        case MessageType.POSITION_SYNC_RESPONSE:
-            return PositionSyncResponsePacket.unpack(body)
-
-
-class MessageType(enum.Enum):
+class MessageType(enum.IntEnum):
     PLAYER_POSITION = 0
     PLAYER_ID = 1
     PLAYER_X_INPUT = 2
@@ -41,158 +20,210 @@ class MessageType(enum.Enum):
     POSITION_SYNC_RESPONSE = 8
 
 
-class Packet(ABC):
-    def __init__(self, message_type: MessageType) -> None:
-        self.message_type: MessageType = message_type
-        self.header: bytes = struct.pack("!B", self.message_type.value)
+class PacketProto(Protocol):
+    TAG: ClassVar[MessageType]
 
-    @abstractmethod
-    def pack(self) -> bytes:
-        pass
-
-
-class PlayerPositionPacket(Packet):
-    def __init__(self, x: float, y: float) -> None:
-        super().__init__(MessageType.PLAYER_POSITION)
-        self.x: float = x
-        self.y: float = y
-
-    @override
-    def pack(self) -> bytes:
-        return self.header + struct.pack("!ff", self.x, self.y)
+    def pack(self) -> str: ...
 
     @staticmethod
-    def unpack(data: bytes) -> PlayerPositionPacket:
-        structure = struct.unpack("!ff", data)
-        x = cast(float, structure[0])
-        y = cast(float, structure[1])
-        return PlayerPositionPacket(x, y)
+    def unpack_body(body: bytes) -> Packet | None: ...
 
 
-class PlayerIdPacket(Packet):
-    def __init__(self, player_id: UUID) -> None:
-        super().__init__(MessageType.PLAYER_ID)
-        self.player_id: UUID = player_id
-
-    @override
-    def pack(self) -> bytes:
-        return self.header + struct.pack("!16s", self.player_id.bytes)
-
-    @staticmethod
-    def unpack(data: bytes) -> PlayerIdPacket:
-        player_id = cast(bytes, struct.unpack("!16s", data)[0])
-        return PlayerIdPacket(UUID(bytes=player_id))
+def _encode(raw: bytes) -> str:
+    return base64.b64encode(raw).decode("ascii")
 
 
-class OtherPlayerPositionPacket(Packet):
-    def __init__(self, player_id: UUID, x: float, y: float) -> None:
-        super().__init__(MessageType.OTHER_PLAYER_POSITION)
-        self.player_id: UUID = player_id
-        self.x: float = x
-        self.y: float = y
+@dataclass(frozen=True)
+class PlayerPositionPacket:
+    TAG: ClassVar[MessageType] = MessageType.PLAYER_POSITION
+    x: float
+    y: float
 
-    @override
-    def pack(self) -> bytes:
-        return self.header + struct.pack("!16sff", self.player_id.bytes, self.x, self.y)
+    def pack(self) -> str:
+        return _encode(struct.pack("!Bff", self.TAG, self.x, self.y))
 
     @staticmethod
-    def unpack(data: bytes) -> OtherPlayerPositionPacket:
-        structure = struct.unpack("!16sff", data)
-        player_id = cast(bytes, structure[0])
-        x = cast(float, structure[1])
-        y = cast(float, structure[2])
-        return OtherPlayerPositionPacket(UUID(bytes=player_id), x, y)
+    def unpack_body(body: bytes) -> PlayerPositionPacket | None:
+        if len(body) != 8:
+            return None
+        x, y = struct.unpack("!ff", body)
+        return PlayerPositionPacket(cast(float, x), cast(float, y))
 
 
-class PlayerXInputPacket(Packet):
-    def __init__(self, player_id: UUID, x_input: int) -> None:
-        super().__init__(MessageType.PLAYER_X_INPUT)
-        self.player_id: UUID = player_id
-        self.x_input: int = x_input
+@dataclass(frozen=True)
+class PlayerIdPacket:
+    TAG: ClassVar[MessageType] = MessageType.PLAYER_ID
+    player_id: UUID
 
-    @override
-    def pack(self) -> bytes:
-        return self.header + struct.pack("!16sb", self.player_id.bytes, self.x_input)
+    def pack(self) -> str:
+        return _encode(struct.pack("!B16s", self.TAG, self.player_id.bytes))
 
     @staticmethod
-    def unpack(data: bytes) -> PlayerXInputPacket:
-        structure = struct.unpack("!16sb", data)
-        player_id = cast(bytes, structure[0])
-        x_input = cast(int, structure[1])
-        return PlayerXInputPacket(UUID(bytes=player_id), x_input)
+    def unpack_body(body: bytes) -> PlayerIdPacket | None:
+        if len(body) != 16:
+            return None
+        raw_id = cast(bytes, struct.unpack("!16s", body)[0])
+        return PlayerIdPacket(UUID(bytes=raw_id))
 
 
-class PlayerJumpPacket(Packet):
-    def __init__(self, player_id: UUID) -> None:
-        super().__init__(MessageType.PLAYER_JUMP)
-        self.player_id: UUID = player_id
+@dataclass(frozen=True)
+class PlayerXInputPacket:
+    TAG: ClassVar[MessageType] = MessageType.PLAYER_X_INPUT
+    player_id: UUID
+    x_input: int
 
-    @override
-    def pack(self) -> bytes:
-        return self.header + struct.pack("!16s", self.player_id.bytes)
-
-    @staticmethod
-    def unpack(data: bytes) -> PlayerJumpPacket:
-        player_id = cast(bytes, struct.unpack("!16s", data)[0])
-        return PlayerJumpPacket(UUID(bytes=player_id))
-
-
-class ConnectionRequestPacket(Packet):
-    def __init__(self) -> None:
-        super().__init__(MessageType.CONNECTION_REQUEST)
-
-    @override
-    def pack(self) -> bytes:
-        return self.header
+    def pack(self) -> str:
+        return _encode(struct.pack("!B16sb", self.TAG, self.player_id.bytes, self.x_input))
 
     @staticmethod
-    def unpack(_: bytes) -> ConnectionRequestPacket:
+    def unpack_body(body: bytes) -> PlayerXInputPacket | None:
+        if len(body) != 17:
+            return None
+        raw_id, x_input = struct.unpack("!16sb", body)
+        return PlayerXInputPacket(UUID(bytes=cast(bytes, raw_id)), cast(int, x_input))
+
+
+@dataclass(frozen=True)
+class PlayerJumpPacket:
+    TAG: ClassVar[MessageType] = MessageType.PLAYER_JUMP
+    player_id: UUID
+
+    def pack(self) -> str:
+        return _encode(struct.pack("!B16s", self.TAG, self.player_id.bytes))
+
+    @staticmethod
+    def unpack_body(body: bytes) -> PlayerJumpPacket | None:
+        if len(body) != 16:
+            return None
+        raw_id = cast(bytes, struct.unpack("!16s", body)[0])
+        return PlayerJumpPacket(UUID(bytes=raw_id))
+
+
+@dataclass(frozen=True)
+class OtherPlayerPositionPacket:
+    TAG: ClassVar[MessageType] = MessageType.OTHER_PLAYER_POSITION
+    player_id: UUID
+    x: float
+    y: float
+
+    def pack(self) -> str:
+        return _encode(struct.pack("!B16sff", self.TAG, self.player_id.bytes, self.x, self.y))
+
+    @staticmethod
+    def unpack_body(body: bytes) -> OtherPlayerPositionPacket | None:
+        if len(body) != 24:
+            return None
+        raw_id, x, y = struct.unpack("!16sff", body)
+        return OtherPlayerPositionPacket(
+            UUID(bytes=cast(bytes, raw_id)), cast(float, x), cast(float, y)
+        )
+
+
+@dataclass(frozen=True)
+class ConnectionRequestPacket:
+    TAG: ClassVar[MessageType] = MessageType.CONNECTION_REQUEST
+
+    def pack(self) -> str:
+        return _encode(struct.pack("!B", self.TAG))
+
+    @staticmethod
+    def unpack_body(body: bytes) -> ConnectionRequestPacket | None:
+        if body:
+            return None
         return ConnectionRequestPacket()
 
 
-class PlayerDisconnectPacket(Packet):
-    def __init__(self, player_id: UUID) -> None:
-        super().__init__(MessageType.PLAYER_DISCONNECT)
-        self.player_id: UUID = player_id
+@dataclass(frozen=True)
+class PlayerDisconnectPacket:
+    TAG: ClassVar[MessageType] = MessageType.PLAYER_DISCONNECT
+    player_id: UUID
 
-    @override
-    def pack(self) -> bytes:
-        return self.header + struct.pack("!16s", self.player_id.bytes)
-
-    @staticmethod
-    def unpack(data: bytes) -> PlayerDisconnectPacket:
-        player_id = cast(bytes, struct.unpack("!16s", data)[0])
-        return PlayerDisconnectPacket(UUID(bytes=player_id))
-
-
-class PositionSyncRequestPacket(Packet):
-    def __init__(self) -> None:
-        super().__init__(MessageType.POSITION_SYNC_REQUEST)
-
-    @override
-    def pack(self) -> bytes:
-        return self.header
+    def pack(self) -> str:
+        return _encode(struct.pack("!B16s", self.TAG, self.player_id.bytes))
 
     @staticmethod
-    def unpack(_: bytes) -> PositionSyncRequestPacket:
+    def unpack_body(body: bytes) -> PlayerDisconnectPacket | None:
+        if len(body) != 16:
+            return None
+        raw_id = cast(bytes, struct.unpack("!16s", body)[0])
+        return PlayerDisconnectPacket(UUID(bytes=raw_id))
+
+
+@dataclass(frozen=True)
+class PositionSyncRequestPacket:
+    TAG: ClassVar[MessageType] = MessageType.POSITION_SYNC_REQUEST
+
+    def pack(self) -> str:
+        return _encode(struct.pack("!B", self.TAG))
+
+    @staticmethod
+    def unpack_body(body: bytes) -> PositionSyncRequestPacket | None:
+        if body:
+            return None
         return PositionSyncRequestPacket()
 
 
-class PositionSyncResponsePacket(Packet):
-    def __init__(self, player_id: UUID, x: float, y: float) -> None:
-        super().__init__(MessageType.POSITION_SYNC_RESPONSE)
-        self.player_id: UUID = player_id
-        self.x: float = x
-        self.y: float = y
+@dataclass(frozen=True)
+class PositionSyncResponsePacket:
+    TAG: ClassVar[MessageType] = MessageType.POSITION_SYNC_RESPONSE
+    player_id: UUID
+    x: float
+    y: float
 
-    @override
-    def pack(self) -> bytes:
-        return self.header + struct.pack("!16sff", self.player_id.bytes, self.x, self.y)
+    def pack(self) -> str:
+        return _encode(struct.pack("!B16sff", self.TAG, self.player_id.bytes, self.x, self.y))
 
     @staticmethod
-    def unpack(data: bytes) -> PositionSyncResponsePacket:
-        structure = struct.unpack("!16sff", data)
-        player_id = cast(bytes, structure[0])
-        x = cast(float, structure[1])
-        y = cast(float, structure[2])
-        return PositionSyncResponsePacket(UUID(bytes=player_id), x, y)
+    def unpack_body(body: bytes) -> PositionSyncResponsePacket | None:
+        if len(body) != 24:
+            return None
+        raw_id, x, y = struct.unpack("!16sff", body)
+        return PositionSyncResponsePacket(
+            UUID(bytes=cast(bytes, raw_id)), cast(float, x), cast(float, y)
+        )
+
+
+Packet = (
+    PlayerPositionPacket
+    | PlayerIdPacket
+    | PlayerXInputPacket
+    | PlayerJumpPacket
+    | OtherPlayerPositionPacket
+    | ConnectionRequestPacket
+    | PlayerDisconnectPacket
+    | PositionSyncRequestPacket
+    | PositionSyncResponsePacket
+)
+
+_REGISTRY = {
+    MessageType.PLAYER_POSITION: PlayerPositionPacket,
+    MessageType.PLAYER_ID: PlayerIdPacket,
+    MessageType.PLAYER_X_INPUT: PlayerXInputPacket,
+    MessageType.PLAYER_JUMP: PlayerJumpPacket,
+    MessageType.OTHER_PLAYER_POSITION: OtherPlayerPositionPacket,
+    MessageType.CONNECTION_REQUEST: ConnectionRequestPacket,
+    MessageType.PLAYER_DISCONNECT: PlayerDisconnectPacket,
+    MessageType.POSITION_SYNC_REQUEST: PositionSyncRequestPacket,
+    MessageType.POSITION_SYNC_RESPONSE: PositionSyncResponsePacket,
+}
+
+
+def decode(data: bytes | str) -> Packet | None:
+    try:
+        raw = base64.b64decode(data)
+    except Exception:
+        return None
+
+    if not raw:
+        return None
+
+    try:
+        tag = MessageType(raw[0])
+    except ValueError:
+        return None
+
+    cls = _REGISTRY.get(tag)
+    if cls is None:
+        return None
+
+    return cls.unpack_body(raw[1:])

@@ -10,7 +10,7 @@ from uuid import UUID, uuid4
 import websockets
 from websockets.asyncio.server import ServerConnection
 
-from demo_projects.multiplayerv2.client.packets import (
+from demo_projects.multiplayerv2.shared.packets import (
     AssignId,
     Chat,
     ClientConnected,

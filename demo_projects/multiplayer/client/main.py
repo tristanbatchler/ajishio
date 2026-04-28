@@ -1,10 +1,7 @@
-from threading import Thread
-from typing import override
-
+from typing import Unpack, override
+import asyncio
 import ajishio as aj
 from uuid import UUID
-import socket
-import threading
 import demo_projects.multiplayer.shared.game_objects as go
 import demo_projects.multiplayer.shared.packet as pck
 import demo_projects.multiplayer.shared as shared
@@ -12,15 +9,17 @@ from queue import Queue
 
 
 class NetworkClient(aj.GameObject):
-    def __init__(self, x: float = 0, y: float = 0, **_: object) -> None:
-        super().__init__(x, y)
-        self.socket: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.socket.bind(("localhost", 0))
+    def __init__(
+        self,
+        client: aj.GameNetClient,
+        x: float = 0,
+        y: float = 0,
+        **kwargs: Unpack[aj.GameObjectKwargs],
+    ) -> None:
+        super().__init__(x, y, **kwargs)
+        self.client: aj.GameNetClient = client
 
         self.packet_queue: Queue[pck.Packet] = Queue()
-
-        self.listen_thread: Thread = threading.Thread(target=self.listen, daemon=True)
-        self.listen_thread.start()
 
         self.player_id: UUID | None = None
         self.player: go.Player | None = None
@@ -32,34 +31,24 @@ class NetworkClient(aj.GameObject):
         self.last_input_x: int = 0
 
         # Tell the server we want to connect
-        self.send(pck.ConnectionRequestPacket())
+        self.send_packet(pck.ConnectionRequestPacket())
 
-    def send(self, packet: pck.Packet) -> None:
-        try:
-            _ = self.socket.sendto(packet.pack(), ("localhost", 12345))
-        except OSError as e:
-            print("Got an error:", e)
-            return
+    def send_packet(self, packet: pck.Packet) -> None:
+        self.client.send(packet.pack())
 
-    def listen(self) -> None:
-        while True:
-            try:
-                data = self.socket.recv(1024)
-            except ConnectionResetError:
-                print("Connection reset")
-                aj.game_end()
-                return
-
-            except OSError as e:
-                print("Got an error:", e)
-                return
-
-            packet = pck.unpack(data)
-            self.packet_queue.put(packet)
+    def ingest_packets(self) -> None:
+        incoming = self.client.recv()
+        while incoming is not None:
+            packet = pck.decode(incoming)
+            if packet is not None:
+                self.handle_packet(packet)
+            incoming = self.client.recv()
 
     @override
     def step(self) -> None:
         super().step()
+
+        self.ingest_packets()
 
         self.process_packets()
 
@@ -71,16 +60,14 @@ class NetworkClient(aj.GameObject):
         if x_input != self.last_input_x:
             self.player.input_x = x_input
 
-            # For redundancy, send the change in input a few times and hope it gets through
-            for _ in range(3):
-                self.send(pck.PlayerXInputPacket(self.player_id, x_input))
+            self.send_packet(pck.PlayerXInputPacket(self.player_id, x_input))
 
         if aj.keyboard_check_pressed(aj.vk_space):
             self.player.jump()
             for _ in range(3):
                 # It won't matter if the server receives the jump packet multiple times, since
                 # on subsequent jumps, the player won't be on the ground so the jump won't be applied
-                self.send(pck.PlayerJumpPacket(self.player_id))
+                self.send_packet(pck.PlayerJumpPacket(self.player_id))
 
         self.last_input_x = x_input
 
@@ -118,9 +105,7 @@ class NetworkClient(aj.GameObject):
             if self.player_id is not None:
                 self.player.name = self.player_id.hex[:4]
 
-    def handle_other_player_position_packet(
-        self, packet: pck.OtherPlayerPositionPacket
-    ) -> None:
+    def handle_other_player_position_packet(self, packet: pck.OtherPlayerPositionPacket) -> None:
         if packet.player_id in self.others:
             self.others[packet.player_id].x = packet.x
             self.others[packet.player_id].y = packet.y
@@ -138,9 +123,7 @@ class NetworkClient(aj.GameObject):
         if other_player is not None:
             other_player.jump()
 
-    def handle_player_disconnect_packet(
-        self, packet: pck.PlayerDisconnectPacket
-    ) -> None:
+    def handle_player_disconnect_packet(self, packet: pck.PlayerDisconnectPacket) -> None:
         print("Received player disconnect packet")
         if packet.player_id == self.player_id:
             self.kicked = True
@@ -153,25 +136,30 @@ class NetworkClient(aj.GameObject):
 
     def handle_position_sync_request_packet(self) -> None:
         if self.player is not None and self.player_id is not None:
-            self.send(
-                pck.PositionSyncResponsePacket(
-                    self.player_id, self.player.x, self.player.y
-                )
+            self.send_packet(
+                pck.PositionSyncResponsePacket(self.player_id, self.player.x, self.player.y)
             )
 
     @override
     def on_game_end(self) -> None:
         if not self.kicked and self.player_id is not None:
-            self.send(pck.PlayerDisconnectPacket(self.player_id))
-        self.socket.close()
+            self.send_packet(pck.PlayerDisconnectPacket(self.player_id))
 
 
-aj.set_rooms(shared.rooms)
-aj.register_objects(go.Floor, NetworkClient)
-aj.room_set_caption("Multiplayer Client")
-aj.room_set_size(shared.room_width, shared.room_height)
-aj.window_set_size(shared.room_width * 2, shared.room_height * 2)
-aj.view_set_wport(aj.view_current, shared.room_width)
-aj.view_set_hport(aj.view_current, shared.room_height)
-aj.room_set_background(shared.room_background_color)
-aj.game_start()
+async def main() -> None:
+    aj.set_rooms(shared.rooms)
+    aj.register_objects(go.Floor, go.PlayerSpawner)
+    client = aj.GameNetClient()
+    await client.connect()
+    _ = NetworkClient(client)
+    aj.room_set_caption("Multiplayer Client")
+    aj.room_set_size(shared.room_width, shared.room_height)
+    aj.window_set_size(shared.room_width * 2, shared.room_height * 2)
+    aj.view_set_wport(aj.view_current, shared.room_width)
+    aj.view_set_hport(aj.view_current, shared.room_height)
+    aj.room_set_background(shared.room_background_color)
+    await aj.async_game_start()
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

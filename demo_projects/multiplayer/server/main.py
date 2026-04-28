@@ -1,210 +1,308 @@
-from threading import Thread
+from __future__ import annotations
 
-
-from random import randrange
-from typing import override
-from uuid import UUID, uuid4
-import socket
-import demo_projects.multiplayer.shared.packet as pck
+import asyncio
 from dataclasses import dataclass
-import threading
-from queue import Queue
+from random import randrange
+from uuid import UUID, uuid4
+
+import websockets
+from websockets.asyncio.server import ServerConnection
+from typing import override
+
 import ajishio as aj
 import demo_projects.multiplayer.shared as shared
 import demo_projects.multiplayer.shared.game_objects as go
+import demo_projects.multiplayer.shared.packet as pck
 
 
-def send_packet(packet: pck.Packet, socket: socket.socket, address: tuple[str, int]) -> None:
-    _ = socket.sendto(packet.pack(), address)
+HOST = "0.0.0.0"
+PORT = 8765
 
 
 @dataclass
 class PlayerNetstate:
     obj: go.Player
-    address: tuple[str, int]
-    requested_position_sync_timer: float = 0
+    ws: ServerConnection
+    requested_position_sync_timer: float = 0.0
 
 
 class GameServer(aj.GameObject):
+    """Authoritative multiplayer server.
+
+    - Runs game simulation inside Ajishio step()
+    - Accepts websocket packets asynchronously
+    - Processes packets on main thread during step()
+    """
+
     def __init__(self, x: float = 0, y: float = 0, **_: object) -> None:
         super().__init__(x, y)
-        self.socket: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-        self.packet_queue: Queue[tuple[pck.Packet, tuple[str, int]]] = Queue()
+        self.players: dict[UUID, PlayerNetstate] = {}
+        self.connections: dict[ServerConnection, UUID] = {}
 
-        print("Server started")
+        self.packet_queue: asyncio.Queue[tuple[pck.Packet, ServerConnection]] = asyncio.Queue()
 
-        self.players_netstates: dict[UUID, PlayerNetstate] = {}
+        self.sync_timer: float = 0.0
+        self.sync_interval: float = 1.0
 
-        self.listen_thread: Thread = threading.Thread(target=self.listen, daemon=True)
-        self.listen_thread.start()
+        print("SERVER: started")
 
-        self.running: bool = True
+    # ------------------------------------------------------------------
+    # websocket layer
+    # ------------------------------------------------------------------
 
-        self.sync_timer: float = 0
-        self.sync_timeout: float = 1
+    async def websocket_handler(self, ws: ServerConnection) -> None:
+        print("SERVER: websocket connected", ws.remote_address)  # pyright: ignore[reportAny]
+
+        try:
+            async for message in ws:
+                if isinstance(message, str):
+                    raw = message.encode("utf-8")
+                else:
+                    raw = message
+
+                packet = pck.decode(raw)
+                if packet is None:
+                    continue
+
+                await self.packet_queue.put((packet, ws))
+
+        except Exception as exc:
+            print("SERVER: websocket error:", exc)
+
+        finally:
+            self.disconnect_ws(ws)
+
+    def disconnect_ws(self, ws: ServerConnection) -> None:
+        player_id = self.connections.pop(ws, None)
+        if player_id is None:
+            return
+
+        ns = self.players.pop(player_id, None)
+        if ns is not None:
+            aj.instance_destroy(ns.obj)
+
+        print("SERVER: disconnected", player_id.hex[:8])
+
+        self.broadcast(pck.PlayerDisconnectPacket(player_id))
+
+    async def send_packet(self, packet: pck.Packet, ws: ServerConnection) -> None:
+        try:
+            await ws.send(packet.pack())
+        except Exception:
+            self.disconnect_ws(ws)
+
+    def send_now(self, packet: pck.Packet, ws: ServerConnection) -> None:
+        _ = asyncio.create_task(self.send_packet(packet, ws))
 
     def broadcast(self, packet: pck.Packet, exclude: UUID | None = None) -> None:
-        for player_id, player in self.players_netstates.items():
-            if not exclude or player_id != exclude:
-                send_packet(packet, self.socket, player.address)
-
-    def listen(self) -> None:
-        self.socket.bind(("", 12345))
-        while self.running:
-            try:
-                data, address = self.socket.recvfrom(1024)  # pyright: ignore[reportAny]
-            except ConnectionResetError:
+        for player_id, ns in list(self.players.items()):
+            if exclude is not None and player_id == exclude:
                 continue
-            packet: pck.Packet = pck.unpack(data)
-            self.packet_queue.put((packet, address))
+            self.send_now(packet, ns.ws)
+
+    # ------------------------------------------------------------------
+    # ajishio loop
+    # ------------------------------------------------------------------
 
     @override
     def step(self) -> None:
         super().step()
 
-        if not self.running:
-            return
-        try:
-            self.process_packets()
-        except KeyboardInterrupt:
-            self.stop()
+        self.process_packets()
 
         self.sync_timer += aj.delta_time
-        if self.sync_timer >= self.sync_timeout:
-            self.sync_timer = self.sync_timer % self.sync_timeout
+        if self.sync_timer >= self.sync_interval:
+            self.sync_timer %= self.sync_interval
             self.sync_positions()
-
-    def stop(self) -> None:
-        print("Server stopped")
-        self.running = False
-        self.listen_thread.join()
-        self.socket.close()
-
-    def sync_positions(self) -> None:
-        # We ask each player to report their position. If  they don't respond in time, we assume
-        # they've disconnected or are cheating, so we disconnect them. If they do respond with a
-        # reasonably close position to ours, we let them keep that position and we update ours and
-        # all other players' positions to match theirs. If they respond with a position that's too
-        # far away from ours, we snap them back to our position.
-        for player_id, ns in self.players_netstates.copy().items():
-            if ns.requested_position_sync_timer >= 5:
-                print("Player", ns.obj, "is not responding to sync requests!")
-                self.handle_player_disconnect_packet(pck.PlayerDisconnectPacket(player_id))
-                continue
-
-            ns.requested_position_sync_timer += 1
-            send_packet(pck.PositionSyncRequestPacket(), self.socket, ns.address)
 
     def process_packets(self) -> None:
         while not self.packet_queue.empty():
-            packet, address = self.packet_queue.get()
-
-            print("Received packet from", address)
+            packet, ws = self.packet_queue.get_nowait()
 
             if isinstance(packet, pck.ConnectionRequestPacket):
-                self.handle_connection_request_packet(address)
+                self.handle_connection_request(ws)
+
             elif isinstance(packet, pck.PlayerXInputPacket):
-                self.handle_player_x_input_packet(packet)
+                self.handle_player_x_input(packet)
+
             elif isinstance(packet, pck.PlayerJumpPacket):
-                self.handle_player_jump_packet(packet)
+                self.handle_player_jump(packet)
+
             elif isinstance(packet, pck.PlayerDisconnectPacket):
-                self.handle_player_disconnect_packet(packet)
+                self.handle_player_disconnect(packet.player_id)
+
             elif isinstance(packet, pck.PositionSyncResponsePacket):
-                self.handle_position_sync_response_packet(packet)
+                self.handle_position_sync_response(packet)
 
-    def handle_connection_request_packet(self, address: tuple[str, int]) -> None:
-        print("Connection from: ", address[0], ":", address[1])
+    # ------------------------------------------------------------------
+    # connection / spawning
+    # ------------------------------------------------------------------
 
-        num_player_spawners = aj.instance_count(go.PlayerSpawner)
-        player_spawner = aj.instance_find(go.PlayerSpawner, randrange(num_player_spawners))
-        assert player_spawner is not None
+    def handle_connection_request(self, ws: ServerConnection) -> None:
+        if ws in self.connections:
+            return
 
-        player = go.Player(player_spawner.x, player_spawner.y)
+        num_spawners = aj.instance_count(go.PlayerSpawner)
+        spawner = aj.instance_find(
+            go.PlayerSpawner,
+            randrange(num_spawners),
+        )
+        assert spawner is not None
+
+        player = go.Player(spawner.x, spawner.y)
         player_id = uuid4()
+        player.name = player_id.hex[:4]
 
-        # Send the connecting player their ID and initial position
-        send_packet(pck.PlayerIdPacket(player_id), self.socket, address)
-        send_packet(pck.PlayerPositionPacket(player.x, player.y), self.socket, address)
+        self.players[player_id] = PlayerNetstate(player, ws)
+        self.connections[ws] = player_id
 
-        # Also send the connecting player the positions of all other players
-        for other_player_id, other_player in self.players_netstates.items():
-            send_packet(
+        print("SERVER: joined", player_id.hex[:8])
+
+        # tell new client its id
+        self.send_now(pck.PlayerIdPacket(player_id), ws)
+
+        # tell new client own spawn position
+        self.send_now(
+            pck.PlayerPositionPacket(player.x, player.y),
+            ws,
+        )
+
+        # tell new client all existing players
+        for other_id, ns in self.players.items():
+            if other_id == player_id:
+                continue
+
+            self.send_now(
                 pck.OtherPlayerPositionPacket(
-                    other_player_id, other_player.obj.x, other_player.obj.y
+                    other_id,
+                    ns.obj.x,
+                    ns.obj.y,
                 ),
-                self.socket,
-                address,
+                ws,
             )
 
-        # Send other players the new player's position
+        # tell everyone else about new player
         self.broadcast(
-            pck.OtherPlayerPositionPacket(player_id, player.x, player.y),
+            pck.OtherPlayerPositionPacket(
+                player_id,
+                player.x,
+                player.y,
+            ),
             exclude=player_id,
         )
 
-        # Finally, add the new player to the list of players
-        player_netstate = PlayerNetstate(player, address)
-        self.players_netstates[player_id] = player_netstate
+    # ------------------------------------------------------------------
+    # gameplay packets
+    # ------------------------------------------------------------------
 
-    def handle_player_x_input_packet(self, packet: pck.PlayerXInputPacket) -> None:
-        player = self.players_netstates[packet.player_id]
-        player.obj.input_x = packet.x_input
+    def handle_player_x_input(
+        self,
+        packet: pck.PlayerXInputPacket,
+    ) -> None:
+        ns = self.players.get(packet.player_id)
+        if ns is None:
+            return
+
+        ns.obj.input_x = packet.x_input
         self.broadcast(packet, exclude=packet.player_id)
 
-    def handle_player_jump_packet(self, packet: pck.PlayerJumpPacket) -> None:
-        player = self.players_netstates[packet.player_id]
-        player.obj.jump()
+    def handle_player_jump(
+        self,
+        packet: pck.PlayerJumpPacket,
+    ) -> None:
+        ns = self.players.get(packet.player_id)
+        if ns is None:
+            return
+
+        ns.obj.jump()
         self.broadcast(packet, exclude=packet.player_id)
 
-    def handle_player_disconnect_packet(self, packet: pck.PlayerDisconnectPacket) -> None:
-        self.broadcast(packet)
-        player_disconnecting: PlayerNetstate | None = self.players_netstates.pop(
-            packet.player_id, None
+    def handle_player_disconnect(self, player_id: UUID) -> None:
+        ns = self.players.pop(player_id, None)
+        if ns is None:
+            return
+
+        self.connections.pop(ns.ws, None)
+        aj.instance_destroy(ns.obj)
+
+        print("SERVER: player quit", player_id.hex[:8])
+
+        self.broadcast(pck.PlayerDisconnectPacket(player_id))
+
+    # ------------------------------------------------------------------
+    # anti-cheat sync
+    # ------------------------------------------------------------------
+
+    def sync_positions(self) -> None:
+        for player_id, ns in list(self.players.items()):
+            if ns.requested_position_sync_timer >= 5:
+                print("SERVER: timeout", player_id.hex[:8])
+                self.handle_player_disconnect(player_id)
+                continue
+
+            ns.requested_position_sync_timer += 1
+            self.send_now(pck.PositionSyncRequestPacket(), ns.ws)
+
+    def handle_position_sync_response(
+        self,
+        packet: pck.PositionSyncResponsePacket,
+    ) -> None:
+        ns = self.players.get(packet.player_id)
+        if ns is None:
+            return
+
+        distance = aj.point_distance(
+            ns.obj.x,
+            ns.obj.y,
+            packet.x,
+            packet.y,
         )
-        if player_disconnecting is not None:
-            aj.instance_destroy(player_disconnecting.obj)
 
-    def handle_position_sync_response_packet(self, packet: pck.PositionSyncResponsePacket) -> None:
-        print("Received position sync response from", packet.player_id)
-        player = self.players_netstates[packet.player_id]
-        distance = aj.point_distance(player.obj.x, player.obj.y, packet.x, packet.y)
         if distance < 10:
-            print(
-                "Player",
-                packet.player_id,
-                "reports position only",
-                distance,
-                "units away - accepting!",
-            )
-            player.obj.x = packet.x
-            player.obj.y = packet.y
+            ns.obj.x = packet.x
+            ns.obj.y = packet.y
+            ns.requested_position_sync_timer = 0
+
             self.broadcast(
-                pck.OtherPlayerPositionPacket(packet.player_id, packet.x, packet.y),
+                pck.OtherPlayerPositionPacket(
+                    packet.player_id,
+                    packet.x,
+                    packet.y,
+                ),
                 exclude=packet.player_id,
             )
-            player.requested_position_sync_timer = 0
+
         else:
-            print(
-                "Player",
-                packet.player_id,
-                "is cheating! They reported a position",
-                distance,
-                "units away! Snapping back!",
-            )
-            send_packet(
-                pck.PlayerPositionPacket(player.obj.x, player.obj.y),
-                self.socket,
-                player.address,
+            self.send_now(
+                pck.PlayerPositionPacket(
+                    ns.obj.x,
+                    ns.obj.y,
+                ),
+                ns.ws,
             )
 
 
-aj.set_rooms(shared.rooms)
-aj.register_objects(go.Floor, GameServer, go.PlayerSpawner)
-aj.room_set_caption("Multiplayer Server")
-aj.room_set_size(shared.room_width, shared.room_height)
-aj.window_set_size(shared.room_width * 2, shared.room_height * 2)
-aj.view_set_wport(aj.view_current, shared.room_width)
-aj.view_set_hport(aj.view_current, shared.room_height)
-aj.room_set_background(shared.room_background_color)
-aj.game_start()
+async def main() -> None:
+    aj.set_rooms(shared.rooms)
+
+    # Register only objects that can be spawned from the room data.
+    # GameServer is created manually below because the websocket server
+    # needs a direct reference to the same instance Ajishio steps.
+    aj.register_objects(go.Floor, go.PlayerSpawner)
+
+    aj.room_set_caption("Multiplayer Server")
+    aj.room_set_size(shared.room_width, shared.room_height)
+    aj.window_set_size(shared.room_width * 2, shared.room_height * 2)
+    aj.view_set_wport(aj.view_current, shared.room_width)
+    aj.view_set_hport(aj.view_current, shared.room_height)
+    aj.room_set_background(shared.room_background_color)
+
+    server = GameServer()
+
+    async with websockets.serve(server.websocket_handler, HOST, PORT):
+        print(f"SERVER: listening on {HOST}:{PORT}")
+        await aj.async_game_start()
+
+
+asyncio.run(main())

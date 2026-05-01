@@ -150,7 +150,7 @@ class Manager(aj.GameObject):
 
 
 async def main() -> None:
-    client = aj.GameNetClient()
+    client = aj.GameNetClient("wss://ajishio.tbat.me/multiplayerv2")
     await client.connect()
     _ = Manager(client)
     await aj.async_game_start()

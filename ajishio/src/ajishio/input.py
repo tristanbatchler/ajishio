@@ -64,6 +64,14 @@ def mouse_check_button(mb: int) -> bool:
     return False
 
 
+def mouse_wheel_up() -> bool:
+    return any(event.type == pg.MOUSEWHEEL and cast(int, event.y) > 0 for event in input.events)
+
+
+def mouse_wheel_down() -> bool:
+    return any(event.type == pg.MOUSEWHEEL and cast(int, event.y) < 0 for event in input.events)
+
+
 def ord(char: str) -> int:
     return pg.key.key_code(char)
 

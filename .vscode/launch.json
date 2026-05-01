@@ -81,6 +81,12 @@
             "type": "debugpy",
             "request": "launch",
             "module": "demo_projects.minesweeper.main"
+        },
+        {
+            "name": "Spinning Cube",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "demo_projects.spinning_cube.main"
         }
     ]
 }

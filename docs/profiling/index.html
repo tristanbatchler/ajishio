@@ -754,7 +754,7 @@ def main() -&gt; None:
 
 main()
 </code></pre>
-<pre><code class="language-bash">uv run demo_projects/platformer/main.py --profile
+<pre><code class="language-bash">uv run -m demo_projects.platformer.main --profile
 </code></pre>
 <p>This prints a summary of the top 30 hotspots sorted by cumulative time. Without <code>--profile</code> the
 decorator is a no-op and adds zero overhead.</p>

@@ -180,7 +180,11 @@ def export(project_dir: Path, extra_args: list[str]) -> None:
         *extra_args,
         str(build_dir),
     ]
-    _ = subprocess.run(pygbag_args, check=True)
+    _ = subprocess.run(
+        pygbag_args,
+        check=True,
+        stdin=subprocess.DEVNULL,
+    )
 
 
 def main() -> None:

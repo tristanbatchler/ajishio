@@ -32,8 +32,9 @@ jobs:
       # Build web demos
       - name: Install pygbag and ffmpeg
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install pygbag
+          uv run python -m ensurepip --default-pip
+          uv run python -m pip install --upgrade pip
+          uv run python -m pip install pygbag
           sudo apt-get update && sudo apt-get install -y ffmpeg
 
       - name: Build all demo projects for web
@@ -44,7 +45,7 @@ jobs:
             proj_dir=$(dirname "$main")
             proj=${proj_dir#"$GITHUB_WORKSPACE/demo_projects/"}
             echo "Building $proj..."
-            uv run pygbag_export.py "$proj_dir" --build || true
+            uv run pygbag_export.py "$proj_dir" --build
             if [ -d "$proj_dir/build/web" ]; then
               mkdir -p "$GITHUB_WORKSPACE/web-demos/$proj"
               cp -r "$proj_dir/build/web"/* "$GITHUB_WORKSPACE/web-demos/$proj/"

@@ -8,3 +8,5 @@ management of the game state.
 
 It also shows that one does not need to use the built-in room system with LDtk. Instead, a manual 
 system is used to load the level data from a text file.
+
+![Sokoban](/.github/assets/demo_previews/sokoban.gif)

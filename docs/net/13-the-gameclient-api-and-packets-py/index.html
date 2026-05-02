@@ -11,6 +11,10 @@
       
       
       
+        <link rel="prev" href="../12-platform-abstraction-helpers/">
+      
+      
+        <link rel="next" href="../14-the-asyncio-hijack/">
       
       
         
@@ -21,7 +25,7 @@
     
     
       
-        <title>13 the gameclient api and packets py - Ajishio</title>
+        <title>The GameNetClient API and packets.py - Ajishio</title>
       
     
     
@@ -74,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#13-the-gameclient-api-and-packetspy" class="md-skip">
+        <a href="#13-the-gamenetclient-api-and-packetspy" class="md-skip">
           Skip to content
         </a>
       
@@ -108,7 +112,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              13 the gameclient api and packets py
+              The GameNetClient API and packets.py
             
           </span>
         </div>
@@ -226,10 +230,12 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
+      <li class="md-tabs__item md-tabs__item--active">
         <a href="../../vs-code/" class="md-tabs__link">
           
   
@@ -344,26 +350,31 @@
       
   
   
+    
   
   
+  
     
     
     
     
+      
+        
+        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
         
           
-          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
             
   
   
@@ -381,7 +392,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_2">
             <span class="md-nav__icon md-icon"></span>
             
@@ -536,6 +547,679 @@
                 
   
   
+    
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_6" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2_6" id="__nav_2_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Networking Internals
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_6_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Networking Internals
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../01-what-pygbag-actually-does/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    What pygbag Actually Does
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../02-the-browser-runtime-environment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The Browser Runtime Environment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../03-the-aio-module/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The aio Module
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../04-the-js-module/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The js Module
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05-the-aio-cross-module/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The aio.cross Module
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../06-the-simulator-vs-real-browser/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Simulator vs Real Browser
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-networking-strategies/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Networking Strategies
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../08-the-20000-port-mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The +20000 Port Mapping
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../09-type-checking-across-platforms/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Type Checking Across Platforms
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../10-the-stub-files/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The Stub Files
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../11-the-dual-field-transport-design/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The Dual-Field Transport Design
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../12-platform-abstraction-helpers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Platform Abstraction Helpers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The GameNetClient API and packets.py
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The GameNetClient API and packets.py
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#13-the-gamenetclient-api-and-packetspy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13. The GameNetClient API and packets.py
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="13. The GameNetClient API and packets.py">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#api-surface" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        API surface
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-packetspy-pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The packets.py pattern
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-recv-returns-bytes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why recv() returns bytes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#background-loop" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Background loop
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../14-the-asyncio-hijack/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The asyncio Hijack
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../15-data-flow-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Flow Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../16-known-gotchas/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Known Gotchas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../17-extending-this-into-the-engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Extending This Into the Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
   
   
     <li class="md-nav__item">
@@ -646,15 +1330,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#13-the-gameclient-api-and-packetspy" class="md-nav__link">
+  <a href="#13-the-gamenetclient-api-and-packetspy" class="md-nav__link">
     <span class="md-ellipsis">
       
-        13. The GameClient API and packets.py
+        13. The GameNetClient API and packets.py
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="13. The GameClient API and packets.py">
+    <nav class="md-nav" aria-label="13. The GameNetClient API and packets.py">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -723,66 +1407,58 @@
 
 
 
-  <h1>13 the gameclient api and packets py</h1>
+  <h1>The GameNetClient API and packets.py</h1>
 
-<h2 id="13-the-gameclient-api-and-packetspy">13. The <code>GameClient</code> API and <code>packets.py</code></h2>
-<p><code>GameClient</code> is a thin, protocol-agnostic wrapper around <code>Transport</code>.  It
-sends and receives raw strings only.  All encoding and decoding of packet
-contents is the responsibility of the caller — deliberately kept out of the
-transport layer so that the wire format can change without touching <code>net.py</code>.</p>
+<h2 id="13-the-gamenetclient-api-and-packetspy">13. The <code>GameNetClient</code> API and <code>packets.py</code></h2>
+<p><code>GameNetClient</code> is a thin wrapper around <code>Transport</code>. The transport is protocol
+agnostic; packet encoding/decoding lives in demo-level packet modules.</p>
 <h3 id="api-surface">API surface</h3>
-<pre><code class="language-python">client = GameClient(host=&quot;ws://localhost:8765&quot;)
+<pre><code class="language-python">client = GameNetClient(host=&quot;ws://localhost:8765&quot;)
 await client.connect()          # opens the transport connection
 
-client.send(data: str)          # send a raw encoded string
+client.send(data: str | bytes)  # send raw payload
 client.recv() -&gt; bytes | None   # pop the next message, or None if inbox empty
 await client.run()              # yield each frame; use as a background task
 client.close()                  # close the connection
 </code></pre>
 <p><code>client.connected</code> is <code>True</code> after <code>connect()</code> returns successfully.</p>
 <h3 id="the-packetspy-pattern">The <code>packets.py</code> pattern</h3>
-<p>All wire-format decisions live in <code>packets.py</code>, not in <code>net.py</code> or game code.
-Each packet type is a frozen dataclass with <code>encode() -&gt; str</code> and a
-<code>@classmethod decode(bytes) -&gt; T | None</code>:</p>
-<pre><code class="language-python"># packets.py
+<p>In multiplayerv2, packets are frozen dataclasses with <code>encode() -&gt; str</code> and a
+top-level <code>decode(data: bytes) -&gt; Packet | None</code> dispatcher.</p>
+<pre><code class="language-python"># demo_projects/multiplayerv2/shared/packets.py
 @dataclass(frozen=True)
-class ChatMessage:
+class Chat:
+    sender_id: UUID
     text: str
 
     def encode(self) -&gt; str:
-        return json.dumps({&quot;t&quot;: &quot;chat&quot;, &quot;text&quot;: self.text})
-
-    @classmethod
-    def decode(cls, data: bytes) -&gt; &quot;ChatMessage | None&quot;:
-        ...  # returns None on any parse error, never raises
+        ...
 </code></pre>
 <p>Game code uses the two together:</p>
 <pre><code class="language-python"># Sending
-client.send(ChatMessage(text=self.input_buffer).encode())
+client.send(Chat(sender_id=self.my_id, text=self.input_buffer).encode())
 
-# Receiving — call once per frame in step()
+# Receiving — typically drain inbox each frame
 raw = client.recv()
-if raw:
-    msg = ChatMessage.decode(raw)
-    if msg:
-        self.message_log.append(msg.text)
+if raw is not None:
+    pkt = decode(raw)
+    if isinstance(pkt, Chat):
+        self.message_log.append(pkt.text)
 </code></pre>
-<p><code>recv()</code> returns <code>None</code> when the inbox is empty, so the <code>if raw:</code> guard is
-sufficient.  <code>ChatMessage.decode</code> returns <code>None</code> for anything that is not a
-valid chat packet, so unknown message types are silently ignored without
-raising exceptions.</p>
+<p><code>recv()</code> returns <code>None</code> when the inbox is empty. Packet decoding is expected to
+be resilient and return <code>None</code> for malformed/unknown payloads.</p>
 <h3 id="why-recv-returns-bytes">Why <code>recv()</code> returns <code>bytes</code></h3>
-<p><code>Transport.inbox</code> stores decoded <code>str</code> values.  <code>recv()</code> re-encodes them to
-<code>bytes</code> (via <code>.encode("utf-8")</code>) so that callers always receive a consistent
-<code>bytes | None</code> type regardless of transport path — keeping the API stable even
-if the underlying inbox representation changes.</p>
+<p><code>Transport.inbox</code> stores bytes from all paths (desktop and browser), so callers
+can decode with one code path regardless of transport backend.</p>
+<p><code>send()</code> accepts both <code>str</code> and <code>bytes</code>.  The multiplayerv2 demo intentionally
+uses base64-encoded <code>str</code> packets for protocol portability and easy logging,
+not because the transport requires string-only payloads.</p>
 <h3 id="background-loop">Background loop</h3>
 <pre><code class="language-python">asyncio.create_task(client.run())
 </code></pre>
-<p><code>run()</code> is a coroutine that yields once per event loop tick via <code>sleep0()</code> and
-exits when <code>should_exit()</code> returns <code>True</code>.  It does no message processing —
-call <code>client.recv()</code> yourself in <code>step()</code> rather than relying on a background
-loop for message delivery.</p>
+<p><code>run()</code> yields once per loop tick via <code>sleep0()</code> and exits when <code>should_exit()</code>
+signals shutdown. It does not process messages; poll <code>recv()</code> in your game
+loop.</p>
 <hr />
 
 

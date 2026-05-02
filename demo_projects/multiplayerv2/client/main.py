@@ -1,13 +1,3 @@
-"""Multiplayerv2 chat client — binary packet protocol.
-
-Connects to the WebSocket server, receives an assigned UUID, then lets
-the user type and send chat messages.  Displays incoming messages
-prefixed with the sender's short ID.  Sends a Ping on connect and shows
-the round-trip time when the Pong comes back.
-"""
-
-from pygame.font import Font
-
 import asyncio
 import time
 from random import randint
@@ -47,7 +37,7 @@ class Manager(aj.GameObject):
         self.cursor_visible: bool = True
         self.cursor_blink_interval: float = 0.5
         self.cursor_timer: float = self.cursor_blink_interval
-        self.font: Font = aj.load_font(Path(__file__).parent / "CutiveMono-Regular.ttf", 24)
+        self.font: aj.Font = aj.load_font(Path(__file__).parent / "CutiveMono-Regular.ttf", 24)
 
         # Assigned by the server via AssignId packet.
         self.my_id: UUID | None = None
@@ -153,7 +143,8 @@ async def main() -> None:
     client = aj.GameNetClient("wss://ajishio.tbat.me/multiplayerv2")
     await client.connect()
     _ = Manager(client)
-    await aj.async_game_start()
+    # aj.room_set_caption("Multiplayer Client")
+    await aj.game_start_async()
 
 
 asyncio.run(main())

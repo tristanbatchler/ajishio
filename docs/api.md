@@ -9,8 +9,8 @@ This page documents the public `aj.` namespace. All functions and classes listed
 
 ## Engine Control
 
-::: ajishio.engine.Engine.async_game_start
-    # Alias: `aj.async_game_start`
+::: ajishio.engine.Engine.game_start_async
+    # Alias: `aj.game_start_async`
 ::: ajishio.engine.Engine.audio_is_playing
     # Alias: `aj.audio_is_playing`
 ::: ajishio.engine.Engine.audio_play_sound

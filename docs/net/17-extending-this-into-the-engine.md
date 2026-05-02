@@ -18,7 +18,7 @@ stubPath = "ajishio/typings"
 The three platform helpers (`should_exit`, `sleep0`, `run_task`) and the
 `_IS_BROWSER` flag are the natural seam.  The engine already has a game loop;
 the browser version needs to yield via `aio.sleep(0)` on every frame.  The
-async game loop in `aj.async_game_start()` is already set up for this.
+async game loop in `aj.game_start_async()` is already set up for this.
 
 ### Optional transport abstraction
 

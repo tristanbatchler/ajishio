@@ -1,22 +1,68 @@
-# Ajishio
+<p align="center">
+	<img src=".github/assets/logo.png" width="96" alt="Ajishio logo" />
+</p>
 
-![Ajishio Taro](/.github/assets/ajishio_taro.png)
+<h1 align="center">Ajishio</h1>
 
-Ajishio is a stripped-down [pygame-ce](https://github.com/pygame-community/pygame-ce)-based game engine for creating 2D games. 
-Its API is modelled after old [GameMaker](https://gamemaker.io) versions, think pre-Studio 1.4. The 
-reason for this is that I wanted to create something that feels the same way as when I first started 
-making games in GameMaker 7, but with the optional features of a modern language and the choice of 
-using whatever text editor I want.
+<p align="center">
+	A relaxed, GameMaker-inspired 2D engine built on <a href="https://github.com/pygame-community/pygame-ce">pygame-ce</a>.<br/>
+	Designed for rapid prototyping, integrated Python workflows, and portable game development.
+</p>
 
-The name "Ajishio" is a reference to 
-[Noboru Yamaguchi](https://cromartiehigh.fandom.com/wiki/Noboru_Yamaguchi), the most misunderstood 
-comedian in Japan. No reason this would ever be relevant to the game engine, but I thought it was a 
-cool name.
+<p align="center">
+	<a href="#quick-links">Quick Links</a> •
+	<a href="#why-ajishio">Why Ajishio</a> •
+	<a href="#quick-start">Quick Start</a> •
+	<a href="#demo-showcase">Demo Showcase</a> •
+	<a href="#documentation">Documentation</a> •
+	<a href="#web-export">Web Export</a> •
+	<a href="#roadmap">Roadmap</a>
+</p>
 
-## Installation
+<p align="center">
+	<a href="https://github.com/tristanbatchler/ajishio/actions/workflows/build_site.yml">
+		<img src="https://github.com/tristanbatchler/ajishio/actions/workflows/build_site.yml/badge.svg" alt="Docs Build" />
+	</a>
+	<img src="https://img.shields.io/badge/python-3.14%2B-3776AB.svg" alt="Python 3.14+" />
+	<img src="https://img.shields.io/badge/engine-pygame--ce-4B8BBE.svg" alt="pygame-ce" />
+	<a href="https://tristanbatchler.github.io/ajishio/docs/">
+		<img src="https://img.shields.io/badge/docs-online-1f883d.svg" alt="Online docs" />
+	</a>
+	<a href="https://tristanbatchler.github.io/ajishio/docs/demo-projects/">
+		<img src="https://img.shields.io/badge/web%20demos-play%20now-f59e0b.svg" alt="Web demos" />
+	</a>
+</p>
 
-Ajishio is managed with [uv](https://github.com/astral-sh/uv). To get started, clone this repository
-and let `uv` create and manage the virtual environment for you:
+---
+
+## Quick Links
+
+- API map: [docs/api.md](docs/api.md)
+- Docs landing page: [docs/index.md](docs/index.md)
+- Demo list: [docs/demo-projects.md](docs/demo-projects.md)
+- Platformer reference demo: [demo_projects/platformer/main.py](demo_projects/platformer/main.py)
+- Multiplayer reference demo: [demo_projects/multiplayerv2/client/main.py](demo_projects/multiplayerv2/client/main.py)
+
+## Why Ajishio
+
+Ajishio aims to recreate the "open a file and start making a game" feeling from classic GameMaker,
+but with modern Python ergonomics.
+
+- Familiar object lifecycle with `step()` and `draw()` hooks
+- Fast iteration loop for prototypes and game jam ideas
+- Room loading with LDtk and sprite workflows via Aseprite exports
+- Built-in paths for desktop and browser deployment
+- Practical examples in `demo_projects/` that are meant to be copied and hacked
+
+The name "Ajishio" is a reference to
+[Noboru Yamaguchi](https://cromartiehigh.fandom.com/wiki/Noboru_Yamaguchi), because every game engine
+needs at least one strange piece of lore.
+
+## Quick Start
+
+### 1) Clone and install
+
+Ajishio uses [uv](https://github.com/astral-sh/uv) for workspace and environment management.
 
 ```bash
 git clone https://github.com/tristanbatchler/ajishio
@@ -24,64 +70,102 @@ cd ajishio
 uv sync
 ```
 
-To verify that the installation was successful, run the following command and you should see a blank
-window pop up:
+### 2) Run the hello world demo
 
 ```bash
 uv run -m demo_projects.hello_world.main
 ```
 
-## Quick Start
+### 3) Build your own minimal game
 
-Inside the cloned repository, create a new directory for your project and create a new Python file 
-inside it called `main.py`. Getting a blank window up and running is as simple as putting the 
-following code in that file:
 ```python
 import ajishio as aj
 
-aj.room_set_caption("Hello, World!")
+aj.room_set_caption("Hello, Ajishio")
+aj.room_set_size(640, 360)
 aj.game_start()
 ```
 
-To run the game, execute the following command from the root of the repository:
+Run from repository root:
 
 ```bash
-uv run -m <your_dot_separated_project_directory>.main
+uv run -m your_project.main
 ```
+
+Try one of the larger examples:
 
 ```bash
 uv run -m demo_projects.platformer.main
 ```
-## Documentation
-View tips and tricks, as well as an API reference, which aims to be similar to the GameMaker 8.1 API: 
-[https://tristanbatchler.github.io/ajishio/docs](https://tristanbatchler.github.io/ajishio/docs)
 
-## Demo projects
+## Demo Showcase
 
-This repository comes loaded with heaps of example projects both to showcase what's possible, but to 
-also provide example code snippets. To run them locally, simply run
+Ajishio ships with multiple complete demos for platformers, puzzle games, arcade clones, and
+multiplayer experiments.
+
+<p align="center">
+	<img src=".github/assets/demo_previews/platformer/platformer.gif" width="48%" alt="Platformer preview" />
+	<img src=".github/assets/demo_previews/pong/pong.gif" width="48%" alt="Pong preview" />
+</p>
+
+<p align="center">
+	<img src=".github/assets/demo_previews/snake/snake.gif" width="48%" alt="Snake preview" />
+	<img src=".github/assets/demo_previews/hello_world/hello_world.png" width="48%" alt="Hello world preview" />
+</p>
+
+- Run any demo locally:
 
 ```bash
-uv run -m demo_projects.sokoban.main # Or minesweeper, platformer, tetris, etc...
+uv run -m demo_projects.sokoban.main
 ```
 
-If you just want to have a look now, you can instantly play all Ajishio demo projects in your 
-browser, thanks to [pygbag](https://github.com/nicegui-org/pygbag) and GitHub Pages.
+- Play browser versions instantly:
+	[Web Demos](https://tristanbatchler.github.io/ajishio/docs/demo-projects/)
 
-See [Web Demos](https://tristanbatchler.github.io/ajishio/docs/demo-projects) for the full, 
-up-to-date list and links to play every demo.
+## Documentation
 
-## TODO
+- Full docs: [tristanbatchler.github.io/ajishio/docs](https://tristanbatchler.github.io/ajishio/docs/)
+- API overview: [docs/api.md](docs/api.md)
+- Rooms and LDtk loading: [docs/rooms.md](docs/rooms.md)
+- Sprites and animation pipeline: [docs/sprites.md](docs/sprites.md)
+- Networking docs: [docs/net/index.md](docs/net/index.md)
+- VS Code workflow tips: [docs/vs-code.md](docs/vs-code.md)
+- Profiling guide: [docs/profiling.md](docs/profiling.md)
 
-- [x] Support to load rooms from files (only support for LDtk at the moment)
-- [x] Room editor (use [LDtk](https://ldtk.io))
-- [x] Support for multiple rooms in a single game
-- [x] Support to load and draw sprites from files (only support for Aseprite at the moment)
-- [x] Sprite editor to define animations and load into the game
-- [x] Load and play sounds
-- [x] Load and play music
-- [x] Support persistant objects
-- [x] Support easy profiling
-- [x] Add library mkdocs generation and docstrings for all exposed objects
-- [x] Web export via pygbag
-- [x] Faster collision detection using spatial quadtree
+## Web Export
+
+Export any demo to a playable browser build with pygbag:
+
+```bash
+uv run pygbag_export.py demo_projects/platformer
+```
+
+The build artifacts are generated under the demo's `_web_build/` directory.
+
+## Project Layout
+
+```text
+ajishio/
+├── ajishio/src/ajishio/      # Engine package
+├── demo_projects/            # Runnable demos and examples
+├── docs/                     # Documentation source (MkDocs)
+├── site/                     # Generated static docs
+└── pygbag_export.py          # Web export helper
+```
+
+## Roadmap
+
+- [x] Load rooms from files (LDtk)
+- [x] Support multiple rooms per game
+- [x] Load and animate sprites (Aseprite export workflow)
+- [x] Load and play sound/music
+- [x] Support persistent objects
+- [x] Profiling workflow docs and support
+- [x] API docs generation via MkDocs
+- [x] Browser export via pygbag
+- [x] Faster collision checks using a spatial quadtree
+
+## Contributing
+
+Contributions are welcome. For development and documentation workflow details, start with
+[docs/contributing.md](docs/contributing.md).

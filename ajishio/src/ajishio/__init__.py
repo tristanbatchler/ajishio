@@ -8,7 +8,7 @@ import os as _os
 import ajishio._context as _ctx
 from ajishio.view import view
 from ajishio.rendering import Renderer
-from ajishio.engine import Engine
+from ajishio.engine import Engine, set_window_icon
 
 # --- Public class / type exports ---
 from ajishio.game_object import GameObject
@@ -22,7 +22,7 @@ from ajishio.types import (
     GameObjectKwargs,
 )
 from ajishio.game_sound import GameSound
-from ajishio.rendering import Color
+from ajishio.rendering import Color, Font
 from ajishio.net import GameNetClient
 
 # --- Input ---
@@ -107,10 +107,9 @@ if _os.environ.get("AJISHIO_DOCS"):
     _renderer: Renderer = cast(Renderer, cast(object, _Dummy()))
     _engine: Engine = cast(Engine, cast(object, _Dummy()))
 else:
-    import pygame as _pg
-
     _ = _pg.init()
     _renderer = Renderer()
+    set_window_icon()
     _engine = Engine(_renderer)
 
 
@@ -143,7 +142,7 @@ view_hport = view.view_hport
 
 # --- Engine method delegates ---
 game_start = _engine.game_start
-async_game_start = _engine.async_game_start
+game_start_async = _engine.game_start_async
 game_end = _engine.game_end
 game_restart = _engine.game_restart
 game_set_speed = _engine.game_set_speed
@@ -239,6 +238,7 @@ __all__ = [
     "GameSound",
     "GameNetClient",
     "Color",
+    "Font",
     # Input
     "keyboard_check",
     "keyboard_check_pressed",
@@ -321,7 +321,7 @@ __all__ = [
     "load_ldtk_levels",
     # Engine methods
     "game_start",
-    "async_game_start",
+    "game_start_async",
     "game_end",
     "game_restart",
     "game_set_speed",

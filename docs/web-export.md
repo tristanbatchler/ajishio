@@ -35,7 +35,7 @@ The script takes care of everything so you don't have to think about it:
 3. Patches the copied `main.py` for the browser:
     - Adds `import pygame` so pygbag downloads the pygame-ce WebAssembly wheel
     - Adds `import asyncio` if not already present
-    - Swaps `aj.game_start()` → `asyncio.run(aj.async_game_start())` so the game loop yields
+    - Swaps `aj.game_start()` → `asyncio.run(aj.game_start_async())` so the game loop yields
       to the browser every frame
 
 ## Debugging

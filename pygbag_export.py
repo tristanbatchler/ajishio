@@ -6,7 +6,7 @@ Usage:
 This script:
   1. Copies your project folder + the ajishio library into a temporary build dir
   2. Patches main.py for pygbag (injects import pygame, import asyncio,
-     swaps aj.game_start() for asyncio.run(aj.async_game_start()))
+      swaps aj.game_start() for asyncio.run(aj.game_start_async()))
   3. Runs pygbag on the result
 
 No changes to your source code are required.
@@ -24,6 +24,7 @@ from typing import cast, override
 
 REPO_ROOT = Path(__file__).resolve().parent
 AJISHIO_SRC = REPO_ROOT / "ajishio" / "src" / "ajishio"
+REPO_LOGO_PATH = REPO_ROOT / ".github" / "assets" / "logo.png"
 
 
 def _has_import(tree: ast.Module, module: str) -> bool:
@@ -56,18 +57,18 @@ def _is_game_start_call(node: ast.AST) -> bool:
 
 
 class _GameStartRewriter(ast.NodeTransformer):
-    """Rewrite `aj.game_start()` → `asyncio.run(aj.async_game_start())`."""
+    """Rewrite `aj.game_start()` → `asyncio.run(aj.game_start_async())`."""
 
     @override
     def visit_Expr(self, node: ast.Expr) -> ast.AST:
         if _is_game_start_call(node.value):
             assert isinstance(node.value, ast.Call)
             assert isinstance(node.value.func, ast.Attribute)
-            # aj.async_game_start()
+            # aj.game_start_async()
             inner = ast.Call(
                 func=ast.Attribute(
                     value=node.value.func.value,
-                    attr="async_game_start",
+                    attr="game_start_async",
                     ctx=ast.Load(),
                 ),
                 args=[],
@@ -105,11 +106,23 @@ def patch_main_py(path: Path) -> None:
         node = ast.Import(names=[ast.alias(name=module)])
         tree.body.insert(insert_idx, node)
 
-    # Rewrite aj.game_start() → asyncio.run(aj.async_game_start())
+    # Rewrite aj.game_start() → asyncio.run(aj.game_start_async())
     tree = _GameStartRewriter().visit(tree)  # pyright: ignore[reportAny]
 
     ast.fix_missing_locations(tree)  # pyright: ignore[reportAny]
     _ = path.write_text(ast.unparse(tree))  # pyright: ignore[reportAny]
+
+
+def _resolve_export_logo(project_dir: Path) -> Path | None:
+    """Resolve a local logo file for web export in priority order: project logo, repo logo."""
+    project_logo = project_dir / "logo.png"
+    if project_logo.is_file():
+        return project_logo
+
+    if REPO_LOGO_PATH.is_file():
+        return REPO_LOGO_PATH
+
+    return None
 
 
 def export(project_dir: Path, extra_args: list[str]) -> None:
@@ -163,6 +176,10 @@ def export(project_dir: Path, extra_args: list[str]) -> None:
     # Patch main.py for pygbag compatibility
     patch_main_py(build_dir / "main.py")
 
+    export_logo = _resolve_export_logo(project_dir)
+    if export_logo is not None:
+        _ = shutil.copy2(export_logo, build_dir / "logo.png")
+
     print(f"Assembled pygbag project in {build_dir}")
     print("Running pygbag...")
 
@@ -175,11 +192,13 @@ def export(project_dir: Path, extra_args: list[str]) -> None:
         "-m",
         "pygbag",
         f"--app_name={app_name}",
+        f"--icon={export_logo if export_logo is not None else 'favicon.png'}",
         f"--template={tmpl_path}",
         "--ume_block=0",
         *extra_args,
         str(build_dir),
     ]
+
     _ = subprocess.run(
         pygbag_args,
         check=True,

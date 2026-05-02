@@ -192,6 +192,8 @@ class SpinningCube(aj.GameObject):
     @override
     def draw(self) -> None:
         super().draw()
+        fps_label = f"FPS: {aj.fps_real:.1f}"
+        aj.draw_text(aj.room_width - aj.text_width(fps_label) - 10, 10, fps_label, aj.c_gray)
         aj.draw_text(10, 10, "LMB: rotate cube")
         aj.draw_text(10, 30, "Mouse wheel: zoom")
         aj.draw_text(10, 50, "Space: friction " + ("off" if self.friction_enabled else "on"))

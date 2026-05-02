@@ -10,6 +10,7 @@ from ajishio.types import GameSprite
 import math
 
 Color = pg.Color
+Font = pg.font.Font
 
 
 c_aqua = Color(0, 255, 255)

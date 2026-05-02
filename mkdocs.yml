@@ -49,6 +49,25 @@ nav:
       - Sprites & Collision: sprites.md
       - Profiling: profiling.md
       - Web Export: web-export.md
+      - Networking Internals:
+        - Overview: net/index.md
+        - What pygbag Actually Does: net/01-what-pygbag-actually-does.md
+        - The Browser Runtime Environment: net/02-the-browser-runtime-environment.md
+        - The aio Module: net/03-the-aio-module.md
+        - The js Module: net/04-the-js-module.md
+        - The aio.cross Module: net/05-the-aio-cross-module.md
+        - Simulator vs Real Browser: net/06-the-simulator-vs-real-browser.md
+        - Networking Strategies: net/07-networking-strategies.md
+        - The +20000 Port Mapping: net/08-the-20000-port-mapping.md
+        - Type Checking Across Platforms: net/09-type-checking-across-platforms.md
+        - The Stub Files: net/10-the-stub-files.md
+        - The Dual-Field Transport Design: net/11-the-dual-field-transport-design.md
+        - Platform Abstraction Helpers: net/12-platform-abstraction-helpers.md
+        - The GameNetClient API and packets.py: net/13-the-gameclient-api-and-packets-py.md
+        - The asyncio Hijack: net/14-the-asyncio-hijack.md
+        - Data Flow Reference: net/15-data-flow-reference.md
+        - Known Gotchas: net/16-known-gotchas.md
+        - Extending This Into the Engine: net/17-extending-this-into-the-engine.md
       - Web Demos: demo-projects.md
   - API Reference: api.md   # This file is generated automatically
   - Contributing: contributing.md

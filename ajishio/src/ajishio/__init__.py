@@ -120,6 +120,7 @@ _ctx.engine = _engine
 # --- Rendering: bound methods on the renderer singleton ---
 draw_circle = _renderer.draw_circle
 draw_rectangle = _renderer.draw_rectangle
+draw_triangle = _renderer.draw_triangle
 draw_line = _renderer.draw_line
 draw_text = _renderer.draw_text
 draw_sprite = _renderer.draw_sprite
@@ -294,6 +295,7 @@ __all__ = [
     # Drawing
     "draw_circle",
     "draw_rectangle",
+    "draw_triangle",
     "draw_line",
     "draw_text",
     "draw_sprite",

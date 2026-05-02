@@ -346,26 +346,6 @@ class Transport:
         print("NET DEBUG: flush()")
 
     def recv(self) -> bytes | None:
-        if _IS_BROWSER and self._js_ws is None and self.sock is not None:
-            import select
-
-            try:
-                ready, _, _ = select.select([self.sock], [], [], 0)
-            except Exception as exc:
-                print("select error:", exc)
-                return None
-
-            if not ready:
-                return None
-
-            try:
-                return self.sock.recv(4096)
-            except BlockingIOError:
-                return None
-            except OSError as exc:
-                print("recv error:", exc)
-                return b""
-
         if not self.inbox:
             return None
 

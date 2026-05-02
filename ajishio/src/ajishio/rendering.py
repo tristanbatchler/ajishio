@@ -7,6 +7,7 @@ from pathlib import Path
 import pygame as pg
 from ajishio.view import view
 from ajishio.types import GameSprite
+import math
 
 Color = pg.Color
 
@@ -113,6 +114,115 @@ class Renderer:
         else:
             _ = rect_surf.fill(color)
         _ = self.display.blit(rect_surf, (x, y))
+
+    def draw_triangle(
+        self,
+        x1: float,
+        y1: float,
+        x2: float,
+        y2: float,
+        x3: float,
+        y3: float,
+        col1: pg.Color | None = None,
+        col2: pg.Color | None = None,
+        col3: pg.Color | None = None,
+        outline: bool = False,
+    ) -> None:
+        """
+        With this function you can draw either an outline of a triangle or a filled triangle. If it
+        is filled you can define the individual colours for each corner point and if these colours
+        are not the same, you will get a gradient effect from one to the other (the colour settings
+        will over-ride the base colour set with the function `draw_set_color()`).
+        """
+        x1, y1 = _translate_offset(x1, y1)
+        x2, y2 = _translate_offset(x2, y2)
+        x3, y3 = _translate_offset(x3, y3)
+
+        if outline:
+            _ = pg.draw.polygon(
+                self.display,
+                self.draw_color if col1 is None else col1,
+                [(x1, y1), (x2, y2), (x3, y3)],
+                1,
+            )
+            return
+
+        col1 = self.draw_color if col1 is None else col1
+        col2 = self.draw_color if col2 is None else col2
+        col3 = self.draw_color if col3 is None else col3
+
+        if col1 == col2 == col3:
+            _ = pg.draw.polygon(
+                self.display,
+                col1,
+                [(x1, y1), (x2, y2), (x3, y3)],
+            )
+            return
+
+        denom = (y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3)
+        if denom == 0:
+            return
+
+        display_w, display_h = self.display.get_size()
+        min_x = max(0, math.floor(min(x1, x2, x3)))
+        max_x = min(display_w, math.ceil(max(x1, x2, x3)))
+        min_y = max(0, math.floor(min(y1, y2, y3)))
+        max_y = min(display_h, math.ceil(max(y1, y2, y3)))
+
+        if min_x >= max_x or min_y >= max_y:
+            return
+
+        width = max_x - min_x
+        height = max_y - min_y
+
+        surf = pg.Surface((width, height), pg.SRCALPHA)
+
+        inv_denom = 1.0 / denom
+
+        # Barycentric value changes per screen pixel.
+        w1_dx = (y2 - y3) * inv_denom
+        w1_dy = (x3 - x2) * inv_denom
+
+        w2_dx = (y3 - y1) * inv_denom
+        w2_dy = (x1 - x3) * inv_denom
+
+        # Barycentric values at the centre of the top-left pixel.
+        start_x = min_x + 0.5
+        start_y = min_y + 0.5
+
+        start_w1 = ((y2 - y3) * (start_x - x3) + (x3 - x2) * (start_y - y3)) * inv_denom
+        start_w2 = ((y3 - y1) * (start_x - x3) + (x1 - x3) * (start_y - y3)) * inv_denom
+
+        c1r, c1g, c1b, c1a = col1.r, col1.g, col1.b, col1.a
+        c2r, c2g, c2b, c2a = col2.r, col2.g, col2.b, col2.a
+        c3r, c3g, c3b, c3a = col3.r, col3.g, col3.b, col3.a
+
+        pixels = pg.PixelArray(surf)
+
+        # Small tolerance avoids tiny cracks along triangle edges.
+        edge_epsilon = -0.000001
+
+        for local_y in range(height):
+            w1 = start_w1 + local_y * w1_dy
+            w2 = start_w2 + local_y * w2_dy
+
+            for local_x in range(width):
+                w3 = 1.0 - w1 - w2
+
+                if w1 >= edge_epsilon and w2 >= edge_epsilon and w3 >= edge_epsilon:
+                    r = int(w1 * c1r + w2 * c2r + w3 * c3r)
+                    g = int(w1 * c1g + w2 * c2g + w3 * c3g)
+                    b = int(w1 * c1b + w2 * c2b + w3 * c3b)
+                    a = int(w1 * c1a + w2 * c2a + w3 * c3a)
+
+                    pixels[local_x, local_y] = surf.map_rgb((r, g, b, a))  # pyright: ignore[reportIndexIssue]
+
+                w1 += w1_dx
+                w2 += w2_dx
+
+        del pixels
+
+        _ = self.display.blit(surf, (min_x, min_y))
 
     def draw_line(
         self, x1: float, y1: float, x2: float, y2: float, color: pg.Color | None = None

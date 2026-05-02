@@ -16,7 +16,7 @@
 10. [The Stub Files](10-the-stub-files.md)
 11. [The Dual-Field Transport Design](11-the-dual-field-transport-design.md)
 12. [Platform Abstraction Helpers](12-platform-abstraction-helpers.md)
-13. [The `GameClient` API and `packets.py`](13-the-gameclient-api-and-packets-py.md)
+13. [The `GameNetClient` API and `packets.py`](13-the-gameclient-api-and-packets-py.md)
 14. [The `asyncio` Hijack](14-the-asyncio-hijack.md)
 15. [Data Flow Reference](15-data-flow-reference.md)
 16. [Known Gotchas](16-known-gotchas.md)

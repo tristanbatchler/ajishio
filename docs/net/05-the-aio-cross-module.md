@@ -30,4 +30,8 @@ We use `getattr(..., "simulator", False)` as a defensive call because `aio` is
 only available in the browser, and `aio.cross.simulator` could theoretically be
 `None` rather than `False` in some contexts.
 
+In this repository's `Transport`, this check only affects the browser fallback
+socket path (inside `_connect_browser`).  If `_IS_BROWSER` is false, the
+desktop websockets path is used and `aio.cross.simulator` is not consulted.
+
 ---

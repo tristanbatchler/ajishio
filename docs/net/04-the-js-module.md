@@ -53,19 +53,26 @@ JavaScript, including handling special characters.
 
 ### JS objects from Python's perspective
 
-A value returned from `js.eval()` is not a Python object — it is a _proxy_
-that forwards attribute access and method calls to the underlying JavaScript
-object.  The important things to know:
+A value returned from `js.eval()` is a proxy object that forwards attribute
+access and method calls into JavaScript.
 
 - **Attribute access** works normally: `ws.readyState`, `ws.binaryType`
 - **Method calls** work normally: `ws.send("hello")`, `ws.close()`
-- **Event handler assignment** works by Python assignment:
-  `ws.onmessage = my_python_function` — pygbag wraps the Python callable in a
-  JS function automatically.
-- **Binary data** (e.g., an `ArrayBuffer` received over a binary WebSocket
-  frame) arrives as a special proxy object, not as Python `bytes`.  You must
-  call `.to_py()` on it to get a Python string.  This is why `on_message` in
-  the transport contains the `isinstance(payload, str)` check.
+- **Event handler assignment** works by direct Python assignment:
+  `ws.onmessage = my_python_function`
+
+For binary events, the current transport does **not** rely on `.to_py()` on
+`ArrayBuffer` objects. Instead, it converts via JavaScript explicitly:
+
+```python
+csv = cast(
+    js.JSFunction, js.eval("(x) => Array.from(new Uint8Array(x)).join(',')")
+)(payload)
+return bytes(int(part) for part in str(csv).split(","))
+```
+
+This avoids runtime differences where `.to_py()` may be unavailable or
+inconsistent in pygbag environments.
 
 ### The `js` module on desktop
 

@@ -84,6 +84,8 @@ This page documents the public `aj.` namespace. All functions and classes listed
     # Alias: `aj.draw_sprite`
 ::: ajishio.rendering.Renderer.draw_text
     # Alias: `aj.draw_text`
+::: ajishio.rendering.Renderer.draw_triangle
+    # Alias: `aj.draw_triangle`
 ::: ajishio.rendering.load_font
     # Alias: `aj.load_font`
 ::: ajishio.rendering.make_color_hsv
@@ -107,6 +109,10 @@ This page documents the public `aj.` namespace. All functions and classes listed
     # Alias: `aj.mouse_check_button_pressed`
 ::: ajishio.input.mouse_check_button_released
     # Alias: `aj.mouse_check_button_released`
+::: ajishio.input.mouse_wheel_down
+    # Alias: `aj.mouse_wheel_down`
+::: ajishio.input.mouse_wheel_up
+    # Alias: `aj.mouse_wheel_up`
 ::: ajishio.input.ord
     # Alias: `aj.ord`
 

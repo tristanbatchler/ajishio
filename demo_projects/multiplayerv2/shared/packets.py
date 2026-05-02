@@ -4,8 +4,9 @@ Wire format
 -----------
 Every packet is a single WebSocket frame containing a **base64-encoded**
 binary blob.  Base64 is used because ``GameNetClient.send()`` accepts
-``str`` only, and the ``Transport`` inbox round-trips through UTF-8 —
-raw binary would be mangled.
+``str | bytes`` and this demo intentionally chooses text payloads for
+simple cross-platform handling and inspection.  The ``Transport`` inbox
+round-trips text through UTF-8 while keeping a unified ``bytes`` recv API.
 
 The underlying binary layout is:
 

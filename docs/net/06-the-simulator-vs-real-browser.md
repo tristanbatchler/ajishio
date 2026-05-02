@@ -24,7 +24,12 @@ pygbag has two runtime modes:
 ### What this means for you
 
 When testing networking locally, you may find yourself in the simulator.
-The port +20000 mapping still applies (see §8), but the URL format may differ.
+
+In this repository's current `Transport` implementation, simulator-specific
+`aio.cross.simulator` logic is only used in the browser fallback path.  The
+desktop simulator path (`_IS_BROWSER == False`) goes through desktop
+`websockets.connect(...)`.
+
 Always test in a real browser before assuming simulator behaviour matches
 production.
 

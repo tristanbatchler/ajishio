@@ -1,17 +1,15 @@
-## 13. The `GameClient` API and `packets.py`
+## 13. The `GameNetClient` API and `packets.py`
 
-`GameClient` is a thin, protocol-agnostic wrapper around `Transport`.  It
-sends and receives raw strings only.  All encoding and decoding of packet
-contents is the responsibility of the caller — deliberately kept out of the
-transport layer so that the wire format can change without touching `net.py`.
+`GameNetClient` is a thin wrapper around `Transport`. The transport is protocol
+agnostic; packet encoding/decoding lives in demo-level packet modules.
 
 ### API surface
 
 ```python
-client = GameClient(host="ws://localhost:8765")
+client = GameNetClient(host="ws://localhost:8765")
 await client.connect()          # opens the transport connection
 
-client.send(data: str)          # send a raw encoded string
+client.send(data: str | bytes)  # send raw payload
 client.recv() -> bytes | None   # pop the next message, or None if inbox empty
 await client.run()              # yield each frame; use as a background task
 client.close()                  # close the connection
@@ -21,49 +19,45 @@ client.close()                  # close the connection
 
 ### The `packets.py` pattern
 
-All wire-format decisions live in `packets.py`, not in `net.py` or game code.
-Each packet type is a frozen dataclass with `encode() -> str` and a
-`@classmethod decode(bytes) -> T | None`:
+In multiplayerv2, packets are frozen dataclasses with `encode() -> str` and a
+top-level `decode(data: bytes) -> Packet | None` dispatcher.
 
 ```python
-# packets.py
+# demo_projects/multiplayerv2/shared/packets.py
 @dataclass(frozen=True)
-class ChatMessage:
+class Chat:
+    sender_id: UUID
     text: str
 
     def encode(self) -> str:
-        return json.dumps({"t": "chat", "text": self.text})
-
-    @classmethod
-    def decode(cls, data: bytes) -> "ChatMessage | None":
-        ...  # returns None on any parse error, never raises
+        ...
 ```
 
 Game code uses the two together:
 
 ```python
 # Sending
-client.send(ChatMessage(text=self.input_buffer).encode())
+client.send(Chat(sender_id=self.my_id, text=self.input_buffer).encode())
 
-# Receiving — call once per frame in step()
+# Receiving — typically drain inbox each frame
 raw = client.recv()
-if raw:
-    msg = ChatMessage.decode(raw)
-    if msg:
-        self.message_log.append(msg.text)
+if raw is not None:
+    pkt = decode(raw)
+    if isinstance(pkt, Chat):
+        self.message_log.append(pkt.text)
 ```
 
-`recv()` returns `None` when the inbox is empty, so the `if raw:` guard is
-sufficient.  `ChatMessage.decode` returns `None` for anything that is not a
-valid chat packet, so unknown message types are silently ignored without
-raising exceptions.
+`recv()` returns `None` when the inbox is empty. Packet decoding is expected to
+be resilient and return `None` for malformed/unknown payloads.
 
 ### Why `recv()` returns `bytes`
 
-`Transport.inbox` stores decoded `str` values.  `recv()` re-encodes them to
-`bytes` (via `.encode("utf-8")`) so that callers always receive a consistent
-`bytes | None` type regardless of transport path — keeping the API stable even
-if the underlying inbox representation changes.
+`Transport.inbox` stores bytes from all paths (desktop and browser), so callers
+can decode with one code path regardless of transport backend.
+
+`send()` accepts both `str` and `bytes`.  The multiplayerv2 demo intentionally
+uses base64-encoded `str` packets for protocol portability and easy logging,
+not because the transport requires string-only payloads.
 
 ### Background loop
 
@@ -71,9 +65,8 @@ if the underlying inbox representation changes.
 asyncio.create_task(client.run())
 ```
 
-`run()` is a coroutine that yields once per event loop tick via `sleep0()` and
-exits when `should_exit()` returns `True`.  It does no message processing —
-call `client.recv()` yourself in `step()` rather than relying on a background
-loop for message delivery.
+`run()` yields once per loop tick via `sleep0()` and exits when `should_exit()`
+signals shutdown. It does not process messages; poll `recv()` in your game
+loop.
 
 ---

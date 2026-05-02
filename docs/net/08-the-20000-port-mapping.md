@@ -1,7 +1,6 @@
 ## 8. The +20000 Port Mapping
 
-This is one of the most surprising facts about pygbag networking and is
-documented almost nowhere.
+This mapping applies only to the socket fallback path in browser mode.
 
 ### The problem
 
@@ -12,45 +11,30 @@ request to the pygbag development server.
 
 ### The solution
 
-The pygbag dev server (`pygbag .`) includes a WebSocket-to-TCP proxy.  It
-listens for WebSocket connections on port `N+20000` and forwards them as raw
-TCP to port `N`.
+The pygbag dev server (`pygbag .`) exposes a WebSocket-to-TCP bridge used by
+browser socket emulation.
 
-So: if your server listens on TCP port **8765**, the browser socket must
-connect to WebSocket port **28765** (= 8765 + 20000).
+In the current transport, for non-simulator fallback URLs, the mapped port is:
 
-`net.py` applies this mapping automatically:
+`mapped_port = original_port + 20000`
+
+`ajishio/src/ajishio/net.py` applies this automatically:
 
 ```python
 if not self.url.startswith("://"):
     port += 20000
 ```
 
-The `"://"` prefix is a special format used by the simulator where the URL
-already encodes the proxy address; in that case no remapping is needed.
+The `"://"` format is used by simulator-specific addressing; in that case this
+mapping is skipped.
 
-### What this means for your server
+### Practical implications
 
-Your server must listen on a **plain TCP port** — it speaks raw bytes, not
-WebSocket framing.  When you connect from the browser via the raw socket path,
-the bytes go:
+- This mapping is irrelevant for desktop mode.
+- This mapping is irrelevant when browser JS WebSocket path is used.
+- It only matters in browser fallback socket mode.
 
-```
-Browser Python socket.send(data)
-    → WASM bridge (JS WebSocket frame to port N+20000)
-    → pygbag dev proxy (unwraps WS, forwards as TCP)
-    → your server's TCP socket on port N
-```
-
-And in reverse for recv.
-
-### The JS WebSocket path bypasses this
-
-When using `js.WebSocket` (Path A), you connect directly to a `ws://` URL.
-The browser's WebSocket speaks to a server that understands WebSocket framing.
-This demo's server (`server/main.py`) is a `websockets.serve` WebSocket server,
-so Path A is the primary connection method.  Path B (raw socket + proxy) is
-only used as a fallback when `js.WebSocket` is unavailable (e.g., in the
-pygbag desktop simulator).
+For this demo, the primary path is JS WebSocket. The fallback path exists for
+compatibility but has stricter URL requirements and different runtime behavior.
 
 ---

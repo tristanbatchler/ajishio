@@ -75,6 +75,18 @@
             "type": "debugpy",
             "request": "launch",
             "module": "demo_projects.spinning_cube.main"
+        },
+        {
+            "name": "Multiplayer Server",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "demo_projects.multiplayerv2.server.main"
+        },
+        {
+            "name": "Multiplayer Client",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "demo_projects.multiplayerv2.client.main"
         }
     ]
 }

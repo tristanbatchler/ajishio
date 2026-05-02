@@ -108,15 +108,72 @@ uv run -m demo_projects.platformer.main
 Ajishio ships with multiple complete demos for platformers, puzzle games, arcade clones, and
 event a multiplayer example.
 
-<p align="center">
-	<img src=".github/assets/demo_previews/platformer/platformer.gif" width="48%" alt="Platformer preview" />
-	<img src=".github/assets/demo_previews/pong/pong.gif" width="48%" alt="Pong preview" />
-</p>
-
-<p align="center">
-	<img src=".github/assets/demo_previews/snake/snake.gif" width="48%" alt="Snake preview" />
-	<img src=".github/assets/demo_previews/hello_world/hello_world.png" width="48%" alt="Hello world preview" />
-</p>
+<table>
+	<tr>
+		<td align="center" width="50%">
+			<a href="./demo_projects/platformer/main.py">
+				<img src=".github/assets/demo_previews/platformer.gif" width="100%" alt="Platformer preview" />
+			</a>
+			<br />
+			<a href="./demo_projects/platformer/main.py">Platformer</a>
+		</td>
+		<td align="center" width="50%">
+			<a href="./demo_projects/pong/main.py">
+				<img src=".github/assets/demo_previews/pong.gif" width="100%" alt="Pong preview" />
+			</a>
+			<br />
+			<a href="./demo_projects/pong/main.py">Pong</a>
+		</td>
+	</tr>
+	<tr>
+		<td align="center" width="50%">
+			<a href="./demo_projects/snake/main.py">
+				<img src=".github/assets/demo_previews/snake.gif" width="100%" alt="Snake preview" />
+			</a>
+			<br />
+			<a href="./demo_projects/snake/main.py">Snake</a>
+		</td>
+		<td align="center" width="50%">
+			<a href="./demo_projects/tetris/main.py">
+				<img src=".github/assets/demo_previews/tetris.gif" width="100%" alt="Tetris preview" />
+			</a>
+			<br />
+			<a href="./demo_projects/tetris/main.py">Tetris</a>
+		</td>
+	</tr>
+	<tr>
+		<td align="center" width="50%">
+			<a href="./demo_projects/minesweeper/main.py">
+				<img src=".github/assets/demo_previews/minesweeper.gif" width="100%" alt="Minesweeper preview" />
+			</a>
+			<br />
+			<a href="./demo_projects/minesweeper/main.py">Minesweeper</a>
+		</td>
+		<td align="center" width="50%">
+			<a href="./demo_projects/sokoban/main.py">
+				<img src=".github/assets/demo_previews/sokoban.gif" width="100%" alt="Sokoban preview" />
+			</a>
+			<br />
+			<a href="./demo_projects/sokoban/main.py">Sokoban</a>
+		</td>
+	</tr>
+	<tr>
+		<td align="center" width="50%">
+			<a href="./demo_projects/spinning_cube/main.py">
+				<img src=".github/assets/demo_previews/spinning_cube.gif" width="100%" alt="Spinning cube preview" />
+			</a>
+			<br />
+			<a href="./demo_projects/spinning_cube/main.py">Spinning Cube</a>
+		</td>
+		<td align="center" width="50%">
+			<a href="./demo_projects/multiplayerv2/client/main.py">
+				<img src=".github/assets/demo_previews/multiplayerv2_client.gif" width="100%" alt="Multiplayer demo preview" />
+			</a>
+			<br />
+			<a href="./demo_projects/multiplayerv2/client/main.py">Multiplayer</a>
+		</td>
+	</tr>
+</table>
 
 - Run any demo locally:
 

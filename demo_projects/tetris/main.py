@@ -80,9 +80,7 @@ class Tile(aj.GameObject):
     DIM: int = 16  # Size in pixels of the tile
 
     def __init__(self, x: float, y: float, color: aj.Color) -> None:
-        super().__init__(
-            x, y, collision_mask=aj.CollisionMask(bbright=self.DIM, bbbottom=self.DIM)
-        )
+        super().__init__(x, y, collision_mask=aj.CollisionMask(bbright=self.DIM, bbbottom=self.DIM))
         self.color: aj.Color = color
 
     @override
@@ -147,9 +145,7 @@ class Piece(aj.GameObject):
         for tile in self.tiles:
             aj.instance_destroy(tile)
 
-    def allowed_at_position(
-        self, x: float, y: float, shape: Shape | None = None
-    ) -> bool:
+    def allowed_at_position(self, x: float, y: float, shape: Shape | None = None) -> bool:
         shape = shape or self.shape
         for y_offset, row in enumerate(shape.solid_map):
             for x_offset, is_solid in enumerate(row):
@@ -186,13 +182,31 @@ class Piece(aj.GameObject):
 
         return True
 
+    def apply_shape(self, shape: Shape, x: float, y: float) -> None:
+        self.shape = shape
+        self.x = x
+        self.y = y
+
+        target_positions: list[tuple[float, float]] = []
+        for y_offset, row in enumerate(shape.solid_map):
+            for x_offset, is_solid in enumerate(row):
+                if not is_solid:
+                    continue
+                target_positions.append((x + x_offset * Tile.DIM, y + y_offset * Tile.DIM))
+
+        # All current tetromino definitions use 4 solid cells.
+        if len(target_positions) != len(self.tiles):
+            return
+
+        for tile, (tile_x, tile_y) in zip(self.tiles, target_positions):
+            tile.x = tile_x
+            tile.y = tile_y
+
 
 class Manager(aj.GameObject):
     current_move_interval: float
 
-    def __init__(
-        self, x: float = 0, y: float = 0, **kwargs: Unpack[aj.GameObjectKwargs]
-    ) -> None:
+    def __init__(self, x: float = 0, y: float = 0, **kwargs: Unpack[aj.GameObjectKwargs]) -> None:
         super().__init__(x, y, **kwargs)
 
         self.current_piece: Piece | None = self.spawn_piece()
@@ -232,25 +246,28 @@ class Manager(aj.GameObject):
             if tile.y < y and tile not in self.current_piece.tiles:
                 tile.y += Tile.DIM
 
-    def clear_full_rows(self, tiles_from_bottom_to_check: int) -> None:
-        if tiles_from_bottom_to_check <= 0:
-            return
-        y = aj.view_hport[aj.view_current] - tiles_from_bottom_to_check * Tile.DIM
-        top_row: list[aj.IGameObject] = []
-        for x in range(0, int(aj.view_wport[aj.view_current]), Tile.DIM):
-            if (
-                tile := aj.instance_position(x + Tile.DIM // 2, y + Tile.DIM // 2, Tile)
-            ) is None:
-                return self.clear_full_rows(tiles_from_bottom_to_check - 1)
-            top_row.append(tile)
+    def clear_full_rows(self) -> None:
+        y = aj.view_hport[aj.view_current] - Tile.DIM
+        while y >= 0:
+            row_tiles: list[aj.IGameObject] = []
+            is_full = True
 
-        self.shift_tiles_above(top_row[0].y)
+            for x in range(0, int(aj.view_wport[aj.view_current]), Tile.DIM):
+                tile = aj.instance_position(x + Tile.DIM // 2, y + Tile.DIM // 2, Tile)
+                if tile is None:
+                    is_full = False
+                    break
+                row_tiles.append(tile)
 
-        for tile in top_row:
-            self.score += 10
-            aj.instance_destroy(tile)
+            if not is_full:
+                y -= Tile.DIM
+                continue
 
-        self.clear_full_rows(tiles_from_bottom_to_check - 1)
+            self.shift_tiles_above(y)
+            for tile in row_tiles:
+                self.score += 10
+                aj.instance_destroy(tile)
+            # Re-check same y because a dropped row may also be full.
 
     @override
     def step(self) -> None:
@@ -268,10 +285,7 @@ class Manager(aj.GameObject):
             self.set_current_move_interval(fast=True)
         elif aj.keyboard_check_released(aj.vk_down):
             self.set_current_move_interval()
-        elif (
-            aj.keyboard_check_released(aj.vk_up)
-            and self.current_piece.shape != SHAPE_SQUARE
-        ):
+        elif aj.keyboard_check_released(aj.vk_up) and self.current_piece.shape != SHAPE_SQUARE:
             rotated_shape = Shape(
                 self.current_piece.shape.get_rotation(), self.current_piece.shape.color
             )
@@ -288,18 +302,15 @@ class Manager(aj.GameObject):
             if kicked_x is None:
                 pass  # No valid position found, don't rotate
             else:
-                piece_y = self.current_piece.y
-                aj.instance_destroy(self.current_piece)
-                self.current_piece = Piece(rotated_shape, kicked_x, piece_y)
+                self.current_piece.apply_shape(rotated_shape, kicked_x, self.current_piece.y)
 
         if self.move_timer <= 0:
             self.move_timer += self.current_move_interval
             if not self.current_piece.move(dy=1):
                 for tile in self.current_piece.tiles:
                     _ = Tile(tile.x, tile.y, tile.color)
-                tiles_from_bottom_to_check = int(self.current_piece.y / Tile.DIM)
                 aj.instance_destroy(self.current_piece)
-                self.clear_full_rows(tiles_from_bottom_to_check)
+                self.clear_full_rows()
                 self.current_piece = self.spawn_piece()
 
     @override

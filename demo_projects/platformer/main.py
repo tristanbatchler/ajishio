@@ -9,9 +9,7 @@ coins_collected: set[str] = set()
 
 
 class Floor(aj.GameObject):
-    def __init__(
-        self, x: float, y: float, **kwargs: Unpack[aj.GameObjectKwargs]
-    ) -> None:
+    def __init__(self, x: float, y: float, **kwargs: Unpack[aj.GameObjectKwargs]) -> None:
         super().__init__(x, y, **kwargs)
         self.collision_mask: aj.CollisionMask | None = aj.CollisionMask(
             bbtop=0, bbleft=0, bbright=self.width, bbbottom=self.height
@@ -19,19 +17,13 @@ class Floor(aj.GameObject):
 
 
 class Doorway(aj.GameObject):
-    def __init__(
-        self, x: float, y: float, **kwargs: Unpack[aj.GameObjectKwargs]
-    ) -> None:
+    def __init__(self, x: float, y: float, **kwargs: Unpack[aj.GameObjectKwargs]) -> None:
         super().__init__(x, y, **kwargs)
 
         to_room_raw = self.custom_fields.get("to_room", 0)
-        self.to_room: int = (
-            int(to_room_raw) if isinstance(to_room_raw, (int, float)) else 0
-        )
+        self.to_room: int = int(to_room_raw) if isinstance(to_room_raw, (int, float)) else 0
 
-        to_doorway_raw = cast(
-            aj.CustomFields | None, self.custom_fields.get("to_doorway")
-        )
+        to_doorway_raw = cast(aj.CustomFields | None, self.custom_fields.get("to_doorway"))
         self.to_doorway_iid: str | None
         if isinstance(to_doorway_raw, dict):
             doorway_iid = cast(str | None, to_doorway_raw.get("entityIid"))
@@ -61,9 +53,7 @@ class Doorway(aj.GameObject):
 
 
 class PhysicsObject(aj.GameObject):
-    def __init__(
-        self, x: float, y: float, **kwargs: Unpack[aj.GameObjectKwargs]
-    ) -> None:
+    def __init__(self, x: float, y: float, **kwargs: Unpack[aj.GameObjectKwargs]) -> None:
         super().__init__(x, y, **kwargs)
         self.x_velocity: float = 0
         self.y_velocity: float = 0
@@ -79,18 +69,14 @@ class PhysicsObject(aj.GameObject):
         )
 
         if self.place_meeting(self.x + self.x_velocity, self.y, Floor):
-            while not self.place_meeting(
-                self.x + aj.sign(self.x_velocity), self.y, Floor
-            ):
+            while not self.place_meeting(self.x + aj.sign(self.x_velocity), self.y, Floor):
                 self.x += aj.sign(self.x_velocity)  # pyright: ignore[reportUnannotatedClassAttribute]
             self.x_velocity = 0
         else:
             self.x += self.x_velocity
 
         if self.place_meeting(self.x, self.y + self.y_velocity, Floor):
-            while not self.place_meeting(
-                self.x, self.y + aj.sign(self.y_velocity), Floor
-            ):
+            while not self.place_meeting(self.x, self.y + aj.sign(self.y_velocity), Floor):
                 self.y += aj.sign(self.y_velocity)  # pyright: ignore[reportUnannotatedClassAttribute]
             self.y_velocity = 0
         else:
@@ -100,9 +86,7 @@ class PhysicsObject(aj.GameObject):
 class Player(PhysicsObject):
     persistent: bool = True
 
-    def __init__(
-        self, x: float, y: float, **kwargs: Unpack[aj.GameObjectKwargs]
-    ) -> None:
+    def __init__(self, x: float, y: float, **kwargs: Unpack[aj.GameObjectKwargs]) -> None:
         super().__init__(x, y, **kwargs)
         self.sprite_index: aj.GameSprite | None = sprites.get("player")
         self.image_speed: float = 10.0
@@ -142,9 +126,7 @@ class Player(PhysicsObject):
         self.x_velocity = aj.clamp(self.x_velocity, -self.speed, self.speed)
 
         # Initiate jump
-        if self.place_meeting(self.x, self.y + 1, Floor) and aj.keyboard_check_pressed(
-            aj.vk_space
-        ):
+        if self.place_meeting(self.x, self.y + 1, Floor) and aj.keyboard_check_pressed(aj.vk_space):
             aj.audio_play_sound(sounds["jump"], gain=0.2)
             self.y_velocity = self.jump_height  # pyright: ignore[reportUnannotatedClassAttribute]
 
@@ -160,9 +142,9 @@ class Player(PhysicsObject):
         doorway_hit = self.place_meeting(self.x, self.y, Doorway)
         if doorway_hit and isinstance(doorway_hit, Doorway):
             entrance_dir_x, entrance_dir_y = doorway_hit.entrance_direction
-            if (
-                entrance_dir_x == 0 and entrance_dir_y == -aj.sign(self.y_velocity)
-            ) or (entrance_dir_y == 0 and entrance_dir_x == -aj.sign(self.x_velocity)):
+            if (entrance_dir_x == 0 and entrance_dir_y == -aj.sign(self.y_velocity)) or (
+                entrance_dir_y == 0 and entrance_dir_x == -aj.sign(self.x_velocity)
+            ):
                 # We are moving in the same direction as the doorway, so we can pass through
                 self.move_through_doorway(doorway_hit)
 
@@ -194,26 +176,20 @@ class Player(PhysicsObject):
         exit_dir_x, exit_dir_y = to_doorway.entrance_direction
 
         # Take us to the corresponding position
-        player_percentage_to_bottom_doorway: float = (
-            self.y - doorway.y
-        ) / doorway.height
+        player_percentage_to_bottom_doorway: float = (self.y - doorway.y) / doorway.height
         player_percentage_to_right_doorway: float = (self.x - doorway.x) / doorway.width
 
         # If we are stepping through the doorway...
         if exit_dir_x != 0:
             self.x = to_doorway.x
             self.y = (
-                to_doorway.y
-                + player_percentage_to_bottom_doorway * to_doorway.height
-                + exit_dir_y
+                to_doorway.y + player_percentage_to_bottom_doorway * to_doorway.height + exit_dir_y
             )
 
         # If we are jumping or falling through the doorway...
         elif exit_dir_y != 0:
             self.x = (
-                to_doorway.x
-                + player_percentage_to_right_doorway * to_doorway.width
-                + exit_dir_x
+                to_doorway.x + player_percentage_to_right_doorway * to_doorway.width + exit_dir_x
             )
             self.y = to_doorway.y
 
@@ -245,9 +221,7 @@ class Player(PhysicsObject):
 class Camera(aj.GameObject):
     persistent: bool = True
 
-    def __init__(
-        self, x: float = 0, y: float = 0, **kwargs: Unpack[aj.GameObjectKwargs]
-    ) -> None:
+    def __init__(self, x: float = 0, y: float = 0, **kwargs: Unpack[aj.GameObjectKwargs]) -> None:
         super().__init__(x, y, **kwargs)
 
         # Set the display size
@@ -274,9 +248,7 @@ class Camera(aj.GameObject):
 
 
 class Enemy(PhysicsObject):
-    def __init__(
-        self, x: float, y: float, **kwargs: Unpack[aj.GameObjectKwargs]
-    ) -> None:
+    def __init__(self, x: float, y: float, **kwargs: Unpack[aj.GameObjectKwargs]) -> None:
         super().__init__(x, y, **kwargs)
         self.sprite_index: aj.GameSprite | None = sprites["enemy"]
 
@@ -305,9 +277,7 @@ class Enemy(PhysicsObject):
 
 
 class Coin(aj.GameObject):
-    def __init__(
-        self, x: float, y: float, **kwargs: Unpack[aj.GameObjectKwargs]
-    ) -> None:
+    def __init__(self, x: float, y: float, **kwargs: Unpack[aj.GameObjectKwargs]) -> None:
         super().__init__(x, y, **kwargs)
 
         if self.iid in coins_collected:
@@ -334,9 +304,7 @@ class Coin(aj.GameObject):
             aj.instance_destroy(self)
             player_hit.score += 1
             aj.audio_play_sound(sounds["coin"], gain=0.3)
-            assert self.iid is not None, (
-                f"Coin at ({self.x}, {self.y}) has no instance ID"
-            )
+            assert self.iid is not None, f"Coin at ({self.x}, {self.y}) has no instance ID"
             coins_collected.add(self.iid)
 
 
@@ -350,8 +318,8 @@ def main() -> None:
     aj.register_objects(Floor, Player, Camera, Enemy, Coin, Doorway)
 
     aj.room_set_caption("Platformer")
-    aspect_ratio: float = levels[0].level_size[0] / levels[0].level_size[1]
-    aj.window_set_size(960, int(960 / aspect_ratio))
+    # aspect_ratio: float = levels[0].level_size[0] / levels[0].level_size[1]
+    # aj.window_set_size(960, int(960 / aspect_ratio))
 
     aj.room_set_background(aj.Color(135, 206, 235))
 

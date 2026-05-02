@@ -110,6 +110,7 @@ else:
     _ = _pg.init()
     _renderer = Renderer()
     set_window_icon()
+    _pg.display.set_caption("Ajishio Game")
     _engine = Engine(_renderer)
 
 

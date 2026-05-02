@@ -88,7 +88,7 @@ def get_original_definition(obj: object) -> str | None:
 def _load_ajishio_for_introspection() -> ModuleType:
     """Import ajishio with runtime exports available for accurate API introspection."""
     old_docs_mode = os.environ.pop("AJISHIO_DOCS", None)
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    _ = os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
 
     try:
         if "ajishio" in sys.modules:
@@ -117,8 +117,8 @@ def generate_api_md() -> str:
 
     # Group objects by their source module
     grouped: dict[str, list[tuple[str, object]]] = {}
-    for name in sorted(ajishio.__all__):
-        obj = getattr(ajishio, name, None)
+    for name in sorted(ajishio.__all__):  # pyright: ignore[reportAny]
+        obj = getattr(ajishio, name, None)  # pyright: ignore[reportAny]
         if obj is None:
             continue
         module = get_source_module(obj)  # pyright: ignore[reportAny]
@@ -204,11 +204,11 @@ def main() -> None:
         _write_via_mkdocs(text)
         return
 
-    if args.stdout:
+    if args.stdout:  # pyright: ignore[reportAny]
         print(text)
         return
 
-    if args.check:
+    if args.check:  # pyright: ignore[reportAny]
         existing = DOCS_API_PATH.read_text() if DOCS_API_PATH.exists() else ""
         if existing != text:
             raise SystemExit(
@@ -216,7 +216,7 @@ def main() -> None:
             )
         return
 
-    DOCS_API_PATH.write_text(text)
+    _ = DOCS_API_PATH.write_text(text)
 
 
 if __name__ == "__main__":

@@ -49,9 +49,7 @@ class Engine:
         self.delta_time: float
         self.fps_real: float
 
-        self.room_set_size(
-            view.view_wport[view.view_current], view.view_hport[view.view_current]
-        )
+        self.room_set_size(view.view_wport[view.view_current], view.view_hport[view.view_current])
         self.game_set_speed(60)
         self.room_set_background(Color(0, 0, 0))
 
@@ -153,9 +151,7 @@ class Engine:
         if speed != 0:
             self.delta_time = 1 / self.room_speed  # seconds
 
-    def _get_obj_aabb(
-        self, obj: IGameObject
-    ) -> tuple[float, float, float, float] | None:
+    def _get_obj_aabb(self, obj: IGameObject) -> tuple[float, float, float, float] | None:
         """Return (left, top, right, bottom) world AABB for obj, or None if no collision mask."""
         msk = obj.collision_mask
         if msk is None:
@@ -203,9 +199,7 @@ class Engine:
         if self._spatial_index is None:
             return []
         # RectQuadTreeObjects.query returns a list of objects directly
-        return cast(
-            list[IGameObject], self._spatial_index.intersect((left, top, right, bottom))
-        )  # pyright: ignore[reportUnknownMemberType]
+        return cast(list[IGameObject], self._spatial_index.intersect((left, top, right, bottom)))  # pyright: ignore[reportUnknownMemberType]
 
     def window_set_size(self, w: int, h: int) -> None:
         view.window_set_size(w, h)
@@ -238,9 +232,7 @@ class Engine:
     def room_set_background(self, color: pg.Color) -> None:
         self.room_background_color = color
 
-    def audio_play_sound(
-        self, index: GameSound, loop: bool = False, gain: float = 1
-    ) -> None:
+    def audio_play_sound(self, index: GameSound, loop: bool = False, gain: float = 1) -> None:
         self._audio_playing.append(index)
         index.play(loop=loop, gain=gain)
 
@@ -265,9 +257,7 @@ class Engine:
     def instance_exists(self, obj: type[IGameObject]) -> bool:
         return self.instance_count(obj) > 0
 
-    def instance_find(
-        self, obj: type[IGameObject] | str, n: int = 0
-    ) -> IGameObject | None:
+    def instance_find(self, obj: type[IGameObject] | str, n: int = 0) -> IGameObject | None:
         all_objects = list(self._game_objects.values()) + self._game_objects_to_add
 
         if isinstance(obj, str):
@@ -358,9 +348,7 @@ class Engine:
                     continue
                 if isinstance(g_o, obj):
                     # precise check (reuse the concrete instance branch)
-                    if self.collision_rectangle(
-                        left, top, right, bottom, g_o, not_these
-                    ):
+                    if self.collision_rectangle(left, top, right, bottom, g_o, not_these):
                         return g_o
             return None
 
@@ -368,9 +356,7 @@ class Engine:
             game_obj = self.get_game_object_by_id(obj)
             if game_obj is None:
                 return None
-            return self.collision_rectangle(
-                left, top, right, bottom, game_obj, not_these
-            )
+            return self.collision_rectangle(left, top, right, bottom, game_obj, not_these)
 
         if not_these is not None and obj in not_these:
             return None
@@ -391,7 +377,6 @@ class Engine:
         return None
 
     def _begin_game_session(self) -> None:
-        pg.display.set_caption("Ajishio Game")
         if len(self._rooms) > 0:
             self.room_goto(0)
         self._game_running = True
@@ -440,9 +425,7 @@ class Engine:
             self.renderer.draw_display()
 
         self._audio_playing = [
-            audio
-            for audio in self._audio_playing
-            if not audio.is_finished(self.delta_time)
+            audio for audio in self._audio_playing if not audio.is_finished(self.delta_time)
         ]
         return True
 

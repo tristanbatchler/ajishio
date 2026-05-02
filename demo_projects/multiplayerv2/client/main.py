@@ -37,9 +37,7 @@ class Manager(aj.GameObject):
         self.cursor_visible: bool = True
         self.cursor_blink_interval: float = 0.5
         self.cursor_timer: float = self.cursor_blink_interval
-        self.font: aj.Font = aj.load_font(
-            Path(__file__).parent / "CutiveMono-Regular.ttf", 24
-        )
+        self.font: aj.Font = aj.load_font(Path(__file__).parent / "CutiveMono-Regular.ttf", 24)
 
         # Assigned by the server via AssignId packet.
         self.my_id: UUID | None = None
@@ -116,9 +114,7 @@ class Manager(aj.GameObject):
             and self.input_buffer.strip()
             and self.my_id is not None
         ):
-            self.client.send(
-                Chat(sender_id=self.my_id, text=self.input_buffer).encode()
-            )
+            self.client.send(Chat(sender_id=self.my_id, text=self.input_buffer).encode())
             self.input_buffer = ""
 
     @override
@@ -140,16 +136,14 @@ class Manager(aj.GameObject):
         for i, (line, color) in enumerate(self.message_log[-max_messages:]):
             aj.draw_text(10, 10 + (i + 1) * font_height, line, color)
 
-        aj.draw_text(
-            10, 10 + (max_messages + 1) * font_height, self.input_buffer + cursor
-        )
+        aj.draw_text(10, 10 + (max_messages + 1) * font_height, self.input_buffer + cursor)
 
 
 async def main() -> None:
     client = aj.GameNetClient("wss://ajishio.tbat.me/multiplayerv2")
     await client.connect()
     _ = Manager(client)
-    # aj.room_set_caption("Multiplayer Client")
+    aj.room_set_caption("Multiplayer Client")
     await aj.game_start_async()
 
 

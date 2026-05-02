@@ -28,11 +28,15 @@ class WitchGirl(aj.GameObject):
     image_xscale: float = 1.0
     x: float
 
-    def __init__(self, x: float, y: float, **kwargs: Unpack[aj.GameObjectKwargs]) -> None:
+    def __init__(
+        self, x: float, y: float, **kwargs: Unpack[aj.GameObjectKwargs]
+    ) -> None:
         super().__init__(x, y, **kwargs)
 
         project_dir: Path = Path(__file__).parent
-        self.sprites: dict[str, GameSprite] = aj.load_aseprite_sprites(project_dir / "sprites")
+        self.sprites: dict[str, GameSprite] = aj.load_aseprite_sprites(
+            project_dir / "sprites"
+        )
 
         # Luckily this asset pack has the same offset for all animations
         SPRITE_X_OFFSET = 26
@@ -61,7 +65,9 @@ class WitchGirl(aj.GameObject):
         for anim in self.anims.values():
             aj.sprite_set_offset(self.sprites[anim.name], anim.x_offset, anim.y_offset)
 
-        self.sprite_index: aj.GameSprite | None = self.sprites[self.anims[WitchGirlAnims.IDLE].name]
+        self.sprite_index: aj.GameSprite | None = self.sprites[
+            self.anims[WitchGirlAnims.IDLE].name
+        ]
 
         self.image_speed: float = 10
 

@@ -87,7 +87,9 @@ class Renderer:
         for bg in self._background_images:
             _ = self.display.blit(bg, view.offset)
 
-    def draw_circle(self, x: float, y: float, radius: float, color: pg.Color | None = None) -> None:
+    def draw_circle(
+        self, x: float, y: float, radius: float, color: pg.Color | None = None
+    ) -> None:
         x, y = _translate_offset(x, y)
         _ = pg.draw.circle(
             self.display,
@@ -237,7 +239,9 @@ class Renderer:
             (x2, y2),
         )
 
-    def draw_text(self, x: float, y: float, string: str, color: pg.Color | None = None) -> None:
+    def draw_text(
+        self, x: float, y: float, string: str, color: pg.Color | None = None
+    ) -> None:
         x, y = _translate_offset(x, y)
         surface = self._render_text_with_fallback(
             string, self.draw_color if color is None else color
@@ -269,10 +273,14 @@ class Renderer:
         scale_y_abs: float = abs(y_scale)
 
         offset_x: float = (
-            sprite_index.x_offset if x_scale >= 0 else sprite_index.width - sprite_index.x_offset
+            sprite_index.x_offset
+            if x_scale >= 0
+            else sprite_index.width - sprite_index.x_offset
         )
         offset_y: float = (
-            sprite_index.y_offset if y_scale >= 0 else sprite_index.height - sprite_index.y_offset
+            sprite_index.y_offset
+            if y_scale >= 0
+            else sprite_index.height - sprite_index.y_offset
         )
 
         draw_x: float = x - offset_x * scale_x_abs

@@ -160,7 +160,8 @@ class Transport:
 
             def _arraybuffer_to_bytes(payload: js.ArrayBuffer) -> bytes:
                 csv = cast(
-                    js.JSFunction, js.eval("(x) => Array.from(new Uint8Array(x)).join(',')")
+                    js.JSFunction,
+                    js.eval("(x) => Array.from(new Uint8Array(x)).join(',')"),
                 )(payload)
                 text = str(csv)
                 if not text:
@@ -304,7 +305,9 @@ class Transport:
     # ------------------------------------------------------------------
 
     def send(self, data: str | bytes) -> None:
-        print(f"NET DEBUG: send() _IS_BROWSER={_IS_BROWSER} len={len(data)} data={data}")
+        print(
+            f"NET DEBUG: send() _IS_BROWSER={_IS_BROWSER} len={len(data)} data={data}"
+        )
 
         if _IS_BROWSER:
             if self._js_ws is not None:

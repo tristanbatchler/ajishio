@@ -145,7 +145,9 @@ def export(project_dir: Path, extra_args: list[str]) -> None:
             continue
         dest = build_dir / item.name
         if item.is_dir():
-            _ = shutil.copytree(item, dest, ignore=shutil.ignore_patterns("__pycache__"))
+            _ = shutil.copytree(
+                item, dest, ignore=shutil.ignore_patterns("__pycache__")
+            )
         else:
             _ = shutil.copy2(item, dest)
 

@@ -62,7 +62,9 @@ class ChoiceMenu(aj.GameObject):
         if not self.visible:
             return None
 
-        if aj.keyboard_check_pressed(aj.vk_enter) or aj.keyboard_check_pressed(aj.vk_space):
+        if aj.keyboard_check_pressed(aj.vk_enter) or aj.keyboard_check_pressed(
+            aj.vk_space
+        ):
             return self.options[self.selected]
 
         return None

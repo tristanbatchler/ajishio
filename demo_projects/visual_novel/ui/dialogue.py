@@ -56,7 +56,9 @@ class DialogueBox(aj.GameObject):
             self.finished = True
 
     def advance_requested(self) -> bool:
-        return aj.keyboard_check_pressed(aj.vk_space) or aj.keyboard_check_pressed(aj.vk_enter)
+        return aj.keyboard_check_pressed(aj.vk_space) or aj.keyboard_check_pressed(
+            aj.vk_enter
+        )
 
     def reveal_all(self) -> None:
         total_length = self._total_chars()

@@ -80,7 +80,9 @@ class Tile(aj.GameObject):
     DIM: int = 16  # Size in pixels of the tile
 
     def __init__(self, x: float, y: float, color: aj.Color) -> None:
-        super().__init__(x, y, collision_mask=aj.CollisionMask(bbright=self.DIM, bbbottom=self.DIM))
+        super().__init__(
+            x, y, collision_mask=aj.CollisionMask(bbright=self.DIM, bbbottom=self.DIM)
+        )
         self.color: aj.Color = color
 
     @override
@@ -145,7 +147,9 @@ class Piece(aj.GameObject):
         for tile in self.tiles:
             aj.instance_destroy(tile)
 
-    def allowed_at_position(self, x: float, y: float, shape: Shape | None = None) -> bool:
+    def allowed_at_position(
+        self, x: float, y: float, shape: Shape | None = None
+    ) -> bool:
         shape = shape or self.shape
         for y_offset, row in enumerate(shape.solid_map):
             for x_offset, is_solid in enumerate(row):
@@ -160,7 +164,12 @@ class Piece(aj.GameObject):
                 ):
                     return False
                 if aj.collision_rectangle(
-                    tile_x, tile_y, tile_x + Tile.DIM, tile_y + Tile.DIM, Tile, self.tiles
+                    tile_x,
+                    tile_y,
+                    tile_x + Tile.DIM,
+                    tile_y + Tile.DIM,
+                    Tile,
+                    self.tiles,
                 ):
                     return False
         return True
@@ -181,7 +190,9 @@ class Piece(aj.GameObject):
 class Manager(aj.GameObject):
     current_move_interval: float
 
-    def __init__(self, x: float = 0, y: float = 0, **kwargs: Unpack[aj.GameObjectKwargs]) -> None:
+    def __init__(
+        self, x: float = 0, y: float = 0, **kwargs: Unpack[aj.GameObjectKwargs]
+    ) -> None:
         super().__init__(x, y, **kwargs)
 
         self.current_piece: Piece | None = self.spawn_piece()
@@ -227,7 +238,9 @@ class Manager(aj.GameObject):
         y = aj.view_hport[aj.view_current] - tiles_from_bottom_to_check * Tile.DIM
         top_row: list[aj.IGameObject] = []
         for x in range(0, int(aj.view_wport[aj.view_current]), Tile.DIM):
-            if (tile := aj.instance_position(x + Tile.DIM // 2, y + Tile.DIM // 2, Tile)) is None:
+            if (
+                tile := aj.instance_position(x + Tile.DIM // 2, y + Tile.DIM // 2, Tile)
+            ) is None:
                 return self.clear_full_rows(tiles_from_bottom_to_check - 1)
             top_row.append(tile)
 
@@ -255,7 +268,10 @@ class Manager(aj.GameObject):
             self.set_current_move_interval(fast=True)
         elif aj.keyboard_check_released(aj.vk_down):
             self.set_current_move_interval()
-        elif aj.keyboard_check_released(aj.vk_up) and self.current_piece.shape != SHAPE_SQUARE:
+        elif (
+            aj.keyboard_check_released(aj.vk_up)
+            and self.current_piece.shape != SHAPE_SQUARE
+        ):
             rotated_shape = Shape(
                 self.current_piece.shape.get_rotation(), self.current_piece.shape.color
             )

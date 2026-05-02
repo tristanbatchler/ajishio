@@ -7,7 +7,9 @@ class GridAlignedObject(aj.GameObject):
     x: float
     y: float
 
-    def __init__(self, x: float = 0, y: float = 0, **kwargs: Unpack[aj.GameObjectKwargs]) -> None:
+    def __init__(
+        self, x: float = 0, y: float = 0, **kwargs: Unpack[aj.GameObjectKwargs]
+    ) -> None:
         super().__init__(x, y, **kwargs)
 
         self.collision_mask: aj.CollisionMask | None = aj.CollisionMask(
@@ -72,7 +74,9 @@ class SnakeHead(GridAlignedObject):
         self.x_velocity: int = choice((-1, 0, 1))
         self.y_velocity: int = choice((-1, 1)) * (1 - abs(self.x_velocity))
 
-        self.tail_segments: list[SnakeTailSegment] = [SnakeTailSegment(self, i) for i in range(3)]
+        self.tail_segments: list[SnakeTailSegment] = [
+            SnakeTailSegment(self, i) for i in range(3)
+        ]
 
     @override
     def step(self) -> None:

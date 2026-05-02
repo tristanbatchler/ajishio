@@ -37,7 +37,9 @@ class GameObject(IGameObject):
         self.width: float = kwargs.get("width") or 0
         self.height: float = kwargs.get("height") or 0
         custom_fields = kwargs.get("customFields")
-        self.custom_fields: CustomFields = custom_fields if custom_fields is not None else {}
+        self.custom_fields: CustomFields = (
+            custom_fields if custom_fields is not None else {}
+        )
 
         _ctx.engine.add_object(self)
 
@@ -70,7 +72,9 @@ class GameObject(IGameObject):
                 and self._last_image_update > 1 / self.image_speed
             ):
                 self._last_image_update = 0
-                self.image_index = (self.image_index + 1) % len(self.sprite_index.images)
+                self.image_index = (self.image_index + 1) % len(
+                    self.sprite_index.images
+                )
 
     @override
     def draw(self) -> None:

@@ -80,7 +80,9 @@ def multiply(matrix: list[list[float]], point: Point) -> Point:
     return Point(new_x, new_y, new_z)
 
 
-def remap_range(n: float, old_min: float, old_max: float, new_min: float, new_max: float) -> float:
+def remap_range(
+    n: float, old_min: float, old_max: float, new_min: float, new_max: float
+) -> float:
     return (n - old_min) / (old_max - old_min) * (new_max - new_min) + new_min
 
 
@@ -101,7 +103,11 @@ def rotate_z(points: list[Point], radians: float) -> None:
 
 class SpinningCube(aj.GameObject):
     def __init__(
-        self, points: list[Point], x: float = 0, y: float = 0, **kwargs: Unpack[aj.GameObjectKwargs]
+        self,
+        points: list[Point],
+        x: float = 0,
+        y: float = 0,
+        **kwargs: Unpack[aj.GameObjectKwargs],
     ) -> None:
         super().__init__(x, y, **kwargs)
         self.points: list[Point] = points
@@ -193,10 +199,14 @@ class SpinningCube(aj.GameObject):
     def draw(self) -> None:
         super().draw()
         fps_label = f"FPS: {aj.fps_real:.1f}"
-        aj.draw_text(aj.room_width - aj.text_width(fps_label) - 10, 10, fps_label, aj.c_gray)
+        aj.draw_text(
+            aj.room_width - aj.text_width(fps_label) - 10, 10, fps_label, aj.c_gray
+        )
         aj.draw_text(10, 10, "LMB: rotate cube")
         aj.draw_text(10, 30, "Mouse wheel: zoom")
-        aj.draw_text(10, 50, "Space: friction " + ("off" if self.friction_enabled else "on"))
+        aj.draw_text(
+            10, 50, "Space: friction " + ("off" if self.friction_enabled else "on")
+        )
         for point in sorted(self.points, key=lambda p: p.z, reverse=True):
             self.draw_point(*point)
 

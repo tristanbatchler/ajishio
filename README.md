@@ -37,11 +37,15 @@
 
 ## Quick Links
 
-- API map: [docs/api.md](docs/api.md)
-- Docs landing page: [docs/index.md](docs/index.md)
-- Demo list: [docs/demo-projects.md](docs/demo-projects.md)
-- Platformer reference demo: [demo_projects/platformer/main.py](demo_projects/platformer/main.py)
-- Multiplayer reference demo: [demo_projects/multiplayerv2/client/main.py](demo_projects/multiplayerv2/client/main.py)
+| What | Where |
+| --- | --- |
+| Public API reference | [docs/api.md](docs/api.md) |
+| Docs landing page | [docs/index.md](docs/index.md) |
+| Demo list | [docs/demo-projects.md](docs/demo-projects.md) |
+| Best single-player example | [demo_projects/platformer/main.py](demo_projects/platformer/main.py) |
+| Best networking example | [demo_projects/multiplayerv2/client/main.py](demo_projects/multiplayerv2/client/main.py) |
+| Browser export helper | [pygbag_export.py](pygbag_export.py) |
+| Contributor workflow | [docs/contributing.md](docs/contributing.md) |
 
 ## Why Ajishio
 
@@ -76,6 +80,18 @@ uv sync
 uv run -m demo_projects.hello_world.main
 ```
 
+<details>
+<summary><strong>More demo launch commands</strong></summary>
+
+```bash
+uv run -m demo_projects.platformer.main
+uv run -m demo_projects.pong.main
+uv run -m demo_projects.sokoban.main
+uv run -m demo_projects.multiplayerv2.client.main
+```
+
+</details>
+
 ### 3) Build your own minimal game
 
 ```python
@@ -97,6 +113,9 @@ Try one of the larger examples:
 ```bash
 uv run -m demo_projects.platformer.main
 ```
+
+> [!IMPORTANT]
+> Use `import ajishio as aj` in your game code. The top-level `ajishio` namespace is the intended public API facade.
 
 ## Demo Showcase
 
@@ -141,6 +160,15 @@ uv run pygbag_export.py demo_projects/platformer
 ```
 
 The build artifacts are generated under the demo's `_web_build/` directory.
+
+<details>
+<summary><strong>Build-only mode (skip local server)</strong></summary>
+
+```bash
+uv run pygbag_export.py demo_projects/platformer --build
+```
+
+</details>
 
 ## Project Layout
 

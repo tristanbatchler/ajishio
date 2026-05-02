@@ -59,8 +59,8 @@ but with modern Python ergonomics.
 - Practical examples in `demo_projects/` that are meant to be copied and hacked
 
 The name "Ajishio" is a reference to
-[Noboru Yamaguchi](https://cromartiehigh.fandom.com/wiki/Noboru_Yamaguchi), because every game engine
-needs at least one strange piece of lore.
+[Noboru Yamaguchi](https://cromartiehigh.fandom.com/wiki/Noboru_Yamaguchi), the greatest comedian 
+in all of Japan. There's no other reason.
 
 ## Quick Start
 
@@ -120,7 +120,7 @@ uv run -m demo_projects.platformer.main
 ## Demo Showcase
 
 Ajishio ships with multiple complete demos for platformers, puzzle games, arcade clones, and
-multiplayer experiments.
+event a multiplayer example.
 
 <p align="center">
 	<img src=".github/assets/demo_previews/platformer/platformer.gif" width="48%" alt="Platformer preview" />

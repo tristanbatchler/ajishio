@@ -1402,7 +1402,7 @@ uv run pygbag_export.py demo_projects/sokoban --build --archive
 <li>Patches the copied <code>main.py</code> for the browser:<ul>
 <li>Adds <code>import pygame</code> so pygbag downloads the pygame-ce WebAssembly wheel</li>
 <li>Adds <code>import asyncio</code> if not already present</li>
-<li>Swaps <code>aj.game_start()</code> → <code>asyncio.run(aj.async_game_start())</code> so the game loop yields
+<li>Swaps <code>aj.game_start()</code> → <code>asyncio.run(aj.game_start_async())</code> so the game loop yields
   to the browser every frame</li>
 </ul>
 </li>

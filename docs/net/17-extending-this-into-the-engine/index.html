@@ -1444,7 +1444,7 @@ stubPath = &quot;ajishio/typings&quot;
 <p>The three platform helpers (<code>should_exit</code>, <code>sleep0</code>, <code>run_task</code>) and the
 <code>_IS_BROWSER</code> flag are the natural seam.  The engine already has a game loop;
 the browser version needs to yield via <code>aio.sleep(0)</code> on every frame.  The
-async game loop in <code>aj.async_game_start()</code> is already set up for this.</p>
+async game loop in <code>aj.game_start_async()</code> is already set up for this.</p>
 <h3 id="optional-transport-abstraction">Optional transport abstraction</h3>
 <p>Consider extracting a <code>Protocol</code> that <code>Transport</code> (or its successors)
 implement.  This would let the engine define the interface without depending

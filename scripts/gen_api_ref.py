@@ -1,10 +1,27 @@
 #!/usr/bin/env python3
-"""Generate api.md from ajishio's __all__ exports, linking to original definitions."""
+"""Generate docs/api.md from ajishio's public facade exports."""
 
+from __future__ import annotations
+
+import argparse
+import importlib
 import inspect
-import mkdocs_gen_files
+import os
+import sys
+from pathlib import Path
+from types import ModuleType
 
-import ajishio
+try:
+    import mkdocs_gen_files
+except ImportError:  # pragma: no cover - optional during normal Python runs
+    mkdocs_gen_files = None  # type: ignore[assignment]
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+DOCS_API_PATH = REPO_ROOT / "docs" / "api.md"
+
+GENERATED_BANNER = (
+    "<!-- AUTO-GENERATED: do not edit manually. Run `uv run python scripts/gen_api_ref.py`. -->"
+)
 
 # Mapping from module names to section titles
 SECTION_MAP = {
@@ -68,8 +85,29 @@ def get_original_definition(obj: object) -> str | None:
     return None
 
 
+def _load_ajishio_for_introspection() -> ModuleType:
+    """Import ajishio with runtime exports available for accurate API introspection."""
+    old_docs_mode = os.environ.pop("AJISHIO_DOCS", None)
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+
+    try:
+        if "ajishio" in sys.modules:
+            module = importlib.reload(sys.modules["ajishio"])
+        else:
+            module = importlib.import_module("ajishio")
+    finally:
+        if old_docs_mode is not None:
+            os.environ["AJISHIO_DOCS"] = old_docs_mode
+
+    return module
+
+
 def generate_api_md() -> str:
+    ajishio = _load_ajishio_for_introspection()
+
     lines: list[str] = []
+    lines.append(GENERATED_BANNER)
+    lines.append("")
     lines.append("# API Reference")
     lines.append("")
     lines.append(
@@ -120,7 +158,12 @@ def generate_api_md() -> str:
         lines.append("")
 
     # Handle any uncategorized
-    other = grouped.get("other", [])
+    uncategorized: list[tuple[str, object]] = []
+    for mod, values in grouped.items():
+        if mod not in order:
+            uncategorized.extend(values)
+
+    other = uncategorized
     if other:
         lines.append("## Other")
         lines.append("")
@@ -131,11 +174,50 @@ def generate_api_md() -> str:
                 lines.append(f"    # Alias: `aj.{name}`")
             else:
                 lines.append(f"::: ajishio.{name}")
+        lines.append("")
 
     return "\n".join(lines)
 
 
-with mkdocs_gen_files.open("api.md", "w") as f:  # pyright: ignore[reportAny]
-    f.write(generate_api_md())  # pyright: ignore[reportAny]
+def _write_via_mkdocs(text: str) -> None:
+    assert mkdocs_gen_files is not None
+    with mkdocs_gen_files.open("api.md", "w") as f:  # pyright: ignore[reportAny]
+        f.write(text)  # pyright: ignore[reportAny]
+    mkdocs_gen_files.set_edit_path("api.md", "scripts/gen_api_ref.py")  # pyright: ignore[reportAny]
 
-mkdocs_gen_files.set_edit_path("api.md", "scripts/gen_api_ref.py")  # pyright: ignore[reportAny]
+
+def _is_mkdocs_run() -> bool:
+    return mkdocs_gen_files is not None and "MKDOCS_CONFIG_FILE" in os.environ
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Generate docs/api.md from ajishio exports")
+    _ = parser.add_argument(
+        "--check", action="store_true", help="Fail if docs/api.md is out of date"
+    )
+    _ = parser.add_argument("--stdout", action="store_true", help="Print generated markdown")
+    args = parser.parse_args()
+
+    text = generate_api_md()
+
+    if _is_mkdocs_run():
+        _write_via_mkdocs(text)
+        return
+
+    if args.stdout:
+        print(text)
+        return
+
+    if args.check:
+        existing = DOCS_API_PATH.read_text() if DOCS_API_PATH.exists() else ""
+        if existing != text:
+            raise SystemExit(
+                "docs/api.md is out of date. Run `uv run python scripts/gen_api_ref.py`."
+            )
+        return
+
+    DOCS_API_PATH.write_text(text)
+
+
+if __name__ == "__main__":
+    main()

@@ -40,6 +40,10 @@ Your default goal is to make pragmatic, typed, demo-friendly changes quickly whi
   - `AJISHIO_DOCS=1 uv run mkdocs serve`
 - Build static docs:
   - `AJISHIO_DOCS=1 uv run mkdocs build --clean`
+- Regenerate API reference page:
+  - `uv run python scripts/gen_api_ref.py`
+- Check API reference is up to date (CI parity):
+  - `uv run python scripts/gen_api_ref.py --check`
 - Export a demo to web via pygbag wrapper:
   - `uv run pygbag_export.py demo_projects/<demo_name>`
 

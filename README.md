@@ -10,7 +10,6 @@
 </p>
 
 <p align="center">
-	<a href="#quick-links">Quick Links</a> •
 	<a href="#why-ajishio">Why Ajishio</a> •
 	<a href="#quick-start">Quick Start</a> •
 	<a href="#demo-showcase">Demo Showcase</a> •
@@ -34,18 +33,6 @@
 </p>
 
 ---
-
-## Quick Links
-
-| What | Where |
-| --- | --- |
-| Public API reference | [docs/api.md](docs/api.md) |
-| Docs landing page | [docs/index.md](docs/index.md) |
-| Demo list | [docs/demo-projects.md](docs/demo-projects.md) |
-| Best single-player example | [demo_projects/platformer/main.py](demo_projects/platformer/main.py) |
-| Best networking example | [demo_projects/multiplayerv2/client/main.py](demo_projects/multiplayerv2/client/main.py) |
-| Browser export helper | [pygbag_export.py](pygbag_export.py) |
-| Contributor workflow | [docs/contributing.md](docs/contributing.md) |
 
 ## Why Ajishio
 
@@ -94,6 +81,8 @@ uv run -m demo_projects.multiplayerv2.client.main
 
 ### 3) Build your own minimal game
 
+Create `your_project/main.py` (the `main.py` is actually important if you want to export to web later):
+
 ```python
 import ajishio as aj
 
@@ -113,9 +102,6 @@ Try one of the larger examples:
 ```bash
 uv run -m demo_projects.platformer.main
 ```
-
-> [!IMPORTANT]
-> Use `import ajishio as aj` in your game code. The top-level `ajishio` namespace is the intended public API facade.
 
 ## Demo Showcase
 
@@ -141,16 +127,6 @@ uv run -m demo_projects.sokoban.main
 - Play browser versions instantly:
 	[Web Demos](https://tristanbatchler.github.io/ajishio/docs/demo-projects/)
 
-## Documentation
-
-- Full docs: [tristanbatchler.github.io/ajishio/docs](https://tristanbatchler.github.io/ajishio/docs/)
-- API overview: [docs/api.md](docs/api.md)
-- Rooms and LDtk loading: [docs/rooms.md](docs/rooms.md)
-- Sprites and animation pipeline: [docs/sprites.md](docs/sprites.md)
-- Networking docs: [docs/net/index.md](docs/net/index.md)
-- VS Code workflow tips: [docs/vs-code.md](docs/vs-code.md)
-- Profiling guide: [docs/profiling.md](docs/profiling.md)
-
 ## Web Export
 
 Export any demo to a playable browser build with pygbag:
@@ -170,16 +146,21 @@ uv run pygbag_export.py demo_projects/platformer --build
 
 </details>
 
-## Project Layout
 
-```text
-ajishio/
-├── ajishio/src/ajishio/      # Engine package
-├── demo_projects/            # Runnable demos and examples
-├── docs/                     # Documentation source (MkDocs)
-├── site/                     # Generated static docs
-└── pygbag_export.py          # Web export helper
+## Documentation
+
+View the full documentation online:
+[https://tristanbatchler.github.io/ajishio/docs/](https://tristanbatchler.github.io/ajishio/docs/)
+
+If you're just looking for the API reference, it's available as a single page here:
+[https://tristanbatchler.github.io/ajishio/docs/api/](https://tristanbatchler.github.io/ajishio/docs/api/)
+
+The API page is auto-generated from the public `ajishio` facade. To refresh it locally:
+
+```bash
+uv run python scripts/gen_api_ref.py
 ```
+
 
 ## Roadmap
 

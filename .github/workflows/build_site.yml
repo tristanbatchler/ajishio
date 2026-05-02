@@ -22,6 +22,12 @@ jobs:
       - name: Install dependencies
         run: uv sync --group dev
 
+      - name: Verify generated API reference
+        env:
+          AJISHIO_DOCS: "1"
+        run: |
+          uv run python scripts/gen_api_ref.py --check
+
       # Build MkDocs documentation into site/
       - name: Build MkDocs documentation
         env:

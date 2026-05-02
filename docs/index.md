@@ -2,6 +2,9 @@
 
 A fun, GameMaker-inspired 2D game engine built on pygame-ce for making unserious games quickly.
 
+The API reference page is generated from the public `ajishio` namespace exports, not maintained
+manually.
+
 ```python
 import ajishio as aj
 

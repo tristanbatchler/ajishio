@@ -1,3 +1,5 @@
+<!-- AUTO-GENERATED: do not edit manually. Run `uv run python scripts/gen_api_ref.py`. -->
+
 # API Reference
 
 This page documents the public `aj.` namespace. All functions and classes listed here are available directly from `ajishio`.
@@ -9,8 +11,6 @@ This page documents the public `aj.` namespace. All functions and classes listed
 
 ## Engine Control
 
-::: ajishio.engine.Engine.game_start_async
-    # Alias: `aj.game_start_async`
 ::: ajishio.engine.Engine.audio_is_playing
     # Alias: `aj.audio_is_playing`
 ::: ajishio.engine.Engine.audio_play_sound
@@ -27,6 +27,8 @@ This page documents the public `aj.` namespace. All functions and classes listed
     # Alias: `aj.game_set_speed`
 ::: ajishio.engine.Engine.game_start
     # Alias: `aj.game_start`
+::: ajishio.engine.Engine.game_start_async
+    # Alias: `aj.game_start_async`
 ::: ajishio.engine.Engine.instance_count
     # Alias: `aj.instance_count`
 ::: ajishio.engine.Engine.instance_destroy
@@ -181,6 +183,12 @@ This page documents the public `aj.` namespace. All functions and classes listed
 
 ## Other
 
+::: pygame.color.Color
+    # Alias: `aj.Color`
+::: pygame.font.Font
+    # Alias: `aj.Font`
+::: ajishio.net.GameNetClient
+    # Alias: `aj.GameNetClient`
 ::: ajishio.c_aqua
 ::: ajishio.c_black
 ::: ajishio.c_blue

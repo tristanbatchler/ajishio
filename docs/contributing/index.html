@@ -1229,6 +1229,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#api-reference-generation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        API reference generation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#running-docs-locally" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1236,6 +1247,23 @@
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Running docs locally">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#why-ci-does-not-open-a-pygame-window" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why CI does not open a pygame window
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1274,6 +1302,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#api-reference-generation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        API reference generation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#running-docs-locally" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1281,6 +1320,23 @@
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Running docs locally">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#why-ci-does-not-open-a-pygame-window" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why CI does not open a pygame window
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1302,6 +1358,17 @@
 
 
 <h1 id="contributing-local-docs">Contributing &amp; Local Docs</h1>
+<h2 id="api-reference-generation">API reference generation</h2>
+<p>The API reference page at <a href="docs/api.md">docs/api.md</a> is generated automatically from the
+public <code>ajishio</code> facade exports (<code>ajishio.__all__</code>) by
+<a href="../scripts/gen_api_ref.py">scripts/gen_api_ref.py</a>.</p>
+<p>Do not edit <a href="docs/api.md">docs/api.md</a> by hand.</p>
+<p>Regenerate locally:</p>
+<pre><code class="language-bash">uv run python scripts/gen_api_ref.py
+</code></pre>
+<p>Verify it is up to date (used by CI):</p>
+<pre><code class="language-bash">uv run python scripts/gen_api_ref.py --check
+</code></pre>
 <h2 id="running-docs-locally">Running docs locally</h2>
 <p>API docs are generated from the <code>ajishio</code> source using
 <a href="https://squidfunk.github.io/mkdocs-material/">MkDocs Material</a>. Because <code>gen_api_ref.py</code> imports
@@ -1313,6 +1380,14 @@ variable must be set so the engine skips pygame initialisation:</p>
 <pre><code class="language-bash">AJISHIO_DOCS=1 uv run mkdocs build --clean
 </code></pre>
 <p>The generated site is written to <code>site/</code>.</p>
+<h3 id="why-ci-does-not-open-a-pygame-window">Why CI does not open a pygame window</h3>
+<p>The API generator imports <code>ajishio</code> for introspection, but it forces a headless SDL backend
+(<code>SDL_VIDEODRIVER=dummy</code>) during that import. This allows pygame initialization to succeed in CI
+without creating a real window.</p>
+<p>The docs workflow also runs:</p>
+<pre><code class="language-bash">uv run python scripts/gen_api_ref.py --check
+</code></pre>
+<p>before MkDocs build, so documentation deploy fails if <a href="docs/api.md">docs/api.md</a> is stale.</p>
 
 
 

@@ -87,15 +87,22 @@ class Renderer:
         for bg in self._background_images:
             _ = self.display.blit(bg, view.offset)
 
-    def draw_circle(
-        self, x: float, y: float, radius: float, color: pg.Color | None = None
-    ) -> None:
+    def draw_circle(self, x: float, y: float, radius: float, color: pg.Color | None = None) -> None:
         x, y = _translate_offset(x, y)
         _ = pg.draw.circle(
             self.display,
             self.draw_color if color is None else color,
             (x, y),
             radius,
+        )
+
+    def draw_point(self, x: float, y: float, color: pg.Color | None = None) -> None:
+        x, y = _translate_offset(x, y)
+        _ = pg.draw.line(
+            self.display,
+            self.draw_color if color is None else color,
+            (x, y),
+            (x, y),
         )
 
     def draw_rectangle(
@@ -134,8 +141,7 @@ class Renderer:
         """
         With this function you can draw either an outline of a triangle or a filled triangle. If it
         is filled you can define the individual colours for each corner point and if these colours
-        are not the same, you will get a gradient effect from one to the other (the colour settings
-        will over-ride the base colour set with the function `draw_set_color()`).
+        are not the same, you will get a gradient effect from one to the other.
         """
         x1, y1 = _translate_offset(x1, y1)
         x2, y2 = _translate_offset(x2, y2)
@@ -239,9 +245,7 @@ class Renderer:
             (x2, y2),
         )
 
-    def draw_text(
-        self, x: float, y: float, string: str, color: pg.Color | None = None
-    ) -> None:
+    def draw_text(self, x: float, y: float, string: str, color: pg.Color | None = None) -> None:
         x, y = _translate_offset(x, y)
         surface = self._render_text_with_fallback(
             string, self.draw_color if color is None else color
@@ -273,14 +277,10 @@ class Renderer:
         scale_y_abs: float = abs(y_scale)
 
         offset_x: float = (
-            sprite_index.x_offset
-            if x_scale >= 0
-            else sprite_index.width - sprite_index.x_offset
+            sprite_index.x_offset if x_scale >= 0 else sprite_index.width - sprite_index.x_offset
         )
         offset_y: float = (
-            sprite_index.y_offset
-            if y_scale >= 0
-            else sprite_index.height - sprite_index.y_offset
+            sprite_index.y_offset if y_scale >= 0 else sprite_index.height - sprite_index.y_offset
         )
 
         draw_x: float = x - offset_x * scale_x_abs

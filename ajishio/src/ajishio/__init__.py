@@ -121,6 +121,7 @@ _ctx.engine = _engine
 draw_circle = _renderer.draw_circle
 draw_rectangle = _renderer.draw_rectangle
 draw_triangle = _renderer.draw_triangle
+draw_point = _renderer.draw_point
 draw_line = _renderer.draw_line
 draw_text = _renderer.draw_text
 draw_sprite = _renderer.draw_sprite
@@ -297,6 +298,7 @@ __all__ = [
     "draw_circle",
     "draw_rectangle",
     "draw_triangle",
+    "draw_point",
     "draw_line",
     "draw_text",
     "draw_sprite",

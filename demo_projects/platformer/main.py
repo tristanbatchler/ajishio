@@ -318,8 +318,8 @@ def main() -> None:
     aj.register_objects(Floor, Player, Camera, Enemy, Coin, Doorway)
 
     aj.room_set_caption("Platformer")
-    # aspect_ratio: float = levels[0].level_size[0] / levels[0].level_size[1]
-    # aj.window_set_size(960, int(960 / aspect_ratio))
+    aspect_ratio: float = levels[0].level_size[0] / levels[0].level_size[1]
+    aj.window_set_size(960, int(960 / aspect_ratio))
 
     aj.room_set_background(aj.Color(135, 206, 235))
 

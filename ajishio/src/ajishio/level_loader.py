@@ -12,6 +12,12 @@ from ajishio.types import Entity, GameLevel
 type EntitiesByType = dict[str, Sequence[Entity]]
 
 
+def _is_ldtk_helper_layer(layer_name: str) -> bool:
+    """Return True for LDtk helper layers that should not spawn engine objects."""
+    normalized = layer_name.casefold()
+    return normalized == "intgrid" or normalized.endswith("-int")
+
+
 class RawLevelInfo(TypedDict):
     width: int
     height: int
@@ -20,9 +26,7 @@ class RawLevelInfo(TypedDict):
 
 
 def load_ldtk_levels(ldtk_super_simple_export_simplified_path: Path) -> list[GameLevel]:
-    alphabetical_level_dirs: list[Path] = sorted(
-        ldtk_super_simple_export_simplified_path.iterdir()
-    )
+    alphabetical_level_dirs: list[Path] = sorted(ldtk_super_simple_export_simplified_path.iterdir())
     return [load_ldtk(level_dir) for level_dir in alphabetical_level_dirs]
 
 
@@ -39,23 +43,27 @@ def load_ldtk(level_dir: Path) -> GameLevel:
     # Get the size of this level
     level_size: tuple[int, int] = (level_info["width"], level_info["height"])
 
-    layers: list[str] = [
-        remove_ext(layer_filename) for layer_filename in level_info["layers"]
-    ]
+    layers: list[str] = [remove_ext(layer_filename) for layer_filename in level_info["layers"]]
     for layer in layers:
+        # LDtk IntGrid helper layers are used by auto-layer rules and are not gameplay objects.
+        if _is_ldtk_helper_layer(layer):
+            continue
+
         # Get the background surface for this layer
         with open(level_dir / f"{layer}.png", "rb") as f:
             background_surfaces[layer] = pg.image.load(f)
 
         # Get the tilemap data for this layer
         tilemap: list[list[bool]] = []
-        with open(level_dir / f"{layer}.csv", "r") as f:
-            reader = csv.reader(f)
-            for raw_row in reader:
-                # LDTK's simplified export includes a trailing comma, so drop empty cells
-                row: list[str] = [cell for cell in raw_row if cell != ""]
-                tilemap.append([bool(int(cell)) for cell in row])
-
+        try:
+            with open(level_dir / f"{layer}.csv", "r") as f:
+                reader = csv.reader(f)
+                for raw_row in reader:
+                    # LDTK's simplified export includes a trailing comma, so drop empty cells
+                    row: list[str] = [cell for cell in raw_row if cell != ""]
+                    tilemap.append([bool(int(cell)) for cell in row])
+        except FileNotFoundError:
+            continue
         # Ensure consistent row widths so placement math stays aligned
         unique_widths: set[int] = {len(r) for r in tilemap}
         if len(unique_widths) != 1:
@@ -68,6 +76,4 @@ def load_ldtk(level_dir: Path) -> GameLevel:
         tile_size = (level_size[0] // len(tilemap[0]), level_size[1] // len(tilemap))
         tile_sizes[layer] = tile_size
 
-    return GameLevel(
-        tilemaps, tile_sizes, background_surfaces, level_size, level_info["entities"]
-    )
+    return GameLevel(tilemaps, tile_sizes, background_surfaces, level_size, level_info["entities"])

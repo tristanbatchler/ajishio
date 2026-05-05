@@ -7198,10 +7198,62 @@ the object in another part of the room, or even for adding points to a score.</p
 </h2>
 <div class="doc-signature highlight"><pre><span></span><code><span class="nf">load_ldtk_levels</span><span class="p">(</span>
     <span class="n">ldtk_super_simple_export_simplified_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">cosmetic_layers</span><span class="p">:</span> <span class="n">Collection</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">GameLevel</span><span class="p">]</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
+
+        <p>Load all LDtk super-simple levels in a simplified export directory.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>ldtk_super_simple_export_simplified_path</code>
+            </td>
+            <td>
+                  <code><span title="pathlib.Path">Path</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Path to LDtk's <code>simplified/</code> folder.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>cosmetic_layers</code>
+            </td>
+            <td>
+                  <code><span title="collections.abc.Collection">Collection</span>[<span title="str">str</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Layer names that should render from <code>.png</code> only and skip
+object spawning from <code>.csv</code> data.</p>
+              </div>
+            </td>
+            <td>
+                  <code>()</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
 
     </div>

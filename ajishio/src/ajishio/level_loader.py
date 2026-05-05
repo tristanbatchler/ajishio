@@ -1,4 +1,4 @@
-from collections.abc import Sequence
+from collections.abc import Collection, Sequence
 import csv
 import json
 from pathlib import Path
@@ -12,10 +12,8 @@ from ajishio.types import Entity, GameLevel
 type EntitiesByType = dict[str, Sequence[Entity]]
 
 
-def _is_ldtk_helper_layer(layer_name: str) -> bool:
-    """Return True for LDtk helper layers that should not spawn engine objects."""
-    normalized = layer_name.casefold()
-    return normalized == "intgrid" or normalized.endswith("-int")
+def _normalize_layer_name_set(layer_names: Collection[str]) -> set[str]:
+    return {layer_name.casefold() for layer_name in layer_names}
 
 
 class RawLevelInfo(TypedDict):
@@ -25,15 +23,39 @@ class RawLevelInfo(TypedDict):
     entities: EntitiesByType
 
 
-def load_ldtk_levels(ldtk_super_simple_export_simplified_path: Path) -> list[GameLevel]:
+def load_ldtk_levels(
+    ldtk_super_simple_export_simplified_path: Path,
+    *,
+    cosmetic_layers: Collection[str] = (),
+) -> list[GameLevel]:
+    """Load all LDtk super-simple levels in a simplified export directory.
+
+    Args:
+        ldtk_super_simple_export_simplified_path: Path to LDtk's ``simplified/`` folder.
+        cosmetic_layers: Layer names that should render from ``.png`` only and skip
+            object spawning from ``.csv`` data.
+    """
     alphabetical_level_dirs: list[Path] = sorted(ldtk_super_simple_export_simplified_path.iterdir())
-    return [load_ldtk(level_dir) for level_dir in alphabetical_level_dirs]
+    normalized_cosmetic_layers = _normalize_layer_name_set(cosmetic_layers)
+    return [
+        load_ldtk(
+            level_dir,
+            cosmetic_layers=normalized_cosmetic_layers,
+        )
+        for level_dir in alphabetical_level_dirs
+    ]
 
 
-def load_ldtk(level_dir: Path) -> GameLevel:
+def load_ldtk(
+    level_dir: Path,
+    *,
+    cosmetic_layers: Collection[str] = (),
+) -> GameLevel:
+    """Load one LDtk super-simple level directory into a ``GameLevel``."""
     tilemaps: dict[str, list[list[bool]]] = {}
     tile_sizes: dict[str, tuple[int, int]] = {}
     background_surfaces: dict[str, pg.Surface] = {}
+    normalized_cosmetic_layers = _normalize_layer_name_set(cosmetic_layers)
 
     level_info: RawLevelInfo = cast(
         RawLevelInfo,
@@ -45,13 +67,13 @@ def load_ldtk(level_dir: Path) -> GameLevel:
 
     layers: list[str] = [remove_ext(layer_filename) for layer_filename in level_info["layers"]]
     for layer in layers:
-        # LDtk IntGrid helper layers are used by auto-layer rules and are not gameplay objects.
-        if _is_ldtk_helper_layer(layer):
-            continue
-
         # Get the background surface for this layer
         with open(level_dir / f"{layer}.png", "rb") as f:
             background_surfaces[layer] = pg.image.load(f)
+
+        # Cosmetic layers draw from PNG only and intentionally do not spawn objects from CSV.
+        if layer.casefold() in normalized_cosmetic_layers:
+            continue
 
         # Get the tilemap data for this layer
         tilemap: list[list[bool]] = []
@@ -64,12 +86,17 @@ def load_ldtk(level_dir: Path) -> GameLevel:
                     tilemap.append([bool(int(cell)) for cell in row])
         except FileNotFoundError:
             continue
+
         # Ensure consistent row widths so placement math stays aligned
         unique_widths: set[int] = {len(r) for r in tilemap}
         if len(unique_widths) != 1:
             raise ValueError(
                 f"Inconsistent row widths in tilemap for layer {layer}: {unique_widths}"
             )
+
+        # Skip storing empty tilemaps so no object lookup/spawn work is done later.
+        if not any(any(row) for row in tilemap):
+            continue
         tilemaps[layer] = tilemap
 
         # Get the tile size for this layer

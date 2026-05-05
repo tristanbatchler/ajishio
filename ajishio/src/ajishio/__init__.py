@@ -92,6 +92,7 @@ from ajishio.rendering import (
 from ajishio.sprite_loader import (
     load_aseprite_sprites,
     load_aseprite_sprite,
+    load_sprite_from_sheet,
     sprite_set_offset,
 )
 from ajishio.sound_loader import load_sounds, load_sound
@@ -318,6 +319,7 @@ __all__ = [
     # Loaders
     "load_aseprite_sprites",
     "load_aseprite_sprite",
+    "load_sprite_from_sheet",
     "sprite_set_offset",
     "load_sounds",
     "load_sound",

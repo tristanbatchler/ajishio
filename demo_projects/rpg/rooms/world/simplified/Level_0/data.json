@@ -17,5 +17,19 @@
 		"Background.png",
 		"FloorIntGrid.png"
 	],
-	"entities" : {}
+	"entities": {
+		"Player": [
+			{
+				"id": "Player",
+				"iid": "a6008fb0-48b0-11f1-8dcc-cd01b0684988",
+				"layer": "Entities",
+				"x": 48,
+				"y": 112,
+				"width": 48,
+				"height": 48,
+				"color": 16777215,
+				"customFields" : {}
+			}
+		]
+	}
 }

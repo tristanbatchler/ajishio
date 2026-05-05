@@ -69,7 +69,10 @@ class Engine:
         logging.basicConfig(level=logging.DEBUG)
 
     def set_rooms(self, rooms: list[GameLevel]) -> None:
+        if len(rooms) == 0:
+            raise ValueError("At least one room must be provided to start the game.")
         self._rooms = rooms
+        self.room_set_size(*rooms[0].level_size)
 
     def register_objects(self, *objects: type[IGameObject]) -> None:
         for obj in objects:

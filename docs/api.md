@@ -163,6 +163,8 @@ This page documents the public `aj.` namespace. All functions and classes listed
     # Alias: `aj.load_aseprite_sprite`
 ::: ajishio.sprite_loader.load_aseprite_sprites
     # Alias: `aj.load_aseprite_sprites`
+::: ajishio.sprite_loader.load_sprite_from_sheet
+    # Alias: `aj.load_sprite_from_sheet`
 ::: ajishio.sprite_loader.sprite_set_offset
     # Alias: `aj.sprite_set_offset`
 

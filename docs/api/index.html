@@ -1606,6 +1606,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#ajishio.rendering.Renderer.draw_ellipse" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        draw_ellipse
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#ajishio.rendering.Renderer.draw_line" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3769,6 +3780,17 @@
     <span class="md-ellipsis">
       
         draw_circle
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ajishio.rendering.Renderer.draw_ellipse" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        draw_ellipse
       
     </span>
   </a>
@@ -6184,10 +6206,39 @@ useful for doing something to all instances of an object in a loop.</p>
     <span class="n">y</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
     <span class="n">radius</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
     <span class="n">color</span><span class="p">:</span> <span class="n">Color</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="ajishio.rendering.Renderer.draw_ellipse" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">ajishio.rendering.Renderer.draw_ellipse</span>
+
+
+</h2>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">draw_ellipse</span><span class="p">(</span>
+    <span class="n">x1</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">y1</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">x2</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">y2</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">color</span><span class="p">:</span> <span class="n">Color</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents first">
+
+        <p>With this function you can draw a filled ellipse by defining a rectangular area that will
+then have the ellipse created to fit.</p>
 
 
     </div>
@@ -6208,6 +6259,7 @@ useful for doing something to all instances of an object in a loop.</p>
     <span class="n">x2</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
     <span class="n">y2</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
     <span class="n">color</span><span class="p">:</span> <span class="n">Color</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </code></pre></div>
 
@@ -6227,7 +6279,10 @@ useful for doing something to all instances of an object in a loop.</p>
 
 </h2>
 <div class="doc-signature highlight"><pre><span></span><code><span class="nf">draw_point</span><span class="p">(</span>
-    <span class="n">x</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">color</span><span class="p">:</span> <span class="n">Color</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">x</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">y</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">color</span><span class="p">:</span> <span class="n">Color</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </code></pre></div>
 
@@ -6354,6 +6409,7 @@ useful for doing something to all instances of an object in a loop.</p>
     <span class="n">col2</span><span class="p">:</span> <span class="n">Color</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">col3</span><span class="p">:</span> <span class="n">Color</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">outline</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </code></pre></div>
 

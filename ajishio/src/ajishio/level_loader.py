@@ -65,27 +65,30 @@ def load_ldtk(
     # Get the size of this level
     level_size: tuple[int, int] = (level_info["width"], level_info["height"])
 
-    layers: list[str] = [remove_ext(layer_filename) for layer_filename in level_info["layers"]]
-    for layer in layers:
+    png_layers: list[str] = [remove_ext(layer_filename) for layer_filename in level_info["layers"]]
+    for layer in png_layers:
         # Get the background surface for this layer
         with open(level_dir / f"{layer}.png", "rb") as f:
             background_surfaces[layer] = pg.image.load(f)
 
+    # IntGrid/auto layers can export CSV without being listed in `layers`.
+    # Load any CSV layer present in the directory so object spawning is consistent.
+    csv_layers: list[str] = sorted(
+        remove_ext(csv_path.name) for csv_path in level_dir.glob("*.csv")
+    )
+    for layer in csv_layers:
         # Cosmetic layers draw from PNG only and intentionally do not spawn objects from CSV.
         if layer.casefold() in normalized_cosmetic_layers:
             continue
 
         # Get the tilemap data for this layer
         tilemap: list[list[bool]] = []
-        try:
-            with open(level_dir / f"{layer}.csv", "r") as f:
-                reader = csv.reader(f)
-                for raw_row in reader:
-                    # LDTK's simplified export includes a trailing comma, so drop empty cells
-                    row: list[str] = [cell for cell in raw_row if cell != ""]
-                    tilemap.append([bool(int(cell)) for cell in row])
-        except FileNotFoundError:
-            continue
+        with open(level_dir / f"{layer}.csv", "r") as f:
+            reader = csv.reader(f)
+            for raw_row in reader:
+                # LDTK's simplified export includes a trailing comma, so drop empty cells
+                row: list[str] = [cell for cell in raw_row if cell != ""]
+                tilemap.append([bool(int(cell)) for cell in row])
 
         # Ensure consistent row widths so placement math stays aligned
         unique_widths: set[int] = {len(r) for r in tilemap}

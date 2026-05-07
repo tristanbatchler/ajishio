@@ -15,7 +15,8 @@
 	"customFields" : {},
 	"layers": [
 		"Background.png",
-		"FloorIntGrid.png"
+		"FloorIntGrid.png",
+		"Walls.png"
 	],
 	"entities": {
 		"Player": [

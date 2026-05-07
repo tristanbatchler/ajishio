@@ -31,10 +31,10 @@ class MessageBox(aj.GameObject):
 
         # Draw a semi-transparent background
         aj.draw_rectangle(
-            x - 10,
-            y - 10,
-            text_width + 20,
-            text_height + 20,
+            x1=x - 10,
+            y1=y - 10,
+            x2=x + text_width + 10,
+            y2=y + text_height + 10,
             color=aj.c_black,
             alpha=0.5,
         )
@@ -120,11 +120,13 @@ class Player(aj.GameObject):
 class Wall(aj.GameObject):
     @override
     def draw(self) -> None:
+        x = self.x * level.grid_size
+        y = self.y * level.grid_size
         aj.draw_rectangle(
-            self.x * level.grid_size,
-            self.y * level.grid_size,
-            level.grid_size,
-            level.grid_size,
+            x,
+            y,
+            x + level.grid_size,
+            y + level.grid_size,
             color=aj.c_black,
         )
 
@@ -139,13 +141,13 @@ class Crate(Wall):
 
     @override
     def draw(self) -> None:
-        x = self.x * level.grid_size + level.half_grid_size
-        y = self.y * level.grid_size + level.half_grid_size
+        x = self.x * level.grid_size + level.half_grid_size * 0.2
+        y = self.y * level.grid_size + level.half_grid_size * 0.2
         aj.draw_rectangle(
-            x - level.half_grid_size * 0.8,
-            y - level.half_grid_size * 0.8,
-            level.grid_size * 0.8,
-            level.grid_size * 0.8,
+            x,
+            y,
+            x + level.grid_size * 0.6,
+            y + level.grid_size * 0.6,
             color=aj.c_aqua,
         )
 
@@ -164,11 +166,13 @@ class Crate(Wall):
 class Goal(aj.GameObject):
     @override
     def draw(self) -> None:
+        x = self.x * level.grid_size
+        y = self.y * level.grid_size
         aj.draw_rectangle(
-            self.x * level.grid_size,
-            self.y * level.grid_size,
-            level.grid_size,
-            level.grid_size,
+            x,
+            y,
+            x + level.grid_size,
+            y + level.grid_size,
             color=aj.c_red,
         )
 

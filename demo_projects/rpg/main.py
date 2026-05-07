@@ -2,7 +2,7 @@ import ajishio as aj
 from pathlib import Path
 from enum import Enum
 import math
-from typing import Literal, Unpack, final, override
+from typing import Unpack, final, override
 
 main_dir = Path(__file__).parent
 
@@ -69,17 +69,6 @@ class Solid(YSortObject):
         self.collision_mask: aj.CollisionMask | None = aj.CollisionMask(
             0, 0, self.width, self.height
         )
-
-    # @override
-    # def draw(self) -> None:
-    #     super().draw()
-    #     if self.collision_mask is not None:
-    #         x = self.x + self.collision_mask.bbleft
-    #         y = self.y + self.collision_mask.bbtop
-    #         w = self.collision_mask.bbright - self.collision_mask.bbleft
-    #         h = self.collision_mask.bbbottom - self.collision_mask.bbtop
-
-    #         aj.draw_rectangle(x, y, w, h, color=aj.c_red, alpha=0.5)
 
 
 @final
@@ -200,7 +189,6 @@ class Player(YSortObject):
     @override
     def draw(self) -> None:
         if self.collision_mask is not None:
-            y = self.y + self.collision_mask.bbtop + 1
             aj.draw_ellipse(
                 self.x + self.collision_mask.bbleft - 2,
                 self.y + self.collision_mask.bbtop + 3,

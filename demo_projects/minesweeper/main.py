@@ -49,13 +49,9 @@ class Minesweeper(aj.GameObject):
         MINE = auto()
         EXPLODED_MINE = auto()
 
-    sprite_sheet: GameSprite = aj.load_aseprite_sprite(
-        Path(__file__).parent / "sprites"
-    )
+    sprite_sheet: GameSprite = aj.load_aseprite_sprite(Path(__file__).parent / "sprites")
 
-    def __init__(
-        self, difficulty: Difficulty, **kwargs: Unpack[aj.GameObjectKwargs]
-    ) -> None:
+    def __init__(self, difficulty: Difficulty, **kwargs: Unpack[aj.GameObjectKwargs]) -> None:
         super().__init__(0, 0, **kwargs)
         aj.room_set_caption(f"{difficulty.name} Minesweeper")
         self.num_mines: int = difficulty.mines
@@ -212,20 +208,20 @@ class Minesweeper(aj.GameObject):
             )
 
         h_x, h_y = self.hovered_cell
+        x = h_x * self.cell_size
+        y = h_y * self.cell_size
         aj.draw_rectangle(
-            h_x * self.cell_size,
-            h_y * self.cell_size,
-            self.cell_size,
-            self.cell_size,
-            True,
-            aj.c_lime,
+            x1=x,
+            y1=y,
+            x2=+self.cell_size,
+            y2=y + self.cell_size,
+            outline=True,
+            color=aj.c_lime,
         )
 
 
 class MainMenu(aj.GameObject):
-    def __init__(
-        self, x: float = 0, y: float = 0, **kwargs: Unpack[aj.GameObjectKwargs]
-    ) -> None:
+    def __init__(self, x: float = 0, y: float = 0, **kwargs: Unpack[aj.GameObjectKwargs]) -> None:
         super().__init__(x, y, **kwargs)
 
         self.difficulties: list[Difficulty] = [
@@ -270,9 +266,7 @@ class MainMenu(aj.GameObject):
     def draw(self) -> None:
         x = aj.view_xport[aj.view_current] + 20
 
-        for difficulty, (y1, _) in zip(
-            self.difficulties, self.difficulties_y1_y2, strict=False
-        ):
+        for difficulty, (y1, _) in zip(self.difficulties, self.difficulties_y1_y2, strict=False):
             prefix, color = "  ", aj.c_white
             if self.difficulties[self.cursor_index] == difficulty:
                 prefix, color = "> ", aj.c_lime
@@ -282,9 +276,7 @@ class MainMenu(aj.GameObject):
 
 
 class Manager(aj.GameObject):
-    def __init__(
-        self, x: float = 0, y: float = 0, **kwargs: Unpack[aj.GameObjectKwargs]
-    ) -> None:
+    def __init__(self, x: float = 0, y: float = 0, **kwargs: Unpack[aj.GameObjectKwargs]) -> None:
         super().__init__(x, y, **kwargs)
 
         _ = MainMenu()

@@ -17,9 +17,11 @@ class PanelStyle:
 
 
 def draw_panel(x: float, y: float, w: float, h: float, style: PanelStyle) -> None:
-    aj.draw_rectangle(x, y, w, h, color=style.bg_color, alpha=style.bg_color.a / 255)
+    x2 = x + w
+    y2 = y + h
+    aj.draw_rectangle(x, y, x2, y2, color=style.bg_color, alpha=style.bg_color.a / 255)
     if style.border:
-        aj.draw_rectangle(x, y, w, h, outline=True, color=style.border_color)
+        aj.draw_rectangle(x, y, x2, y2, outline=True, color=style.border_color)
 
 
 def wrap_text(text: str, max_width: float) -> list[str]:

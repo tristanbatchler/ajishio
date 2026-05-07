@@ -40,14 +40,16 @@ class Player(aj.GameObject):
 
     @override
     def draw(self) -> None:
-        aj.draw_rectangle(self.x, self.y, Player.width, Player.height, color=aj.c_lime)
+        aj.draw_rectangle(
+            self.x, self.y, self.x + Player.width, self.y + Player.height, color=aj.c_lime
+        )
 
         fps_caption = f"FPS: {aj.fps_real:.2f}"
         aj.draw_rectangle(
-            10,
-            10,
-            aj.text_width(fps_caption) + 10,
-            aj.text_height(fps_caption) + 10,
+            x1=10,
+            y1=10,
+            x2=aj.text_width(fps_caption) + 20,
+            y2=aj.text_height(fps_caption) + 20,
             color=aj.c_black,
             alpha=0.5,
         )
@@ -55,10 +57,10 @@ class Player(aj.GameObject):
 
         lives_caption = f"Lives: {self.lives}"
         aj.draw_rectangle(
-            aj.room_width - aj.text_width(lives_caption) - 10,
-            10,
-            aj.text_width(lives_caption) + 10,
-            aj.text_height(lives_caption) + 10,
+            x1=aj.room_width - aj.text_width(lives_caption) - 10,
+            y1=10,
+            x2=aj.room_width - 10,
+            y2=aj.text_height(lives_caption) + 20,
             color=aj.c_black,
             alpha=0.5,
         )
@@ -106,7 +108,9 @@ class Enemy(aj.GameObject):
 
     @override
     def draw(self) -> None:
-        aj.draw_rectangle(self.x, self.y, Enemy.width, Enemy.height, color=aj.c_purple)
+        aj.draw_rectangle(
+            self.x, self.y, self.x + Enemy.width, self.y + Enemy.height, color=aj.c_purple
+        )
 
 
 class Bullet(aj.GameObject):
@@ -135,9 +139,7 @@ class Bullet(aj.GameObject):
             assert isinstance(player, Player)
             player.lives -= 1
 
-        elif not self.hurts_player and (
-            enemy := self.place_meeting(self.x, self.y, Enemy)
-        ):
+        elif not self.hurts_player and (enemy := self.place_meeting(self.x, self.y, Enemy)):
             aj.instance_destroy(self)
             aj.instance_destroy(enemy)
             if not aj.instance_exists(Enemy):
@@ -147,15 +149,15 @@ class Bullet(aj.GameObject):
 
     @override
     def draw(self) -> None:
-        aj.draw_rectangle(self.x, self.y, Bullet.width, Bullet.height, color=aj.c_black)
+        aj.draw_rectangle(
+            self.x, self.y, self.x + Bullet.width, self.y + Bullet.height, color=aj.c_black
+        )
 
 
 def spawn_wave(difficulty: int) -> None:
     speed = 2 ** (difficulty / 5.0)  # Gets exponentially harder each wave
     for row in range(3):
-        for enemy_x in range(
-            PADDING, int(aj.room_width) - PADDING, round(1.5 * Enemy.width)
-        ):
+        for enemy_x in range(PADDING, int(aj.room_width) - PADDING, round(1.5 * Enemy.width)):
             _ = Enemy(enemy_x, PADDING + Enemy.height * row * 1.5, x_velocity=speed)
 
 

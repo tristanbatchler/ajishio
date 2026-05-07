@@ -96,19 +96,32 @@ class Renderer:
         self,
         x: float,
         y: float,
-        radius: float,
+        r: float,
+        outline: bool = False,
         color: pg.Color | None = None,
         alpha: float = 1.0,
     ) -> None:
+        """
+        With this function you can draw either an outline of a circle or a filled circle. You can
+        define how precise the drawing is with the function `draw_set_circle_precision()`.
+
+        Args:
+            x: The x coordinate of the center of the circle.
+            y: The y coordinate of the center of the circle.
+            r: The circle's radius (length from its center to its edge)
+            outline: Whether the circle is drawn filled (false) or as a one pixel wide outline (true).
+            color: The color to draw with. If None, uses the current draw color.
+            alpha: The opacity of the circle, between 0.0 (fully transparent) and 1.0 (fully opaque).
+        """
         x, y = _translate_offset(x, y)
         draw_color = _color_with_alpha(self.draw_color if color is None else color, alpha)
 
         if alpha >= 1.0:
-            _ = pg.draw.circle(self.display, draw_color, (x, y), radius)
+            _ = pg.draw.circle(self.display, draw_color, (x, y), r, 1 if outline else 0)
             return
 
         overlay = pg.Surface(self.display.get_size(), flags=pg.SRCALPHA)
-        _ = pg.draw.circle(overlay, draw_color, (x, y), radius)
+        _ = pg.draw.circle(overlay, draw_color, (x, y), r, 1 if outline else 0)
         _ = self.display.blit(overlay, (0, 0))
 
     def draw_ellipse(
@@ -117,12 +130,23 @@ class Renderer:
         y1: float,
         x2: float,
         y2: float,
+        outline: bool = False,
         color: pg.Color | None = None,
         alpha: float = 1.0,
     ) -> None:
         """
-        With this function you can draw a filled ellipse by defining a rectangular area that will
-        then have the ellipse created to fit.
+        With this function you can draw either an outline of an ellipse or a filled ellipse by
+        defining a rectangular area that will then have the ellipse created to fit. You can define
+        how precise the drawing is with the function draw_set_circle_precision().
+
+        Args:
+            x1: The x coordinate of the left of the ellipse.
+            y1: The y coordinate of the top of the ellipse.
+            x2: The x coordinate of the right of the ellipse.
+            y2: The y coordinate of the bottom of the ellipse.
+            outline: Whether the ellipse is drawn filled (false) or as a one pixel wide outline (true).
+            color: The color to draw with. If None, uses the current draw color.
+            alpha: The opacity of the ellipse, between 0.0 (fully transparent) and 1.0 (fully opaque).
         """
         x1, y1 = _translate_offset(x1, y1)
         x2, y2 = _translate_offset(x2, y2)
@@ -130,11 +154,11 @@ class Renderer:
         draw_color = _color_with_alpha(self.draw_color if color is None else color, alpha)
 
         if alpha >= 1.0:
-            _ = pg.draw.ellipse(self.display, draw_color, rect)
+            _ = pg.draw.ellipse(self.display, draw_color, rect, 1 if outline else 0)
             return
 
         overlay = pg.Surface(self.display.get_size(), flags=pg.SRCALPHA)
-        _ = pg.draw.ellipse(overlay, draw_color, rect)
+        _ = pg.draw.ellipse(overlay, draw_color, rect, 1 if outline else 0)
         _ = self.display.blit(overlay, (0, 0))
 
     def draw_point(
@@ -153,15 +177,30 @@ class Renderer:
 
     def draw_rectangle(
         self,
-        x: float,
-        y: float,
-        width: float,
-        height: float,
+        x1: float,
+        y1: float,
+        x2: float,
+        y2: float,
         outline: bool = False,
         color: pg.Color | None = None,
         alpha: float = 1.0,
     ) -> None:
-        x, y = _translate_offset(x, y)
+        """
+        This function draws either an outline of a rectangle or a filled rectangle where the (x1,y1)
+        position is the top left corner and the (x2,y2) position is the bottom right corner.
+
+        Args:
+            x1: The x coordinate of the top left corner of the rectangle.
+            y1: The y coordinate of the top left corner of the rectangle.
+            x2: The x coordinate of the bottom right corner of the rectangle.
+            y2: The y coordinate of the bottom right corner of the rectangle.
+            outline: Whether the rectangle is drawn filled (false) or as a one pixel wide outline (true).
+            color: The color to draw with. If None, uses the current draw color.
+            alpha: The opacity of the rectangle, between 0.0 (fully transparent) and 1.0 (fully opaque).
+        """
+        x, y = _translate_offset(x1, y1)
+        width = abs(x2 - x1)
+        height = abs(y2 - y1)
         color = _color_with_alpha(self.draw_color if color is None else color, alpha)
         rect_surf = pg.Surface((width, height), flags=pg.SRCALPHA)
         if outline:

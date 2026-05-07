@@ -5,9 +5,7 @@ import ajishio as aj
 
 
 class Wall(aj.GameObject):
-    def __init__(
-        self, x: float = 0, y: float = 0, **kwargs: Unpack[aj.GameObjectKwargs]
-    ) -> None:
+    def __init__(self, x: float = 0, y: float = 0, **kwargs: Unpack[aj.GameObjectKwargs]) -> None:
         super().__init__(x, y, **kwargs)
         self.collision_mask: aj.CollisionMask | None = aj.CollisionMask(
             bbtop=0, bbleft=0, bbright=self.width, bbbottom=self.height
@@ -15,7 +13,7 @@ class Wall(aj.GameObject):
 
     @override
     def draw(self) -> None:
-        aj.draw_rectangle(self.x, self.y, self.width, self.height, False)
+        aj.draw_rectangle(self.x, self.y, self.x + self.width, self.y + self.height, outline=True)
 
 
 class Boundary(Wall):
@@ -48,9 +46,7 @@ class Paddle(Wall):
         ) * self.speed
         self.target_y = self.y + self.y_vel
         if self.place_meeting(self.x, self.target_y, Boundary):
-            while not self.place_meeting(
-                self.x, self.y + aj.sign(self.y_vel), Boundary
-            ):
+            while not self.place_meeting(self.x, self.y + aj.sign(self.y_vel), Boundary):
                 self.y += aj.sign(self.y_vel)
             self.y_vel = 0
         else:
@@ -105,9 +101,7 @@ class Ball(aj.GameObject):
 
             if isinstance(hit_x, Paddle):
                 added_y_vel: float = hit_x.y_vel / (4 * hit_x.speed)
-                self.y_dir = aj.clamp(
-                    self.y_dir + added_y_vel, -self.max_y_dir, self.max_y_dir
-                )
+                self.y_dir = aj.clamp(self.y_dir + added_y_vel, -self.max_y_dir, self.max_y_dir)
                 self.set_x_dir(aj.sign(self.x_dir))
                 self.speed = aj.clamp(
                     self.speed * self.speed_increase_percent, self.speed, self.max_speed
@@ -159,7 +153,7 @@ class Ball(aj.GameObject):
     @override
     def draw(self) -> None:
         aj.draw_circle(
-            self.x, self.y, self.radius, aj.make_color_hsv(self.color_hue_angle, 1, 1)
+            self.x, self.y, self.radius, color=aj.make_color_hsv(self.color_hue_angle, 1, 1)
         )
         aj.draw_text(20, 20, str(self.score[1]))
         aj.draw_text(aj.room_width - 50, 20, str(self.score[2]))

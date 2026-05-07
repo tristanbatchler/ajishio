@@ -85,7 +85,7 @@ class Tile(aj.GameObject):
 
     @override
     def draw(self) -> None:
-        aj.draw_rectangle(self.x, self.y, self.DIM, self.DIM, color=self.color)
+        aj.draw_rectangle(self.x, self.y, self.x + self.DIM, self.y + self.DIM, color=self.color)
 
     @override
     def __repr__(self) -> str:

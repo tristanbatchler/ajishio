@@ -38,6 +38,11 @@ def _translate_offset(x: float, y: float) -> tuple[float, float]:
     return (x + view.offset[0], y + view.offset[1])
 
 
+def _color_with_alpha(color: Color, alpha: float) -> Color:
+    clamped_alpha = max(0.0, min(1.0, alpha))
+    return Color(color.r, color.g, color.b, int(clamped_alpha * 255))
+
+
 def make_color_hsv(hue: float, sat: float, val: float) -> Color:
     return Color(*[int(c * 255) for c in colorsys.hsv_to_rgb(hue, sat, val)])
 
@@ -87,23 +92,64 @@ class Renderer:
         for bg in self._background_images:
             _ = self.display.blit(bg, view.offset)
 
-    def draw_circle(self, x: float, y: float, radius: float, color: pg.Color | None = None) -> None:
+    def draw_circle(
+        self,
+        x: float,
+        y: float,
+        radius: float,
+        color: pg.Color | None = None,
+        alpha: float = 1.0,
+    ) -> None:
         x, y = _translate_offset(x, y)
-        _ = pg.draw.circle(
-            self.display,
-            self.draw_color if color is None else color,
-            (x, y),
-            radius,
-        )
+        draw_color = _color_with_alpha(self.draw_color if color is None else color, alpha)
 
-    def draw_point(self, x: float, y: float, color: pg.Color | None = None) -> None:
+        if alpha >= 1.0:
+            _ = pg.draw.circle(self.display, draw_color, (x, y), radius)
+            return
+
+        overlay = pg.Surface(self.display.get_size(), flags=pg.SRCALPHA)
+        _ = pg.draw.circle(overlay, draw_color, (x, y), radius)
+        _ = self.display.blit(overlay, (0, 0))
+
+    def draw_ellipse(
+        self,
+        x1: float,
+        y1: float,
+        x2: float,
+        y2: float,
+        color: pg.Color | None = None,
+        alpha: float = 1.0,
+    ) -> None:
+        """
+        With this function you can draw a filled ellipse by defining a rectangular area that will
+        then have the ellipse created to fit.
+        """
+        x1, y1 = _translate_offset(x1, y1)
+        x2, y2 = _translate_offset(x2, y2)
+        rect = pg.Rect(min(x1, x2), min(y1, y2), abs(x2 - x1), abs(y2 - y1))
+        draw_color = _color_with_alpha(self.draw_color if color is None else color, alpha)
+
+        if alpha >= 1.0:
+            _ = pg.draw.ellipse(self.display, draw_color, rect)
+            return
+
+        overlay = pg.Surface(self.display.get_size(), flags=pg.SRCALPHA)
+        _ = pg.draw.ellipse(overlay, draw_color, rect)
+        _ = self.display.blit(overlay, (0, 0))
+
+    def draw_point(
+        self, x: float, y: float, color: pg.Color | None = None, alpha: float = 1.0
+    ) -> None:
         x, y = _translate_offset(x, y)
-        _ = pg.draw.line(
-            self.display,
-            self.draw_color if color is None else color,
-            (x, y),
-            (x, y),
-        )
+        draw_color = _color_with_alpha(self.draw_color if color is None else color, alpha)
+
+        if alpha >= 1.0:
+            _ = pg.draw.line(self.display, draw_color, (x, y), (x, y))
+            return
+
+        overlay = pg.Surface(self.display.get_size(), flags=pg.SRCALPHA)
+        _ = pg.draw.line(overlay, draw_color, (x, y), (x, y))
+        _ = self.display.blit(overlay, (0, 0))
 
     def draw_rectangle(
         self,
@@ -116,8 +162,7 @@ class Renderer:
         alpha: float = 1.0,
     ) -> None:
         x, y = _translate_offset(x, y)
-        color = self.draw_color if color is None else color
-        color.a = int(alpha * 255)
+        color = _color_with_alpha(self.draw_color if color is None else color, alpha)
         rect_surf = pg.Surface((width, height), flags=pg.SRCALPHA)
         if outline:
             _ = pg.draw.rect(rect_surf, color, (0, 0, width, height), 1)
@@ -137,6 +182,7 @@ class Renderer:
         col2: pg.Color | None = None,
         col3: pg.Color | None = None,
         outline: bool = False,
+        alpha: float = 1.0,
     ) -> None:
         """
         With this function you can draw either an outline of a triangle or a filled triangle. If it
@@ -147,18 +193,19 @@ class Renderer:
         x2, y2 = _translate_offset(x2, y2)
         x3, y3 = _translate_offset(x3, y3)
 
-        if outline:
-            _ = pg.draw.polygon(
-                self.display,
-                self.draw_color if col1 is None else col1,
-                [(x1, y1), (x2, y2), (x3, y3)],
-                1,
-            )
-            return
+        col1 = _color_with_alpha(self.draw_color if col1 is None else col1, alpha)
+        col2 = _color_with_alpha(self.draw_color if col2 is None else col2, alpha)
+        col3 = _color_with_alpha(self.draw_color if col3 is None else col3, alpha)
 
-        col1 = self.draw_color if col1 is None else col1
-        col2 = self.draw_color if col2 is None else col2
-        col3 = self.draw_color if col3 is None else col3
+        if outline:
+            points = [(x1, y1), (x2, y2), (x3, y3)]
+            if alpha >= 1.0:
+                _ = pg.draw.polygon(self.display, col1, points, 1)
+            else:
+                overlay = pg.Surface(self.display.get_size(), flags=pg.SRCALPHA)
+                _ = pg.draw.polygon(overlay, col1, points, 1)
+                _ = self.display.blit(overlay, (0, 0))
+            return
 
         if col1 == col2 == col3:
             _ = pg.draw.polygon(
@@ -234,16 +281,25 @@ class Renderer:
         _ = self.display.blit(surf, (min_x, min_y))
 
     def draw_line(
-        self, x1: float, y1: float, x2: float, y2: float, color: pg.Color | None = None
+        self,
+        x1: float,
+        y1: float,
+        x2: float,
+        y2: float,
+        color: pg.Color | None = None,
+        alpha: float = 1.0,
     ) -> None:
         x1, y1 = _translate_offset(x1, y1)
         x2, y2 = _translate_offset(x2, y2)
-        _ = pg.draw.line(
-            self.display,
-            self.draw_color if color is None else color,
-            (x1, y1),
-            (x2, y2),
-        )
+        draw_color = _color_with_alpha(self.draw_color if color is None else color, alpha)
+
+        if alpha >= 1.0:
+            _ = pg.draw.line(self.display, draw_color, (x1, y1), (x2, y2))
+            return
+
+        overlay = pg.Surface(self.display.get_size(), flags=pg.SRCALPHA)
+        _ = pg.draw.line(overlay, draw_color, (x1, y1), (x2, y2))
+        _ = self.display.blit(overlay, (0, 0))
 
     def draw_text(self, x: float, y: float, string: str, color: pg.Color | None = None) -> None:
         x, y = _translate_offset(x, y)

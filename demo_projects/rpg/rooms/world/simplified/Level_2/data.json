@@ -1,0 +1,34 @@
+{
+	"identifier": "Level_2",
+	"uniqueIdentifer": "34b85110-48b0-11f1-9e61-a13336fd1480",
+	"x": 256,
+	"y": 0,
+	"width": 256,
+	"height": 256,
+	"bgColor": "#696A79",
+	"neighbourLevels": [
+		{
+			"levelIid": "d817b852-21a0-11f1-b6bc-4f843ec63318",
+			"dir": "w"
+		},
+		{
+			"levelIid": "b2a13220-21a0-11f1-8b0b-8b668750d979",
+			"dir": "sw"
+		},
+		{
+			"levelIid": "37392f90-48b0-11f1-9e61-d9cd02cada2d",
+			"dir": "e"
+		},
+		{
+			"levelIid": "380ecf10-48b0-11f1-9e61-2bcc9b2e2164",
+			"dir": "ne"
+		}
+	],
+	"customFields" : {},
+	"layers": [
+		"Background.png",
+		"FloorIntGrid.png",
+		"Walls.png"
+	],
+	"entities" : {}
+}

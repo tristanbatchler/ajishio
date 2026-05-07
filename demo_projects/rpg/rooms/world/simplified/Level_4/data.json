@@ -1,0 +1,26 @@
+{
+	"identifier": "Level_4",
+	"uniqueIdentifer": "380ecf10-48b0-11f1-9e61-2bcc9b2e2164",
+	"x": 512,
+	"y": -256,
+	"width": 256,
+	"height": 256,
+	"bgColor": "#696A79",
+	"neighbourLevels": [
+		{
+			"levelIid": "34b85110-48b0-11f1-9e61-a13336fd1480",
+			"dir": "sw"
+		},
+		{
+			"levelIid": "37392f90-48b0-11f1-9e61-d9cd02cada2d",
+			"dir": "s"
+		}
+	],
+	"customFields" : {},
+	"layers": [
+		"Background.png",
+		"FloorIntGrid.png",
+		"Walls.png"
+	],
+	"entities" : {}
+}

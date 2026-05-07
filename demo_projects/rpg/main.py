@@ -2,9 +2,23 @@ import ajishio as aj
 from pathlib import Path
 from enum import Enum
 import math
-from typing import Unpack, final, override
+from typing import Literal, Unpack, final, override
 
 main_dir = Path(__file__).parent
+
+rooms = aj.load_ldtk_levels(
+    main_dir / "rooms" / "world" / "simplified",
+    cosmetic_layers={"FloorIntGrid"},
+)
+
+world_pos_rooms = {
+    (0, 0): 0,
+    (0, 1): 1,
+    (1, 0): 2,
+    (2, 0): 3,
+    (2, -1): 4,
+}
+rooms_world_pos = {room_id: world_pos for world_pos, room_id in world_pos_rooms.items()}
 
 
 class PlayerSprite(Enum):
@@ -56,30 +70,34 @@ class Solid(YSortObject):
             0, 0, self.width, self.height
         )
 
-    @override
-    def draw(self) -> None:
-        super().draw()
-        if self.collision_mask is not None:
-            x = self.x + self.collision_mask.bbleft
-            y = self.y + self.collision_mask.bbtop
-            w = self.collision_mask.bbright - self.collision_mask.bbleft
-            h = self.collision_mask.bbbottom - self.collision_mask.bbtop
+    # @override
+    # def draw(self) -> None:
+    #     super().draw()
+    #     if self.collision_mask is not None:
+    #         x = self.x + self.collision_mask.bbleft
+    #         y = self.y + self.collision_mask.bbtop
+    #         w = self.collision_mask.bbright - self.collision_mask.bbleft
+    #         h = self.collision_mask.bbbottom - self.collision_mask.bbtop
 
-            aj.draw_rectangle(x, y, w, h, color=aj.c_red, alpha=0.5)
+    #         aj.draw_rectangle(x, y, w, h, color=aj.c_red, alpha=0.5)
 
 
 @final
 class Player(YSortObject):
+    persistent = True
+
     def __init__(self, x: float = 0, y: float = 0, **kwargs: Unpack[aj.GameObjectKwargs]) -> None:
         super().__init__(x, y, **kwargs)
         self.sprite_index = player_sprites[PlayerSprite.SOUTH]
         self.collision_mask = aj.CollisionMask(20, 24, 28, 32)
         self.x_velocity: float = 0
         self.y_velocity: float = 0
-        self.x_remainder = 0.0
-        self.y_remainder = 0.0
+        self.x_remainder: float = 0.0
+        self.y_remainder: float = 0.0
         self.active_move_key: int | None = None
-        self.move_speed = 70
+        self.move_speed: float = 70
+        self.world_x: int = 0
+        self.world_y: int = 0
 
     @override
     def step(self) -> None:
@@ -148,24 +166,53 @@ class Player(YSortObject):
                 break
             self.y = next_y
 
+        if self.collision_mask is not None:
+            if self.x < -self.collision_mask.bbleft:
+                self.world_move(-1, 0)
+            elif self.x + self.collision_mask.bbright > aj.room_width:
+                self.world_move(1, 0)
+            elif self.y < -self.collision_mask.bbtop:
+                self.world_move(0, -1)
+            elif self.y + self.collision_mask.bbbottom > aj.room_height:
+                self.world_move(0, 1)
+
+    def world_move(self, x_offset: int, y_offset: int) -> None:
+        new_world_x = self.world_x + x_offset
+        new_world_y = self.world_y + y_offset
+        if (new_world_x, new_world_y) not in world_pos_rooms:
+            return
+
+        self.world_x = new_world_x
+        self.world_y = new_world_y
+        new_room_id = world_pos_rooms[(self.world_x, self.world_y)]
+        aj.room_goto(new_room_id)
+
+        assert self.collision_mask is not None
+        if x_offset == -1:
+            self.x = aj.room_width - self.collision_mask.bbright - 1
+        elif x_offset == 1:
+            self.x = -self.collision_mask.bbleft + 1
+        elif y_offset == -1:
+            self.y = aj.room_height - self.collision_mask.bbbottom - 1
+        elif y_offset == 1:
+            self.y = -self.collision_mask.bbtop + 1
+
     @override
     def draw(self) -> None:
-        super().draw()
         if self.collision_mask is not None:
-            x = self.x + self.collision_mask.bbleft
-            y = self.y + self.collision_mask.bbtop
-            w = self.collision_mask.bbright - self.collision_mask.bbleft
-            h = self.collision_mask.bbbottom - self.collision_mask.bbtop
-
-            aj.draw_rectangle(x, y, w, h, color=aj.c_lime, alpha=0.5)
+            y = self.y + self.collision_mask.bbtop + 1
+            aj.draw_ellipse(
+                self.x + self.collision_mask.bbleft - 2,
+                self.y + self.collision_mask.bbtop + 3,
+                self.x + self.collision_mask.bbright + 2,
+                self.y + self.collision_mask.bbbottom + 2,
+                color=aj.c_black,
+                alpha=0.3,
+            )
+        super().draw()
 
 
 def main():
-    rooms = aj.load_ldtk_levels(
-        main_dir / "rooms" / "world" / "simplified",
-        cosmetic_layers={"FloorIntGrid"},
-    )
-
     aj.set_rooms(rooms)
     w = int(aj.room_width)
     h = int(aj.room_height)

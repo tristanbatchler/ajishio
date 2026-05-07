@@ -76,6 +76,8 @@ This page documents the public `aj.` namespace. All functions and classes listed
 
 ::: ajishio.rendering.Renderer.draw_circle
     # Alias: `aj.draw_circle`
+::: ajishio.rendering.Renderer.draw_ellipse
+    # Alias: `aj.draw_ellipse`
 ::: ajishio.rendering.Renderer.draw_line
     # Alias: `aj.draw_line`
 ::: ajishio.rendering.Renderer.draw_point

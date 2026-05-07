@@ -1650,6 +1650,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#ajishio.rendering.Renderer.draw_set_circle_precision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        draw_set_circle_precision
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ajishio.rendering.Renderer.draw_set_color" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        draw_set_color
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#ajishio.rendering.Renderer.draw_set_font" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3824,6 +3846,28 @@
     <span class="md-ellipsis">
       
         draw_rectangle
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ajishio.rendering.Renderer.draw_set_circle_precision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        draw_set_circle_precision
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ajishio.rendering.Renderer.draw_set_color" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        draw_set_color
       
     </span>
   </a>
@@ -6696,6 +6740,85 @@ position is the top left corner and the (x2,y2) position is the bottom right cor
 <div class="doc doc-object doc-function">
 
 
+<h2 id="ajishio.rendering.Renderer.draw_set_circle_precision" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">ajishio.rendering.Renderer.draw_set_circle_precision</span>
+
+
+</h2>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">draw_set_circle_precision</span><span class="p">(</span><span class="n">precision</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents first">
+
+        <p>To optimise performance when drawing circles, Ajishio basically draws a polygon shape with
+enough sides to make it appear circular. However, depending on how big or small you need
+your circles to be, you may find that changing this value can help increase the performance
+of your game, or make the circles look better. The precision value that you can input into
+this function is the number of sides the circle polygon has, and this number can be anything
+between 4 and 64, but must be a number divisible by 4, with a default value of 24.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="ajishio.rendering.Renderer.draw_set_color" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">ajishio.rendering.Renderer.draw_set_color</span>
+
+
+</h2>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">draw_set_color</span><span class="p">(</span><span class="n">color</span><span class="p">:</span> <span class="n">Color</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents first">
+
+        <p>With this function you can set the base draw color for the game.
+This will affect drawing of fonts, forms, primitives and 3D, however it will not affect
+sprites (drawn manually or by an instance). If any affected graphics are drawn with their
+own color values, this value will be ignored.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>color</code>
+            </td>
+            <td>
+                  <code><span title="ajishio.rendering.Color">Color</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The color to set for drawing.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
 <h2 id="ajishio.rendering.Renderer.draw_set_font" class="doc doc-heading">
             <span class="doc doc-object-name doc-function-name">ajishio.rendering.Renderer.draw_set_font</span>
 
@@ -6792,6 +6915,181 @@ position is the top left corner and the (x2,y2) position is the bottom right cor
         <p>With this function you can draw either an outline of a triangle or a filled triangle. If it
 is filled you can define the individual colours for each corner point and if these colours
 are not the same, you will get a gradient effect from one to the other.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>x1</code>
+            </td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The x coordinate of the triangle's first corner.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>y1</code>
+            </td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The y coordinate of the triangle's first corner.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>x2</code>
+            </td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The x coordinate of the triangle's second corner.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>y2</code>
+            </td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The y coordinate of the triangle's second corner.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>x3</code>
+            </td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The x coordinate of the triangle's third corner.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>y3</code>
+            </td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The y coordinate of the triangle's third corner.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>col1</code>
+            </td>
+            <td>
+                  <code><span title="pygame.Color">Color</span> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The colour of the first corner. If None, uses the current draw color.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>col2</code>
+            </td>
+            <td>
+                  <code><span title="pygame.Color">Color</span> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The colour of the second corner. If None, uses the current draw color.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>col3</code>
+            </td>
+            <td>
+                  <code><span title="pygame.Color">Color</span> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The colour of the third corner. If None, uses the current draw color.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>outline</code>
+            </td>
+            <td>
+                  <code><span title="bool">bool</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Whether the triangle is an outline (true) or filled in (false).</p>
+              </div>
+            </td>
+            <td>
+                  <code>False</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
 
     </div>

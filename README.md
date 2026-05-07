@@ -111,66 +111,74 @@ event a multiplayer example.
 <table>
 	<tr>
 		<td align="center" width="50%">
-			<a href="./demo_projects/platformer/main.py">
+		    <span><strong>Platformer</strong></span>
+			<a href="https://tristanbatchler.github.io/ajishio/web-demos/platformer/">
 				<img src=".github/assets/demo_previews/platformer.gif" width="100%" alt="Platformer preview" />
 			</a>
 			<br />
-			<a href="./demo_projects/platformer/main.py">Platformer</a>
+			<a href="https://tristanbatchler.github.io/ajishio/web-demos/platformer/">Play in browser</a> • <a href="./demo_projects/platformer/main.py">Source code</a>
 		</td>
 		<td align="center" width="50%">
-			<a href="./demo_projects/pong/main.py">
+			<span><strong>Pong</strong></span>
+			<a href="https://tristanbatchler.github.io/ajishio/web-demos/pong/">
 				<img src=".github/assets/demo_previews/pong.gif" width="100%" alt="Pong preview" />
 			</a>
 			<br />
-			<a href="./demo_projects/pong/main.py">Pong</a>
+			<a href="https://tristanbatchler.github.io/ajishio/web-demos/pong/">Play in browser</a> • <a href="./demo_projects/pong/main.py">Source code</a>
 		</td>
 	</tr>
 	<tr>
 		<td align="center" width="50%">
-			<a href="./demo_projects/snake/main.py">
+			<span><strong>Snake</strong></span>
+			<a href="https://tristanbatchler.github.io/ajishio/web-demos/snake/">
 				<img src=".github/assets/demo_previews/snake.gif" width="100%" alt="Snake preview" />
 			</a>
 			<br />
-			<a href="./demo_projects/snake/main.py">Snake</a>
+			<a href="https://tristanbatchler.github.io/ajishio/web-demos/snake/">Play in browser</a> • <a href="./demo_projects/snake/main.py">Source code</a>
 		</td>
 		<td align="center" width="50%">
-			<a href="./demo_projects/tetris/main.py">
+			<span><strong>Tetris</strong></span>
+			<a href="https://tristanbatchler.github.io/ajishio/web-demos/tetris/">
 				<img src=".github/assets/demo_previews/tetris.gif" width="100%" alt="Tetris preview" />
 			</a>
 			<br />
-			<a href="./demo_projects/tetris/main.py">Tetris</a>
+			<a href="https://tristanbatchler.github.io/ajishio/web-demos/tetris/">Play in browser</a> • <a href="./demo_projects/tetris/main.py">Source code</a>
 		</td>
 	</tr>
 	<tr>
 		<td align="center" width="50%">
-			<a href="./demo_projects/minesweeper/main.py">
+			<span><strong>Minesweeper</strong></span>
+			<a href="https://tristanbatchler.github.io/ajishio/web-demos/minesweeper/">
 				<img src=".github/assets/demo_previews/minesweeper.gif" width="100%" alt="Minesweeper preview" />
 			</a>
 			<br />
-			<a href="./demo_projects/minesweeper/main.py">Minesweeper</a>
+			<a href="https://tristanbatchler.github.io/ajishio/web-demos/minesweeper/">Play in browser</a> • <a href="./demo_projects/minesweeper/main.py">Source code</a>
 		</td>
 		<td align="center" width="50%">
-			<a href="./demo_projects/sokoban/main.py">
+			<span><strong>Sokoban</strong></span>
+			<a href="https://tristanbatchler.github.io/ajishio/web-demos/sokoban/">
 				<img src=".github/assets/demo_previews/sokoban.gif" width="100%" alt="Sokoban preview" />
 			</a>
 			<br />
-			<a href="./demo_projects/sokoban/main.py">Sokoban</a>
+			<a href="https://tristanbatchler.github.io/ajishio/web-demos/sokoban/">Play in browser</a> • <a href="./demo_projects/sokoban/main.py">Source code</a>
 		</td>
 	</tr>
 	<tr>
 		<td align="center" width="50%">
-			<a href="./demo_projects/spinning_cube/main.py">
+			<span><strong>Spinning Cube</strong></span>
+			<a href="https://tristanbatchler.github.io/ajishio/web-demos/spinning_cube/">
 				<img src=".github/assets/demo_previews/spinning_cube.gif" width="100%" alt="Spinning cube preview" />
 			</a>
 			<br />
-			<a href="./demo_projects/spinning_cube/main.py">Spinning Cube</a>
+			<a href="https://tristanbatchler.github.io/ajishio/web-demos/spinning_cube/">Play in browser</a> • <a href="./demo_projects/spinning_cube/main.py">Source code</a>
 		</td>
 		<td align="center" width="50%">
-			<a href="./demo_projects/multiplayerv2/client/main.py">
+			<span><strong>Multiplayer</strong></span>
+			<a href="https://tristanbatchler.github.io/ajishio/web-demos/multiplayerv2_client/">
 				<img src=".github/assets/demo_previews/multiplayerv2_client.gif" width="100%" alt="Multiplayer demo preview" />
 			</a>
 			<br />
-			<a href="./demo_projects/multiplayerv2/client/main.py">Multiplayer</a>
+			<a href="https://tristanbatchler.github.io/ajishio/web-demos/multiplayerv2_client/">Play in browser</a> • <a href="https://tristanbatchler.github.io/ajishio/web-demos/multiplayerv2_client/">Source code</a>
 		</td>
 	</tr>
 </table>

@@ -62,8 +62,34 @@ class Renderer:
         self._background_images: Iterable[pg.Surface] = []
 
         self.draw_color: Color = Color(255, 255, 255)
+        self.draw_circle_precision: int = 24
         self.draw_font: pg.font.Font = pg.font.Font(None, 32)
         self.draw_font_fallbacks: Iterable[pg.font.Font] = []
+
+    def draw_set_color(self, color: Color) -> None:
+        """
+        With this function you can set the base draw color for the game.
+        This will affect drawing of fonts, forms, primitives and 3D, however it will not affect
+        sprites (drawn manually or by an instance). If any affected graphics are drawn with their
+        own color values, this value will be ignored.
+
+        Args:
+            color: The color to set for drawing.
+        """
+        self.draw_color = color
+
+    def draw_set_circle_precision(self, precision: int) -> None:
+        """
+        To optimise performance when drawing circles, Ajishio basically draws a polygon shape with
+        enough sides to make it appear circular. However, depending on how big or small you need
+        your circles to be, you may find that changing this value can help increase the performance
+        of your game, or make the circles look better. The precision value that you can input into
+        this function is the number of sides the circle polygon has, and this number can be anything
+        between 4 and 64, but must be a number divisible by 4, with a default value of 24.
+        """
+        if precision < 4 or precision > 64 or precision % 4 != 0:
+            raise ValueError("Circle precision must be a number between 4 and 64, divisible by 4.")
+        self.draw_circle_precision = precision
 
     def set_screen_size(self, w: float, h: float) -> None:
         self._screen = pg.display.set_mode((w, h))
@@ -92,6 +118,20 @@ class Renderer:
         for bg in self._background_images:
             _ = self.display.blit(bg, view.offset)
 
+    def _draw_polygon(
+        self,
+        points: list[tuple[float, float]],
+        color: pg.Color,
+        outline: bool = False,
+    ) -> None:
+        if color.a >= 255:
+            _ = pg.draw.polygon(self.display, color, points, 1 if outline else 0)
+            return
+
+        overlay = pg.Surface(self.display.get_size(), flags=pg.SRCALPHA)
+        _ = pg.draw.polygon(overlay, color, points, 1 if outline else 0)
+        _ = self.display.blit(overlay, (0, 0))
+
     def draw_circle(
         self,
         x: float,
@@ -113,16 +153,19 @@ class Renderer:
             color: The color to draw with. If None, uses the current draw color.
             alpha: The opacity of the circle, between 0.0 (fully transparent) and 1.0 (fully opaque).
         """
-        x, y = _translate_offset(x, y)
-        draw_color = _color_with_alpha(self.draw_color if color is None else color, alpha)
-
-        if alpha >= 1.0:
-            _ = pg.draw.circle(self.display, draw_color, (x, y), r, 1 if outline else 0)
+        if r <= 0:
             return
 
-        overlay = pg.Surface(self.display.get_size(), flags=pg.SRCALPHA)
-        _ = pg.draw.circle(overlay, draw_color, (x, y), r, 1 if outline else 0)
-        _ = self.display.blit(overlay, (0, 0))
+        x, y = _translate_offset(x, y)
+        draw_color = _color_with_alpha(self.draw_color if color is None else color, alpha)
+        points = [
+            (
+                x + r * math.cos(math.tau * i / self.draw_circle_precision),
+                y + r * math.sin(math.tau * i / self.draw_circle_precision),
+            )
+            for i in range(self.draw_circle_precision)
+        ]
+        self._draw_polygon(points, draw_color, outline)
 
     def draw_ellipse(
         self,
@@ -150,16 +193,22 @@ class Renderer:
         """
         x1, y1 = _translate_offset(x1, y1)
         x2, y2 = _translate_offset(x2, y2)
-        rect = pg.Rect(min(x1, x2), min(y1, y2), abs(x2 - x1), abs(y2 - y1))
-        draw_color = _color_with_alpha(self.draw_color if color is None else color, alpha)
-
-        if alpha >= 1.0:
-            _ = pg.draw.ellipse(self.display, draw_color, rect, 1 if outline else 0)
+        radius_x = abs(x2 - x1) / 2
+        radius_y = abs(y2 - y1) / 2
+        if radius_x <= 0 or radius_y <= 0:
             return
 
-        overlay = pg.Surface(self.display.get_size(), flags=pg.SRCALPHA)
-        _ = pg.draw.ellipse(overlay, draw_color, rect, 1 if outline else 0)
-        _ = self.display.blit(overlay, (0, 0))
+        center_x = min(x1, x2) + radius_x
+        center_y = min(y1, y2) + radius_y
+        draw_color = _color_with_alpha(self.draw_color if color is None else color, alpha)
+        points = [
+            (
+                center_x + radius_x * math.cos(math.tau * i / self.draw_circle_precision),
+                center_y + radius_y * math.sin(math.tau * i / self.draw_circle_precision),
+            )
+            for i in range(self.draw_circle_precision)
+        ]
+        self._draw_polygon(points, draw_color, outline)
 
     def draw_point(
         self, x: float, y: float, color: pg.Color | None = None, alpha: float = 1.0
@@ -227,6 +276,18 @@ class Renderer:
         With this function you can draw either an outline of a triangle or a filled triangle. If it
         is filled you can define the individual colours for each corner point and if these colours
         are not the same, you will get a gradient effect from one to the other.
+
+        Args:
+            x1: The x coordinate of the triangle's first corner.
+            y1: The y coordinate of the triangle's first corner.
+            x2: The x coordinate of the triangle's second corner.
+            y2: The y coordinate of the triangle's second corner.
+            x3: The x coordinate of the triangle's third corner.
+            y3: The y coordinate of the triangle's third corner.
+            col1: The colour of the first corner. If None, uses the current draw color.
+            col2: The colour of the second corner. If None, uses the current draw color.
+            col3: The colour of the third corner. If None, uses the current draw color.
+            outline: Whether the triangle is an outline (true) or filled in (false).
         """
         x1, y1 = _translate_offset(x1, y1)
         x2, y2 = _translate_offset(x2, y2)
@@ -238,20 +299,11 @@ class Renderer:
 
         if outline:
             points = [(x1, y1), (x2, y2), (x3, y3)]
-            if alpha >= 1.0:
-                _ = pg.draw.polygon(self.display, col1, points, 1)
-            else:
-                overlay = pg.Surface(self.display.get_size(), flags=pg.SRCALPHA)
-                _ = pg.draw.polygon(overlay, col1, points, 1)
-                _ = self.display.blit(overlay, (0, 0))
+            self._draw_polygon(points, col1, outline=True)
             return
 
         if col1 == col2 == col3:
-            _ = pg.draw.polygon(
-                self.display,
-                col1,
-                [(x1, y1), (x2, y2), (x3, y3)],
-            )
+            self._draw_polygon([(x1, y1), (x2, y2), (x3, y3)], col1)
             return
 
         denom = (y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3)

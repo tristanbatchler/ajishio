@@ -119,6 +119,8 @@ else:
 _ctx.engine = _engine
 
 # --- Rendering: bound methods on the renderer singleton ---
+draw_set_color = _renderer.draw_set_color
+draw_set_circle_precision = _renderer.draw_set_circle_precision
 draw_circle = _renderer.draw_circle
 draw_ellipse = _renderer.draw_ellipse
 draw_rectangle = _renderer.draw_rectangle
@@ -297,6 +299,8 @@ __all__ = [
     "make_color_hsv",
     "load_font",
     # Drawing
+    "draw_set_color",
+    "draw_set_circle_precision",
     "draw_circle",
     "draw_ellipse",
     "draw_rectangle",

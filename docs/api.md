@@ -84,6 +84,10 @@ This page documents the public `aj.` namespace. All functions and classes listed
     # Alias: `aj.draw_point`
 ::: ajishio.rendering.Renderer.draw_rectangle
     # Alias: `aj.draw_rectangle`
+::: ajishio.rendering.Renderer.draw_set_circle_precision
+    # Alias: `aj.draw_set_circle_precision`
+::: ajishio.rendering.Renderer.draw_set_color
+    # Alias: `aj.draw_set_color`
 ::: ajishio.rendering.Renderer.draw_set_font
     # Alias: `aj.draw_set_font`
 ::: ajishio.rendering.Renderer.draw_sprite

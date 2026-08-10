@@ -47,6 +47,8 @@ _project_dir = Path(__file__).parent
 sprites = aj.load_aseprite_sprite(_project_dir / "sprites")
 font = aj.load_font(_project_dir / "CutiveMono-Regular.ttf", 20)
 _label_font = aj.load_font(_project_dir / "CutiveMono-Regular.ttf", 16)
+_win_font = aj.load_font(_project_dir / "CutiveMono-Regular.ttf", 28)
+_prompt_font = aj.load_font(_project_dir / "CutiveMono-Regular.ttf", 16)
 TILE_SIZE = max(sprites.width, 72)
 SPRITE_SIZE = sprites.width
 board_size = GRID_SIZE * TILE_SIZE
@@ -321,6 +323,17 @@ class Game:
         # Check for king capture (should not happen with proper check detection)
         if _find_king(self.state, self.current_turn) is None:
             self._winner = from_cell.colour
+        else:
+            # Check for checkmate: current player has no legal moves and is in check
+            if _is_king_in_check(self.state, self.current_turn):
+                all_moves: list[Move] = []
+                for c in range(GRID_SIZE):
+                    for r in range(GRID_SIZE):
+                        cell = self.state.get(c, r)
+                        if cell is not None and cell.colour == self.current_turn:
+                            all_moves.extend(_legal_moves_for(self.state, c, r))
+                if not all_moves:
+                    self._winner = from_cell.colour
         self.clear_selection()
         return True
 
@@ -333,6 +346,17 @@ class Game:
         return self._winner
 
     _winner: Colour | None = None
+
+    def reset(self) -> None:
+        """Reset to a fresh game."""
+        self.state = BoardState.initial()
+        self.current_turn = Colour.white
+        self.selected_col = None
+        self.selected_row = None
+        self.drag_col = None
+        self.drag_row = None
+        self._winner = None
+
 
 
 def _find_king(state: BoardState, colour: Colour) -> tuple[int, int] | None:
@@ -372,13 +396,13 @@ def _can_piece_strike(
     match ptype:
         case PieceType.pawn:
             direction = -1 if colour == Colour.white else 1
-            return target_col == col + (target_row - row) and target_row == row + direction
+            return abs(target_col - col) == 1 and target_row == row + direction
         case PieceType.knight:
             diff_col = abs(target_col - col)
             diff_row = abs(target_row - row)
             return (diff_col, diff_row) in ((1, 2), (2, 1))
         case PieceType.king:
-            return abs(target_col - col) <= 1 and abs(target_row - row) <= 1
+            return max(abs(target_col - col), abs(target_row - row)) == 1
         case PieceType.bishop:
             return _is_diagonal(col, row, target_col, target_row) and _path_clear(
                 state, col, row, target_col, target_row
@@ -506,7 +530,6 @@ class BoardRenderer(aj.GameObject):
             cx = _col_x(0) + 4
             cy = _row_y(i) + 8
             aj.draw_text(cx, cy, _RANK_LABELS[i], aj.c_white)
-            aj.draw_text(cx, cy, _RANK_LABELS[i], aj.c_white)
 
     def _draw_pieces(self) -> None:
         game = self.game
@@ -538,7 +561,7 @@ class BoardRenderer(aj.GameObject):
         sr = game.selected_row
         if sc is None or sr is None:
             return
-        hints = _pseudo_valid_moves_for(game.state, sc, sr)
+        hints = _legal_moves_for(game.state, sc, sr)
         for hint in hints:
             cx = _col_x(hint.to_col) + TILE_SIZE / 2
             cy = _row_y(hint.to_row) + TILE_SIZE / 2
@@ -568,12 +591,24 @@ class TurnDisplay(aj.GameObject):
     @override
     def draw(self) -> None:
         aj.draw_set_font(font)
-        text = f"{self.game.current_turn.name_title} to move"
-        tw = aj.text_width(text) * 1.3
         px = board_size + 10
         ay = 10
-        aj.draw_rectangle(px, ay, px + tw + 30, ay + 24, color=aj.c_black, alpha=0.5)
-        aj.draw_text(px + 10, ay + 2, text, aj.c_white)
+        if self.game.winner is not None:
+            aj.draw_set_font(_win_font)
+            winner = self.game.winner
+            text = f"{winner.name.capitalize()} wins!"
+            tw = aj.text_width(text)
+            aj.draw_rectangle(px, ay, px + tw + 40, ay + 40, color=aj.c_black)
+            aj.draw_text(px + 10, ay + 4, text, aj.c_white)
+            aj.draw_set_font(_prompt_font)
+            prompt = "Press R to restart"
+            pw = aj.text_width(prompt)
+            aj.draw_text(px + (tw + 40 - pw) / 2, ay + 44, prompt, aj.c_white)
+        else:
+            text = f"{self.game.current_turn.name_title} to move"
+            tw = aj.text_width(text) * 1.3
+            aj.draw_rectangle(px, ay, px + tw + 30, ay + 24, color=aj.c_black)
+            aj.draw_text(px + 10, ay + 2, text, aj.c_white)
 
 
 class InputHandler(aj.GameObject):
@@ -585,6 +620,9 @@ class InputHandler(aj.GameObject):
 
     @override
     def step(self) -> None:
+        if self.game.winner is not None and aj.keyboard_check(ord('r')):
+            self.game.reset()
+            return
         room_x, room_y = _mouse_room_position()
         col = int((room_x - _board_offset_x) // TILE_SIZE)
         row = int((room_y - _board_offset_y) // TILE_SIZE)

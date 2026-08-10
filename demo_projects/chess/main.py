@@ -141,12 +141,8 @@ class BoardState:
         return self.grid[row][col]
 
     def set(self, col: int, row: int, value: CellData) -> BoardState:
-        new_cell_row = (
-            tuple(self.grid[row][:col]) + (value,) + tuple(self.grid[row][col + 1 :])
-        )
-        new_grid = (
-            tuple(self.grid[:row]) + (new_cell_row,) + tuple(self.grid[row + 1 :])
-        )
+        new_cell_row = tuple(self.grid[row][:col]) + (value,) + tuple(self.grid[row][col + 1 :])
+        new_grid = tuple(self.grid[:row]) + (new_cell_row,) + tuple(self.grid[row + 1 :])
         return BoardState(new_grid)
 
     @staticmethod
@@ -206,11 +202,7 @@ def _pseudo_valid_moves_for(state: BoardState, col: int, row: int) -> list[Move]
             direction = -1 if colour == Colour.white else 1
             forward = (col, row + direction)
             if _in_bounds(*forward) and state.get(*forward) is None:
-                moves.append(
-                    Move(
-                        from_col=col, from_row=row, to_col=forward[0], to_row=forward[1]
-                    )
-                )
+                moves.append(Move(from_col=col, from_row=row, to_col=forward[0], to_row=forward[1]))
                 if row == colour.pawn_start_row:
                     ahead = (col, row + 2 * direction)
                     if _in_bounds(*ahead) and state.get(*ahead) is None:
@@ -241,9 +233,7 @@ def _pseudo_valid_moves_for(state: BoardState, col: int, row: int) -> list[Move]
                 if _in_bounds(nc, nr):
                     target = state.get(nc, nr)
                     if target is None or target.colour != colour:
-                        moves.append(
-                            Move(from_col=col, from_row=row, to_col=nc, to_row=nr)
-                        )
+                        moves.append(Move(from_col=col, from_row=row, to_col=nc, to_row=nr))
         case PieceType.bishop:
             _slide(state, col, row, colour, _DIAGONALS, moves)
         case PieceType.rook:
@@ -259,9 +249,7 @@ def _pseudo_valid_moves_for(state: BoardState, col: int, row: int) -> list[Move]
                     if _in_bounds(nc, nr):
                         target = state.get(nc, nr)
                         if target is None or target.colour != colour:
-                            moves.append(
-                                Move(from_col=col, from_row=row, to_col=nc, to_row=nr)
-                            )
+                            moves.append(Move(from_col=col, from_row=row, to_col=nc, to_row=nr))
     return moves
 
 
@@ -373,7 +361,9 @@ def _is_king_in_check(state: BoardState, colour: Colour) -> bool:
     return False
 
 
-def _can_piece_strike(state: BoardState, col: int, row: int, colour: Colour, target_col: int, target_row: int) -> bool:
+def _can_piece_strike(
+    state: BoardState, col: int, row: int, colour: Colour, target_col: int, target_row: int
+) -> bool:
     """Check if a piece at (col, row) can geometrically strike (target_col, target_row)."""
     cell = state.get(col, row)
     if cell is None:
@@ -390,12 +380,18 @@ def _can_piece_strike(state: BoardState, col: int, row: int, colour: Colour, tar
         case PieceType.king:
             return abs(target_col - col) <= 1 and abs(target_row - row) <= 1
         case PieceType.bishop:
-            return _is_diagonal(col, row, target_col, target_row) and _path_clear(state, col, row, target_col, target_row)
+            return _is_diagonal(col, row, target_col, target_row) and _path_clear(
+                state, col, row, target_col, target_row
+            )
         case PieceType.rook:
-            return _is_straight(col, row, target_col, target_row) and _path_clear(state, col, row, target_col, target_row)
+            return _is_straight(col, row, target_col, target_row) and _path_clear(
+                state, col, row, target_col, target_row
+            )
         case PieceType.queen:
-            return (_is_diagonal(col, row, target_col, target_row) or _is_straight(col, row, target_col, target_row)) and _path_clear(state, col, row, target_col, target_row)
-    return False  # pyright-ignore: unreachable
+            return (
+                _is_diagonal(col, row, target_col, target_row)
+                or _is_straight(col, row, target_col, target_row)
+            ) and _path_clear(state, col, row, target_col, target_row)
 
 
 def _is_diagonal(col1: int, row1: int, col2: int, row2: int) -> bool:
@@ -516,11 +512,7 @@ class BoardRenderer(aj.GameObject):
         game = self.game
         for col in range(GRID_SIZE):
             for row in range(GRID_SIZE):
-                if (
-                    game.drag_col is not None
-                    and col == game.drag_col
-                    and row == game.drag_row
-                ):
+                if game.drag_col is not None and col == game.drag_col and row == game.drag_row:
                     continue
                 cell = game.state.get(col, row)
                 if cell is None:
@@ -538,9 +530,7 @@ class BoardRenderer(aj.GameObject):
             return
         sx = _col_x(sc)
         sy = _row_y(sr)
-        aj.draw_rectangle(
-            sx, sy, sx + TILE_SIZE, sy + TILE_SIZE, outline=True, color=aj.c_yellow
-        )
+        aj.draw_rectangle(sx, sy, sx + TILE_SIZE, sy + TILE_SIZE, outline=True, color=aj.c_yellow)
 
     def _draw_valid_move_hints(self) -> None:
         game = self.game
@@ -565,9 +555,7 @@ class BoardRenderer(aj.GameObject):
             if piece is not None:
                 offset = (TILE_SIZE - SPRITE_SIZE) // 2
                 frame = _frame_index(piece.piece_type, piece.colour)
-                aj.draw_sprite(
-                    px + offset, py + offset, sprites, frame, x_scale=1.1, y_scale=1.1
-                )
+                aj.draw_sprite(px + offset, py + offset, sprites, frame, x_scale=1.1, y_scale=1.1)
 
 
 class TurnDisplay(aj.GameObject):
@@ -632,9 +620,7 @@ def main() -> None:
     window_scale = 2
     aj.room_set_caption("Chess")
     aj.room_set_size(_room_width, _room_height)
-    aj.window_set_size(
-        int(_room_width * window_scale), int(_room_height * window_scale)
-    )
+    aj.window_set_size(int(_room_width * window_scale), int(_room_height * window_scale))
     aj.room_set_background(aj.c_navy)
     aj.view_set_wport(aj.view_current, _room_width)
     aj.view_set_hport(aj.view_current, _room_height)

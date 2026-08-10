@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Literal, Unpack, override
 
 GRID_SIZE: int = 8
-PANEL_WIDTH: int = 220
+PANEL_WIDTH: int = 260
 PieceNotation = Literal["K", "Q", "B", "N", "R", ""]
 
 _DIAGONALS: tuple[tuple[int, int], ...] = (
@@ -46,12 +46,15 @@ class Move:
 _project_dir = Path(__file__).parent
 sprites = aj.load_aseprite_sprite(_project_dir / "sprites")
 font = aj.load_font(_project_dir / "CutiveMono-Regular.ttf", 20)
-TILE_SIZE = sprites.width
-SPRITE_SIZE = sprites.height
+_label_font = aj.load_font(_project_dir / "CutiveMono-Regular.ttf", 16)
+TILE_SIZE = max(sprites.width, 72)
+SPRITE_SIZE = sprites.width
 board_size = GRID_SIZE * TILE_SIZE
 
 _board_offset_x: float = 0.0
 _board_offset_y: float = 0.0
+_COLUMN_LABELS: str = "abcdefgh"
+_RANK_LABELS: str = "87654321"
 _room_width: int = PANEL_WIDTH + board_size
 _room_height: int = board_size
 
@@ -322,13 +325,108 @@ class Game:
         from_cell = self.state.get(move.from_col, move.from_row)
         if from_cell is None or from_cell.colour != self.current_turn:
             return False
-        pseudo = _pseudo_valid_moves_for(self.state, move.from_col, move.from_row)
+        pseudo = _legal_moves_for(self.state, move.from_col, move.from_row)
         if move not in pseudo:
             return False
         self.state = _apply_move(self.state, move)
         self.current_turn = from_cell.colour.opposite
+        # Check for king capture (should not happen with proper check detection)
+        if _find_king(self.state, self.current_turn) is None:
+            self._winner = from_cell.colour
         self.clear_selection()
         return True
+
+    @property
+    def game_over(self) -> bool:
+        return self._winner is not None
+
+    @property
+    def winner(self) -> Colour | None:
+        return self._winner
+
+    _winner: Colour | None = None
+
+
+def _find_king(state: BoardState, colour: Colour) -> tuple[int, int] | None:
+    for col in range(GRID_SIZE):
+        for row in range(GRID_SIZE):
+            cell = state.get(col, row)
+            if cell is not None and cell.piece_type == PieceType.king and cell.colour == colour:
+                return (col, row)
+    return None
+
+
+def _is_king_in_check(state: BoardState, colour: Colour) -> bool:
+    """Return True if the given colour's king is under attack."""
+    king = _find_king(state, colour)
+    if king is None:
+        return False
+    kcol, krow = king
+    opponent = colour.opposite
+    for col in range(GRID_SIZE):
+        for row in range(GRID_SIZE):
+            cell = state.get(col, row)
+            if cell is None or cell.colour != opponent:
+                continue
+            if _can_piece_strike(state, col, row, opponent, kcol, krow):
+                return True
+    return False
+
+
+def _can_piece_strike(state: BoardState, col: int, row: int, colour: Colour, target_col: int, target_row: int) -> bool:
+    """Check if a piece at (col, row) can geometrically strike (target_col, target_row)."""
+    cell = state.get(col, row)
+    if cell is None:
+        return False
+    ptype = cell.piece_type
+    match ptype:
+        case PieceType.pawn:
+            direction = -1 if colour == Colour.white else 1
+            return target_col == col + (target_row - row) and target_row == row + direction
+        case PieceType.knight:
+            diff_col = abs(target_col - col)
+            diff_row = abs(target_row - row)
+            return (diff_col, diff_row) in ((1, 2), (2, 1))
+        case PieceType.king:
+            return abs(target_col - col) <= 1 and abs(target_row - row) <= 1
+        case PieceType.bishop:
+            return _is_diagonal(col, row, target_col, target_row) and _path_clear(state, col, row, target_col, target_row)
+        case PieceType.rook:
+            return _is_straight(col, row, target_col, target_row) and _path_clear(state, col, row, target_col, target_row)
+        case PieceType.queen:
+            return (_is_diagonal(col, row, target_col, target_row) or _is_straight(col, row, target_col, target_row)) and _path_clear(state, col, row, target_col, target_row)
+    return False  # pyright-ignore: unreachable
+
+
+def _is_diagonal(col1: int, row1: int, col2: int, row2: int) -> bool:
+    return abs(col2 - col1) == abs(row2 - row1)
+
+
+def _is_straight(col1: int, row1: int, col2: int, row2: int) -> bool:
+    return col1 == col2 or row1 == row2
+
+
+def _path_clear(state: BoardState, col1: int, row1: int, col2: int, row2: int) -> bool:
+    """Return True if the path from (col1,row1) to (col2,row2) is clear (exclusive of endpoints)."""
+    dc = (1 if col2 > col1 else -1) if col2 != col1 else 0
+    dr = (1 if row2 > row1 else -1) if row2 != row1 else 0
+    col, row = col1 + dc, row1 + dr
+    while (col, row) != (col2, row2):
+        if state.get(col, row) is not None:
+            return False
+        col += dc
+        row += dr
+    return True
+
+
+def _legal_moves_for(state: BoardState, col: int, row: int) -> list[Move]:
+    """Return geometrically valid moves that don't leave the owning king in check."""
+    cell = state.get(col, row)
+    if cell is None:
+        return []
+    colour = cell.colour
+    pseudo = _pseudo_valid_moves_for(state, col, row)
+    return [m for m in pseudo if not _is_king_in_check(_apply_move(state, m), colour)]
 
 
 def _apply_move(state: BoardState, move: Move) -> BoardState:
@@ -399,6 +497,20 @@ class BoardRenderer(aj.GameObject):
             _board_offset_y + board_size,
             outline=True,
         )
+        self._draw_labels()
+
+    def _draw_labels(self) -> None:
+        aj.draw_set_font(_label_font)
+        for i in range(GRID_SIZE):
+            # Column labels bottom-right of bottom row
+            cx = _col_x(i) + TILE_SIZE - 14
+            cy = _row_y(GRID_SIZE - 1) + TILE_SIZE - 22
+            aj.draw_text(cx, cy, _COLUMN_LABELS[i], aj.c_white)
+            # Row labels top-left of left column
+            cx = _col_x(0) + 4
+            cy = _row_y(i) + 8
+            aj.draw_text(cx, cy, _RANK_LABELS[i], aj.c_white)
+            aj.draw_text(cx, cy, _RANK_LABELS[i], aj.c_white)
 
     def _draw_pieces(self) -> None:
         game = self.game
@@ -469,7 +581,7 @@ class TurnDisplay(aj.GameObject):
     def draw(self) -> None:
         aj.draw_set_font(font)
         text = f"{self.game.current_turn.name_title} to move"
-        tw = aj.text_width(text)
+        tw = aj.text_width(text) * 1.3
         px = board_size + 10
         ay = 10
         aj.draw_rectangle(px, ay, px + tw + 30, ay + 24, color=aj.c_black, alpha=0.5)

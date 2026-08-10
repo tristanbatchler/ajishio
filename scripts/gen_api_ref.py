@@ -19,9 +19,7 @@ except ImportError:  # pragma: no cover - optional during normal Python runs
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DOCS_API_PATH = REPO_ROOT / "docs" / "api.md"
 
-GENERATED_BANNER = (
-    "<!-- AUTO-GENERATED: do not edit manually. Run `uv run python scripts/gen_api_ref.py`. -->"
-)
+GENERATED_BANNER = "<!-- AUTO-GENERATED: do not edit manually. Run `uv run python scripts/gen_api_ref.py`. -->"
 
 # Mapping from module names to section titles
 SECTION_MAP = {
@@ -191,11 +189,15 @@ def _is_mkdocs_run() -> bool:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Generate docs/api.md from ajishio exports")
+    parser = argparse.ArgumentParser(
+        description="Generate docs/api.md from ajishio exports"
+    )
     _ = parser.add_argument(
         "--check", action="store_true", help="Fail if docs/api.md is out of date"
     )
-    _ = parser.add_argument("--stdout", action="store_true", help="Print generated markdown")
+    _ = parser.add_argument(
+        "--stdout", action="store_true", help="Print generated markdown"
+    )
     args = parser.parse_args()
 
     text = generate_api_md()

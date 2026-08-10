@@ -41,7 +41,11 @@ class Player(aj.GameObject):
     @override
     def draw(self) -> None:
         aj.draw_rectangle(
-            self.x, self.y, self.x + Player.width, self.y + Player.height, color=aj.c_lime
+            self.x,
+            self.y,
+            self.x + Player.width,
+            self.y + Player.height,
+            color=aj.c_lime,
         )
 
         fps_caption = f"FPS: {aj.fps_real:.2f}"
@@ -109,7 +113,11 @@ class Enemy(aj.GameObject):
     @override
     def draw(self) -> None:
         aj.draw_rectangle(
-            self.x, self.y, self.x + Enemy.width, self.y + Enemy.height, color=aj.c_purple
+            self.x,
+            self.y,
+            self.x + Enemy.width,
+            self.y + Enemy.height,
+            color=aj.c_purple,
         )
 
 
@@ -139,7 +147,9 @@ class Bullet(aj.GameObject):
             assert isinstance(player, Player)
             player.lives -= 1
 
-        elif not self.hurts_player and (enemy := self.place_meeting(self.x, self.y, Enemy)):
+        elif not self.hurts_player and (
+            enemy := self.place_meeting(self.x, self.y, Enemy)
+        ):
             aj.instance_destroy(self)
             aj.instance_destroy(enemy)
             if not aj.instance_exists(Enemy):
@@ -150,14 +160,20 @@ class Bullet(aj.GameObject):
     @override
     def draw(self) -> None:
         aj.draw_rectangle(
-            self.x, self.y, self.x + Bullet.width, self.y + Bullet.height, color=aj.c_black
+            self.x,
+            self.y,
+            self.x + Bullet.width,
+            self.y + Bullet.height,
+            color=aj.c_black,
         )
 
 
 def spawn_wave(difficulty: int) -> None:
     speed = 2 ** (difficulty / 5.0)  # Gets exponentially harder each wave
     for row in range(3):
-        for enemy_x in range(PADDING, int(aj.room_width) - PADDING, round(1.5 * Enemy.width)):
+        for enemy_x in range(
+            PADDING, int(aj.room_width) - PADDING, round(1.5 * Enemy.width)
+        ):
             _ = Enemy(enemy_x, PADDING + Enemy.height * row * 1.5, x_velocity=speed)
 
 

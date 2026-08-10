@@ -63,7 +63,9 @@ class YSortObject(aj.GameObject):
 
 
 class Solid(YSortObject):
-    def __init__(self, x: float = 0, y: float = 0, **kwargs: Unpack[aj.GameObjectKwargs]) -> None:
+    def __init__(
+        self, x: float = 0, y: float = 0, **kwargs: Unpack[aj.GameObjectKwargs]
+    ) -> None:
         super().__init__(x, y, **kwargs)
         # Solid tiles are spawned from CSV with width/height, usually without a sprite.
         self.collision_mask: aj.CollisionMask | None = aj.CollisionMask(
@@ -75,7 +77,9 @@ class Solid(YSortObject):
 class Player(YSortObject):
     persistent = True
 
-    def __init__(self, x: float = 0, y: float = 0, **kwargs: Unpack[aj.GameObjectKwargs]) -> None:
+    def __init__(
+        self, x: float = 0, y: float = 0, **kwargs: Unpack[aj.GameObjectKwargs]
+    ) -> None:
         super().__init__(x, y, **kwargs)
         self.sprite_index = player_sprites[PlayerSprite.SOUTH]
         self.collision_mask = aj.CollisionMask(20, 24, 28, 32)
@@ -92,7 +96,9 @@ class Player(YSortObject):
     def step(self) -> None:
         super().step()
         movement_keys = (aj.vk_right, aj.vk_left, aj.vk_down, aj.vk_up)
-        if self.active_move_key is not None and not aj.keyboard_check(self.active_move_key):
+        if self.active_move_key is not None and not aj.keyboard_check(
+            self.active_move_key
+        ):
             self.active_move_key = None
             self.image_index = 0
 

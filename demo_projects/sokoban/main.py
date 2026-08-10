@@ -26,8 +26,14 @@ class MessageBox(aj.GameObject):
     def draw(self) -> None:
         text_width = aj.text_width(self.message)
         text_height = aj.text_height(self.message)
-        x = aj.view_xport[aj.view_current] + (aj.view_wport[aj.view_current] - text_width) / 2
-        y = aj.view_yport[aj.view_current] + (aj.view_hport[aj.view_current] - text_height) / 2
+        x = (
+            aj.view_xport[aj.view_current]
+            + (aj.view_wport[aj.view_current] - text_width) / 2
+        )
+        y = (
+            aj.view_yport[aj.view_current]
+            + (aj.view_hport[aj.view_current] - text_height) / 2
+        )
 
         # Draw a semi-transparent background
         aj.draw_rectangle(

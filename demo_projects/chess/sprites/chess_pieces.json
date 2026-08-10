@@ -1,0 +1,122 @@
+{
+  "frames": {
+    "king_w": {
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 45,
+        "h": 45
+      },
+      "frameIndex": 1
+    },
+    "king_b": {
+      "frame": {
+        "x": 0,
+        "y": 45,
+        "w": 45,
+        "h": 45
+      },
+      "frameIndex": 2
+    },
+    "queen_w": {
+      "frame": {
+        "x": 45,
+        "y": 0,
+        "w": 45,
+        "h": 45
+      },
+      "frameIndex": 3
+    },
+    "queen_b": {
+      "frame": {
+        "x": 45,
+        "y": 45,
+        "w": 45,
+        "h": 45
+      },
+      "frameIndex": 4
+    },
+    "bishop_w": {
+      "frame": {
+        "x": 90,
+        "y": 0,
+        "w": 45,
+        "h": 45
+      },
+      "frameIndex": 5
+    },
+    "bishop_b": {
+      "frame": {
+        "x": 90,
+        "y": 45,
+        "w": 45,
+        "h": 45
+      },
+      "frameIndex": 6
+    },
+    "knight_w": {
+      "frame": {
+        "x": 135,
+        "y": 0,
+        "w": 45,
+        "h": 45
+      },
+      "frameIndex": 7
+    },
+    "knight_b": {
+      "frame": {
+        "x": 135,
+        "y": 45,
+        "w": 45,
+        "h": 45
+      },
+      "frameIndex": 8
+    },
+    "rook_w": {
+      "frame": {
+        "x": 180,
+        "y": 0,
+        "w": 45,
+        "h": 45
+      },
+      "frameIndex": 9
+    },
+    "rook_b": {
+      "frame": {
+        "x": 180,
+        "y": 45,
+        "w": 45,
+        "h": 45
+      },
+      "frameIndex": 10
+    },
+    "pawn_w": {
+      "frame": {
+        "x": 225,
+        "y": 0,
+        "w": 45,
+        "h": 45
+      },
+      "frameIndex": 11
+    },
+    "pawn_b": {
+      "frame": {
+        "x": 225,
+        "y": 45,
+        "w": 45,
+        "h": 45
+      },
+      "frameIndex": 12
+    }
+  },
+  "meta": {
+    "app": "manual",
+    "image": "chess_pieces.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 270,
+      "h": 90
+    },
+    "scale": "1"
+  }
+}

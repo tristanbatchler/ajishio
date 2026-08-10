@@ -35,7 +35,9 @@ def load_ldtk_levels(
         cosmetic_layers: Layer names that should render from ``.png`` only and skip
             object spawning from ``.csv`` data.
     """
-    alphabetical_level_dirs: list[Path] = sorted(ldtk_super_simple_export_simplified_path.iterdir())
+    alphabetical_level_dirs: list[Path] = sorted(
+        ldtk_super_simple_export_simplified_path.iterdir()
+    )
     normalized_cosmetic_layers = _normalize_layer_name_set(cosmetic_layers)
     return [
         load_ldtk(
@@ -65,7 +67,9 @@ def load_ldtk(
     # Get the size of this level
     level_size: tuple[int, int] = (level_info["width"], level_info["height"])
 
-    png_layers: list[str] = [remove_ext(layer_filename) for layer_filename in level_info["layers"]]
+    png_layers: list[str] = [
+        remove_ext(layer_filename) for layer_filename in level_info["layers"]
+    ]
     for layer in png_layers:
         # Get the background surface for this layer
         with open(level_dir / f"{layer}.png", "rb") as f:
@@ -106,4 +110,6 @@ def load_ldtk(
         tile_size = (level_size[0] // len(tilemap[0]), level_size[1] // len(tilemap))
         tile_sizes[layer] = tile_size
 
-    return GameLevel(tilemaps, tile_sizes, background_surfaces, level_size, level_info["entities"])
+    return GameLevel(
+        tilemaps, tile_sizes, background_surfaces, level_size, level_info["entities"]
+    )

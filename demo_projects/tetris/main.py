@@ -80,12 +80,16 @@ class Tile(aj.GameObject):
     DIM: int = 16  # Size in pixels of the tile
 
     def __init__(self, x: float, y: float, color: aj.Color) -> None:
-        super().__init__(x, y, collision_mask=aj.CollisionMask(bbright=self.DIM, bbbottom=self.DIM))
+        super().__init__(
+            x, y, collision_mask=aj.CollisionMask(bbright=self.DIM, bbbottom=self.DIM)
+        )
         self.color: aj.Color = color
 
     @override
     def draw(self) -> None:
-        aj.draw_rectangle(self.x, self.y, self.x + self.DIM, self.y + self.DIM, color=self.color)
+        aj.draw_rectangle(
+            self.x, self.y, self.x + self.DIM, self.y + self.DIM, color=self.color
+        )
 
     @override
     def __repr__(self) -> str:
@@ -145,7 +149,9 @@ class Piece(aj.GameObject):
         for tile in self.tiles:
             aj.instance_destroy(tile)
 
-    def allowed_at_position(self, x: float, y: float, shape: Shape | None = None) -> bool:
+    def allowed_at_position(
+        self, x: float, y: float, shape: Shape | None = None
+    ) -> bool:
         shape = shape or self.shape
         for y_offset, row in enumerate(shape.solid_map):
             for x_offset, is_solid in enumerate(row):
@@ -192,7 +198,9 @@ class Piece(aj.GameObject):
             for x_offset, is_solid in enumerate(row):
                 if not is_solid:
                     continue
-                target_positions.append((x + x_offset * Tile.DIM, y + y_offset * Tile.DIM))
+                target_positions.append(
+                    (x + x_offset * Tile.DIM, y + y_offset * Tile.DIM)
+                )
 
         # All current tetromino definitions use 4 solid cells.
         if len(target_positions) != len(self.tiles):
@@ -206,7 +214,9 @@ class Piece(aj.GameObject):
 class Manager(aj.GameObject):
     current_move_interval: float
 
-    def __init__(self, x: float = 0, y: float = 0, **kwargs: Unpack[aj.GameObjectKwargs]) -> None:
+    def __init__(
+        self, x: float = 0, y: float = 0, **kwargs: Unpack[aj.GameObjectKwargs]
+    ) -> None:
         super().__init__(x, y, **kwargs)
 
         self.current_piece: Piece | None = self.spawn_piece()
@@ -285,7 +295,10 @@ class Manager(aj.GameObject):
             self.set_current_move_interval(fast=True)
         elif aj.keyboard_check_released(aj.vk_down):
             self.set_current_move_interval()
-        elif aj.keyboard_check_released(aj.vk_up) and self.current_piece.shape != SHAPE_SQUARE:
+        elif (
+            aj.keyboard_check_released(aj.vk_up)
+            and self.current_piece.shape != SHAPE_SQUARE
+        ):
             rotated_shape = Shape(
                 self.current_piece.shape.get_rotation(), self.current_piece.shape.color
             )
@@ -302,7 +315,9 @@ class Manager(aj.GameObject):
             if kicked_x is None:
                 pass  # No valid position found, don't rotate
             else:
-                self.current_piece.apply_shape(rotated_shape, kicked_x, self.current_piece.y)
+                self.current_piece.apply_shape(
+                    rotated_shape, kicked_x, self.current_piece.y
+                )
 
         if self.move_timer <= 0:
             self.move_timer += self.current_move_interval

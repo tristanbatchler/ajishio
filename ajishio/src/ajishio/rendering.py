@@ -88,7 +88,9 @@ class Renderer:
         between 4 and 64, but must be a number divisible by 4, with a default value of 24.
         """
         if precision < 4 or precision > 64 or precision % 4 != 0:
-            raise ValueError("Circle precision must be a number between 4 and 64, divisible by 4.")
+            raise ValueError(
+                "Circle precision must be a number between 4 and 64, divisible by 4."
+            )
         self.draw_circle_precision = precision
 
     def set_screen_size(self, w: float, h: float) -> None:
@@ -97,7 +99,19 @@ class Renderer:
     def draw_display(self) -> None:
         if self._screen is None:
             return
-        _ = pg.transform.scale(self.display, self._screen.get_size(), self._screen)
+        win_w, win_h = self._screen.get_size()
+        disp_w, disp_h = self.display.get_size()
+        if disp_w == 0 or disp_h == 0:
+            return
+        sx = win_w / disp_w
+        sy = win_h / disp_h
+        scale = min(sx, sy)
+        w = int(disp_w * scale)
+        h = int(disp_h * scale)
+        scaled = pg.transform.scale(self.display, (w, h))
+        dst_x = (win_w - w) // 2
+        dst_y = (win_h - h) // 2
+        _ = self._screen.blit(scaled, (dst_x, dst_y))
 
     def fit_display(self) -> None:
         w = int(view.view_wport[view.view_current])
@@ -157,7 +171,9 @@ class Renderer:
             return
 
         x, y = _translate_offset(x, y)
-        draw_color = _color_with_alpha(self.draw_color if color is None else color, alpha)
+        draw_color = _color_with_alpha(
+            self.draw_color if color is None else color, alpha
+        )
         points = [
             (
                 x + r * math.cos(math.tau * i / self.draw_circle_precision),
@@ -200,11 +216,15 @@ class Renderer:
 
         center_x = min(x1, x2) + radius_x
         center_y = min(y1, y2) + radius_y
-        draw_color = _color_with_alpha(self.draw_color if color is None else color, alpha)
+        draw_color = _color_with_alpha(
+            self.draw_color if color is None else color, alpha
+        )
         points = [
             (
-                center_x + radius_x * math.cos(math.tau * i / self.draw_circle_precision),
-                center_y + radius_y * math.sin(math.tau * i / self.draw_circle_precision),
+                center_x
+                + radius_x * math.cos(math.tau * i / self.draw_circle_precision),
+                center_y
+                + radius_y * math.sin(math.tau * i / self.draw_circle_precision),
             )
             for i in range(self.draw_circle_precision)
         ]
@@ -214,7 +234,9 @@ class Renderer:
         self, x: float, y: float, color: pg.Color | None = None, alpha: float = 1.0
     ) -> None:
         x, y = _translate_offset(x, y)
-        draw_color = _color_with_alpha(self.draw_color if color is None else color, alpha)
+        draw_color = _color_with_alpha(
+            self.draw_color if color is None else color, alpha
+        )
 
         if alpha >= 1.0:
             _ = pg.draw.line(self.display, draw_color, (x, y), (x, y))
@@ -382,7 +404,9 @@ class Renderer:
     ) -> None:
         x1, y1 = _translate_offset(x1, y1)
         x2, y2 = _translate_offset(x2, y2)
-        draw_color = _color_with_alpha(self.draw_color if color is None else color, alpha)
+        draw_color = _color_with_alpha(
+            self.draw_color if color is None else color, alpha
+        )
 
         if alpha >= 1.0:
             _ = pg.draw.line(self.display, draw_color, (x1, y1), (x2, y2))
@@ -392,7 +416,9 @@ class Renderer:
         _ = pg.draw.line(overlay, draw_color, (x1, y1), (x2, y2))
         _ = self.display.blit(overlay, (0, 0))
 
-    def draw_text(self, x: float, y: float, string: str, color: pg.Color | None = None) -> None:
+    def draw_text(
+        self, x: float, y: float, string: str, color: pg.Color | None = None
+    ) -> None:
         x, y = _translate_offset(x, y)
         surface = self._render_text_with_fallback(
             string, self.draw_color if color is None else color
@@ -424,10 +450,14 @@ class Renderer:
         scale_y_abs: float = abs(y_scale)
 
         offset_x: float = (
-            sprite_index.x_offset if x_scale >= 0 else sprite_index.width - sprite_index.x_offset
+            sprite_index.x_offset
+            if x_scale >= 0
+            else sprite_index.width - sprite_index.x_offset
         )
         offset_y: float = (
-            sprite_index.y_offset if y_scale >= 0 else sprite_index.height - sprite_index.y_offset
+            sprite_index.y_offset
+            if y_scale >= 0
+            else sprite_index.height - sprite_index.y_offset
         )
 
         draw_x: float = x - offset_x * scale_x_abs

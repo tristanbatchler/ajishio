@@ -333,26 +333,60 @@ class TurnDisplay(aj.GameObject):
                 text = "Waiting for opponent..."
                 color = aj.c_yellow
             elif status == LobbyStatus.MATCH_FOUND:
-                text = f"Matched! {self.game.opponent_id} vs you"
+                short_id = self.game.opponent_id[:8] if self.game.opponent_id else "??????"
+                text = f"Matched! {short_id} vs you"
                 color = aj.c_lime
             elif status == LobbyStatus.OPPONENT_LEFT:
                 text = "Opponent disconnected"
                 color = aj.c_orange
             else:
-                role = f"  [You are {self.game.my_role}]" if self.game.my_role else ""
                 is_your_turn = False
                 if self.game.my_role == Role.white and self.game.current_turn == Role.white:
                     is_your_turn = True
                 elif self.game.my_role == Role.black and self.game.current_turn == Role.black:
                     is_your_turn = True
-                turn_text = (
-                    "Your turn" if is_your_turn else f"{self.game.current_turn.name_title} to move"
-                )
-                text = f"{turn_text}{role}"
+                turn_text = "Your turn" if is_your_turn else "Opponent's turn"
+                text = f"{turn_text}".strip()
                 color = aj.c_white
-            tw = aj.text_width(text)
-            aj.draw_rectangle(px, ay, px + tw + 30, ay + 24, color=aj.c_black)
-            aj.draw_text(px + 10, ay + 2, text, color)
+            _ = _draw_wrapped_text(px, ay, text, color, panel_width=PANEL_WIDTH - 20)
+
+
+def _draw_wrapped_text(
+    x: float,
+    y: float,
+    text: str,
+    color: aj.Color,
+    *,
+    max_width: float = 0.0,
+    panel_width: float = 0.0,
+    line_height: float = 18.0,
+) -> int:
+    """Draw text wrapped to max_width. Returns number of lines drawn."""
+    assert _prompt_font is not None
+    aj.draw_set_font(_prompt_font)
+    effective_max = panel_width if panel_width > 0 else max_width
+    if effective_max <= 0:
+        effective_max = _room_width() - x - 20
+    words = text.split()
+    if not words:
+        return 0
+    lines: list[str] = []
+    current_line: list[str] = []
+    current_width: float = 0.0
+    for word in words:
+        word_w = aj.text_width(word) + aj.text_width(" ")
+        if current_width + word_w > effective_max and current_line:
+            lines.append(" ".join(current_line))
+            current_line = [word]
+            current_width = word_w
+        else:
+            current_line.append(word)
+            current_width += word_w
+    if current_line:
+        lines.append(" ".join(current_line))
+    for i, line_text in enumerate(lines):
+        aj.draw_text(x + 10, y + i * line_height + 2, line_text, color)
+    return len(lines)
 
 
 @final

@@ -153,6 +153,7 @@ game_end = _engine.game_end
 game_restart = _engine.game_restart
 game_set_speed = _engine.game_set_speed
 set_rooms = _engine.set_rooms
+add_object = _engine.add_object
 register_objects = _engine.register_objects
 room_goto = _engine.room_goto
 room_goto_next = _engine.room_goto_next

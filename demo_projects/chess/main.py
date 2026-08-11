@@ -358,7 +358,6 @@ class Game:
         self._winner = None
 
 
-
 def _find_king(state: BoardState, colour: Colour) -> tuple[int, int] | None:
     for col in range(GRID_SIZE):
         for row in range(GRID_SIZE):
@@ -380,13 +379,18 @@ def _is_king_in_check(state: BoardState, colour: Colour) -> bool:
             cell = state.get(col, row)
             if cell is None or cell.colour != opponent:
                 continue
-            if _can_piece_strike(state, col, row, opponent, kcol, krow):
+            if _piece_attacks_square(state, col, row, opponent, kcol, krow):
                 return True
     return False
 
 
-def _can_piece_strike(
-    state: BoardState, col: int, row: int, colour: Colour, target_col: int, target_row: int
+def _piece_attacks_square(
+    state: BoardState,
+    col: int,
+    row: int,
+    colour: Colour,
+    target_col: int,
+    target_row: int,
 ) -> bool:
     """Check if a piece at (col, row) can geometrically strike (target_col, target_row)."""
     cell = state.get(col, row)
@@ -620,7 +624,7 @@ class InputHandler(aj.GameObject):
 
     @override
     def step(self) -> None:
-        if self.game.winner is not None and aj.keyboard_check(ord('r')):
+        if self.game.winner is not None and aj.keyboard_check(ord("r")):
             self.game.reset()
             return
         room_x, room_y = _mouse_room_position()

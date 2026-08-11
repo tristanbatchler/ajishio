@@ -593,7 +593,7 @@ async def main() -> None:
     game = Game(state=initial_board(), current_turn=Role.white)
     client: aj.GameNetClient | None = None
     try:
-        client = aj.GameNetClient("ws://localhost:8766")
+        client = aj.GameNetClient("wss://ajishio.tbat.me/chess")
         await client.connect()
         print("Connected to server")
     except Exception as e:

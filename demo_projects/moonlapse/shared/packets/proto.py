@@ -1,0 +1,13 @@
+from __future__ import annotations
+
+from typing import Protocol, runtime_checkable
+
+
+@runtime_checkable
+class PacketProto(Protocol):
+    def get_type(self) -> int: ...
+    def get_fmt(self) -> str: ...
+    def get_structure(self) -> tuple[object, ...]: ...
+
+    @classmethod
+    def from_bytes(cls, data: bytes) -> PacketProto: ...

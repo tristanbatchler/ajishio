@@ -3,19 +3,38 @@ import demo_projects.moonlapse.shared.packets.clientbound as clientbound
 from demo_projects.moonlapse.shared.packets import deserialize_from_client, deserialize_from_server
 
 
-# serialise serverbound
-chat = serverbound.ChatRequest(message="Hello, world!")
-raw = chat.serialize()
-print(f"serialised: {raw.hex()}")
+chat_request = serverbound.ChatRequest("Hello?")
+bytes = chat_request.serialize()
 
-# deserialise from client
-pkt = deserialize_from_client(raw)
-assert isinstance(pkt, serverbound.ChatRequest)
-print(f"deserialised: {type(pkt).__name__}, message={pkt.message}")
+incoming = deserialize_from_client(bytes)
+response: clientbound.ClientboundPacket | None = None
+if isinstance(incoming, serverbound.ChatRequest):
+    print("Got a chat request!")
+    print(incoming.message)
+    response = clientbound.ChatResponse(ok=True)
+elif isinstance(incoming, serverbound.MoveRequest):
+    print("Got a move request!")
+    print(f"({incoming.dx}, {incoming.dy})")
+    response = clientbound.MoveResponse(
+        ok=False, err="Hmmmm I don't like the look of that movement"
+    )
+else:
+    print("Got something else!")
 
-# round-trip
-resp = clientbound.ChatResponse(ok=True, err=None)
-raw2 = resp.serialize()
-pkt2 = deserialize_from_server(raw2)
-assert isinstance(pkt2, clientbound.ChatResponse)
-print(f"round-trip: {type(pkt2).__name__}, ok={pkt2.ok}, err={pkt2.err}")
+if response is not None:
+    bytes = response.serialize()
+
+    incoming = deserialize_from_server(bytes)
+
+    if isinstance(incoming, clientbound.ChatResponse):
+        print("Got a chat response!")
+        if not incoming.ok:
+            print(f"It's bad news: {incoming.err}")
+        else:
+            print("It's all good!")
+    elif isinstance(incoming, clientbound.MoveResponse):
+        print("Got a move response!")
+        if not incoming.ok:
+            print(f"It's not good at all... {incoming.err}")
+        else:
+            print("Guess they like my moves")

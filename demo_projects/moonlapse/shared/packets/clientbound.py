@@ -25,7 +25,7 @@ class ClientboundResponsePacket(ClientboundPacket, ABC):
     FORMAT_STRING: ClassVar[str] = "?128s"
 
     ok: bool
-    err: str | None
+    err: str | None = None
 
     @override
     def get_structure(self):

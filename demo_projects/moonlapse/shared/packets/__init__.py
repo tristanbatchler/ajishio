@@ -1,13 +1,18 @@
 from demo_projects.moonlapse.shared.packets import serverbound as serverbound
 from demo_projects.moonlapse.shared.packets import clientbound as clientbound
-from demo_projects.moonlapse.shared.packets.proto import PacketProto
 
 
-def deserialize(data: bytes) -> PacketProto:
-    header: bytes = data[:2]
-    packet_type: int = int.from_bytes(header)
-    payload_bytes = data[2:]
-    for registry in (serverbound.REGISTRY, clientbound.REGISTRY):
-        if packet_type in registry:
-            return registry[packet_type].from_bytes(payload_bytes)
-    raise ValueError(f"Unknown packet type: {packet_type}")
+def deserialize_from_server(data: bytes) -> clientbound.ClientboundPacket:
+    packet_type = clientbound.ClientboundPacketType(int.from_bytes(data[:2]))
+    payload = data[2:]
+
+    packet_class = clientbound.get_packet_class(packet_type)
+    return packet_class.from_bytes(payload)
+
+
+def deserialize_from_client(data: bytes) -> serverbound.ServerboundPacket:
+    packet_type = serverbound.ServerboundPacketType(int.from_bytes(data[:2]))
+    payload = data[2:]
+
+    packet_class = serverbound.get_packet_class(packet_type)
+    return packet_class.from_bytes(payload)

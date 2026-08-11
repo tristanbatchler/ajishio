@@ -1,8 +1,9 @@
 from __future__ import annotations
 from collections.abc import Iterable
+from abc import ABC, abstractmethod
 import struct
 
-from typing import ClassVar, Protocol, runtime_checkable
+from typing import ClassVar, Self
 
 
 def _encode_structure(structure: Iterable[object]) -> Iterable[object]:
@@ -21,16 +22,16 @@ def _decode_structure(structure: Iterable[object]) -> Iterable[object]:
             yield obj
 
 
-@runtime_checkable
-class PacketProto(Protocol):
+class Packet(ABC):
     TYPE: ClassVar[int]
     IS_SERVERBOUND: ClassVar[bool]
     FORMAT_STRING: ClassVar[str]
 
+    @abstractmethod
     def get_structure(self) -> tuple[object, ...]: ...
 
     @classmethod
-    def from_bytes(cls, data: bytes) -> PacketProto:
+    def from_bytes(cls, data: bytes) -> Self:
         fmt = cls.FORMAT_STRING
         structure = _decode_structure(struct.unpack(fmt, data))
         return cls(*structure)

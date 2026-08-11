@@ -23,16 +23,12 @@ class ServerboundPacket(PacketProto, Protocol):
 @dataclass(frozen=True)
 class ChatRequest(ServerboundPacket):
     TYPE = ServerboundPacketType.CHAT_REQUEST
+    FORMAT_STRING = "128s"
     message: str
 
     @override
-    @staticmethod
-    def get_fmt() -> str:
-        return ">127s"
-
-    @override
-    def get_structure(self) -> tuple[object, ...]:
-        return (self.message.encode(),)
+    def get_structure(self):
+        return (self.message,)
 
 
 REGISTRY: dict[int, type[PacketProto]] = {

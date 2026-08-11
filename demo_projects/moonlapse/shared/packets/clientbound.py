@@ -23,17 +23,26 @@ class ClientboundPacket(PacketProto, Protocol):
 @dataclass(frozen=True)
 class ChatResponse(ClientboundPacket):
     TYPE = ClientboundPacketType.CHAT_RESPONSE
+    FORMAT_STRING = "?128s"
     ok: bool
     err: str | None
 
     @override
-    @staticmethod
-    def get_fmt() -> str:
-        return ">B128s"
+    def get_structure(self):
+        return (self.ok, self.err or "")
+
+
+@final
+@dataclass(frozen=True)
+class MoveResponse(ClientboundPacket):
+    TYPE = ClientboundPacketType.MOVE_RESPONSE
+    FORMAT_STRING = "?128s"
+    ok: bool
+    err: str | None
 
     @override
     def get_structure(self) -> tuple[object, ...]:
-        return (self.ok, self.err.encode() if self.err else b"\x00" * 128)
+        return (self.ok, self.err or "")
 
 
 REGISTRY: dict[int, type[PacketProto]] = {

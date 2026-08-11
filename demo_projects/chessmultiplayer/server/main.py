@@ -87,7 +87,9 @@ async def _send_to(server: ServerState, client_id: UUID, packet: Packet) -> None
         await _send(ws, packet)
 
 
-async def _broadcast(server: ServerState, packet: Packet, *, exclude: UUID | None = None) -> None:
+async def _broadcast(
+    server: ServerState, packet: Packet, *, exclude: UUID | None = None
+) -> None:
     for client_id, ws in list(server.id_to_ws.items()):
         if client_id == exclude:
             continue
@@ -104,7 +106,9 @@ def _board_to_wire(state: BoardState) -> bytes:
         for col in range(8):
             cell = state.get(col, row)
             if cell is not None:
-                grid_bytes[row * 8 + col] = (cell.piece_type.value << 4) | cell.colour.value
+                grid_bytes[row * 8 + col] = (
+                    cell.piece_type.value << 4
+                ) | cell.colour.value
             else:
                 grid_bytes[row * 8 + col] = 0
     return bytes(grid_bytes)
@@ -174,7 +178,9 @@ async def _handle_join(server: ServerState, ws: ServerConnection) -> None:
 # ── Move handling ───────────────────────────────────────────────────────────
 
 
-async def _handle_move(server: ServerState, client_id: UUID, request: MoveRequest) -> None:
+async def _handle_move(
+    server: ServerState, client_id: UUID, request: MoveRequest
+) -> None:
     """Validate and apply a move. Authoritative server logic."""
     game_id = server.client_games.get(client_id)
     if game_id is None or game_id not in server.games:
@@ -188,7 +194,9 @@ async def _handle_move(server: ServerState, client_id: UUID, request: MoveReques
     if (game.white_id == client_id and game.current_turn != Role.white) or (
         game.black_id == client_id and game.current_turn != Role.black
     ):
-        await _send_to(server, client_id, MoveResult(success=False, error="not your turn"))
+        await _send_to(
+            server, client_id, MoveResult(success=False, error="not your turn")
+        )
         return
 
     move = Move(
@@ -198,12 +206,16 @@ async def _handle_move(server: ServerState, client_id: UUID, request: MoveReques
         to_row=request.to_row,
     )
     if not game.state.is_legal(move):
-        await _send_to(server, client_id, MoveResult(success=False, error="out of bounds"))
+        await _send_to(
+            server, client_id, MoveResult(success=False, error="out of bounds")
+        )
         return
 
     from_cell = game.state.get(request.from_col, request.from_row)
     if from_cell is None or from_cell.colour != game.current_turn:
-        await _send_to(server, client_id, MoveResult(success=False, error="not your piece"))
+        await _send_to(
+            server, client_id, MoveResult(success=False, error="not your piece")
+        )
         return
 
     legal = game.state.legal_moves(request.from_col, request.from_row)
@@ -214,7 +226,9 @@ async def _handle_move(server: ServerState, client_id: UUID, request: MoveReques
         and m.to_row == request.to_row
         for m in legal
     ):
-        await _send_to(server, client_id, MoveResult(success=False, error="invalid move"))
+        await _send_to(
+            server, client_id, MoveResult(success=False, error="invalid move")
+        )
         return
 
     # Apply move
@@ -311,7 +325,9 @@ async def _handle_disconnect(server: ServerState, ws: ServerConnection) -> None:
                 error=f"opponent {client_id.hex[:8]} disconnected",
             ),
         )
-        await _send_to(server, survivor_id, LobbyUpdate(status=LobbyStatus.OPPONENT_LEFT))
+        await _send_to(
+            server, survivor_id, LobbyUpdate(status=LobbyStatus.OPPONENT_LEFT)
+        )
 
     del server.games[game_id]
 
@@ -343,7 +359,9 @@ async def handle_client(server: ServerState, ws: ServerConnection) -> None:
 
 async def main() -> None:
     server = ServerState()
-    async with websockets.serve(lambda ws: handle_client(server, ws), host="localhost", port=8766):
+    async with websockets.serve(
+        lambda ws: handle_client(server, ws), host="localhost", port=8766
+    ):
         await asyncio.Future()
 
 

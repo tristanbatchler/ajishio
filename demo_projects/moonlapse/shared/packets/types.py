@@ -1,19 +1,8 @@
 from __future__ import annotations
 
-import struct
-
 from demo_projects.moonlapse.shared.packets.clientbound import REGISTRY as CB_REGISTRY
 from demo_projects.moonlapse.shared.packets.serverbound import REGISTRY as SB_REGISTRY
 from demo_projects.moonlapse.shared.packets.proto import PacketProto
-
-
-def serialize(proto: PacketProto) -> bytes:
-    ptype = proto.get_type()
-    fmt = proto.get_fmt()
-    structure = proto.get_structure()
-    header_bytes = struct.pack(">H", ptype)
-    payload_bytes = struct.pack(fmt, *structure)
-    return header_bytes + payload_bytes
 
 
 def deserialize(data: bytes) -> PacketProto:

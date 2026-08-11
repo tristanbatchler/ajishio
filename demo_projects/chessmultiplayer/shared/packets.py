@@ -106,7 +106,9 @@ class AssignId:
     sender_id: UUID
 
     def encode(self) -> str:
-        return base64.b64encode(struct.pack("!B", self.TAG.value) + self.sender_id.bytes).decode()
+        return base64.b64encode(
+            struct.pack("!B", self.TAG.value) + self.sender_id.bytes
+        ).decode()
 
     @staticmethod
     def unpack_body(body: bytes) -> AssignId | None:
@@ -143,7 +145,9 @@ class GameStart:
             return None
         white = UUID(bytes=body[:UUID_LEN])
         black_raw = body[UUID_LEN : UUID_LEN * 2]
-        black_id: UUID | None = None if black_raw == GameStart._ZERO_UUID else UUID(bytes=black_raw)
+        black_id: UUID | None = (
+            None if black_raw == GameStart._ZERO_UUID else UUID(bytes=black_raw)
+        )
         return GameStart(white_id=white, black_id=black_id)
 
 
@@ -188,7 +192,9 @@ class MoveRequest:
     def encode(self) -> str:
         return base64.b64encode(
             struct.pack("!B", PacketType.MOVE_REQUEST.value)
-            + struct.pack("!BBBB", self.from_col, self.from_row, self.to_col, self.to_row)
+            + struct.pack(
+                "!BBBB", self.from_col, self.from_row, self.to_col, self.to_row
+            )
         ).decode()
 
     @staticmethod
@@ -251,7 +257,10 @@ class LobbyUpdate:
             ).decode()
         if self.white_id:
             return base64.b64encode(
-                tag_byte + struct.pack("!B", len(status_bytes)) + status_bytes + self.white_id.bytes
+                tag_byte
+                + struct.pack("!B", len(status_bytes))
+                + status_bytes
+                + self.white_id.bytes
             ).decode()
         return base64.b64encode(
             tag_byte + struct.pack("!B", len(status_bytes)) + status_bytes
@@ -285,7 +294,9 @@ class ClientConnected:
     client_id: UUID
 
     def encode(self) -> str:
-        return base64.b64encode(struct.pack("!B", self.TAG.value) + self.client_id.bytes).decode()
+        return base64.b64encode(
+            struct.pack("!B", self.TAG.value) + self.client_id.bytes
+        ).decode()
 
     @staticmethod
     def unpack_body(body: bytes) -> ClientConnected | None:
@@ -300,7 +311,9 @@ class ClientDisconnected:
     client_id: UUID
 
     def encode(self) -> str:
-        return base64.b64encode(struct.pack("!B", self.TAG.value) + self.client_id.bytes).decode()
+        return base64.b64encode(
+            struct.pack("!B", self.TAG.value) + self.client_id.bytes
+        ).decode()
 
     @staticmethod
     def unpack_body(body: bytes) -> ClientDisconnected | None:

@@ -127,7 +127,11 @@ def _find_king(state: BoardState, colour: Role) -> tuple[int, int] | None:
     for col in range(GRID_SIZE):
         for row in range(GRID_SIZE):
             cell = state.get(col, row)
-            if cell is not None and cell.piece_type == PieceType.king and cell.colour == colour:
+            if (
+                cell is not None
+                and cell.piece_type == PieceType.king
+                and cell.colour == colour
+            ):
                 return (col, row)
     return None
 
@@ -163,7 +167,9 @@ def _piece_attacks_square(
         case PieceType.queen:
             is_diag = abs(target_col - col) == abs(target_row - row)
             is_straight = col == target_col or row == target_row
-            return (is_diag or is_straight) and _path_clear(state, col, row, target_col, target_row)
+            return (is_diag or is_straight) and _path_clear(
+                state, col, row, target_col, target_row
+            )
         case _:  # pyright: ignore[reportUnnecessaryComparison]
             raise AssertionError(f"unhandled piece type {ptype}")  # pyright: ignore[reportUnreachable]
 
@@ -236,7 +242,8 @@ def _pseudo_valid_moves_for(state: BoardState, col: int, row: int) -> list[Move]
                     if _in_bounds(nc, nr):
                         target = state.get(nc, nr)
                         if target is None or (
-                            target.colour != colour and target.piece_type != PieceType.king
+                            target.colour != colour
+                            and target.piece_type != PieceType.king
                         ):
                             moves.append(Move(col, row, nc, nr))
     return moves
@@ -324,8 +331,12 @@ class BoardState:
         return self.grid[row][col]
 
     def set(self, col: int, row: int, value: CellData) -> BoardState:
-        new_row = tuple(self.grid[row][:col]) + (value,) + tuple(self.grid[row][col + 1 :])
-        return BoardState(tuple(self.grid[:row]) + (new_row,) + tuple(self.grid[row + 1 :]))
+        new_row = (
+            tuple(self.grid[row][:col]) + (value,) + tuple(self.grid[row][col + 1 :])
+        )
+        return BoardState(
+            tuple(self.grid[:row]) + (new_row,) + tuple(self.grid[row + 1 :])
+        )
 
     def is_legal(self, move: Move) -> bool:
         return (
@@ -349,7 +360,9 @@ class BoardState:
 
     @property
     def is_finished(self) -> bool:
-        return _find_king(self, Role.white) is None or _find_king(self, Role.black) is None
+        return (
+            _find_king(self, Role.white) is None or _find_king(self, Role.black) is None
+        )
 
     def check_winner(self) -> Role | None:
         if is_checkmate(self, Role.white):

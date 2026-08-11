@@ -252,8 +252,16 @@ class BoardRenderer(aj.GameObject):
             if cell is None:
                 continue
             if self.game.drag_col is not None and self.game.drag_row is not None:
-                drag_vis_col = GRID_SIZE - 1 - self.game.drag_col if flipped else self.game.drag_col
-                drag_vis_row = GRID_SIZE - 1 - self.game.drag_row if flipped else self.game.drag_row
+                drag_vis_col = (
+                    GRID_SIZE - 1 - self.game.drag_col
+                    if flipped
+                    else self.game.drag_col
+                )
+                drag_vis_row = (
+                    GRID_SIZE - 1 - self.game.drag_row
+                    if flipped
+                    else self.game.drag_row
+                )
                 if col == drag_vis_col and logical_row == drag_vis_row:
                     continue
             px, py = _col_x(col), _row_y(logical_row)
@@ -299,7 +307,9 @@ class BoardRenderer(aj.GameObject):
         if piece is not None:
             offset = (_tile_size() - _sprite_size()) // 2
             frame = _frame_index(piece.piece_type, piece.colour)
-            aj.draw_sprite(px + offset, py + offset, sprites, frame, x_scale=1.1, y_scale=1.1)
+            aj.draw_sprite(
+                px + offset, py + offset, sprites, frame, x_scale=1.1, y_scale=1.1
+            )
 
 
 class TurnDisplay(aj.GameObject):
@@ -333,7 +343,9 @@ class TurnDisplay(aj.GameObject):
                 text = "Waiting for opponent..."
                 color = aj.c_yellow
             elif status == LobbyStatus.MATCH_FOUND:
-                short_id = self.game.opponent_id[:8] if self.game.opponent_id else "??????"
+                short_id = (
+                    self.game.opponent_id[:8] if self.game.opponent_id else "??????"
+                )
                 text = f"Matched! {short_id} vs you"
                 color = aj.c_lime
             elif status == LobbyStatus.OPPONENT_LEFT:
@@ -341,9 +353,15 @@ class TurnDisplay(aj.GameObject):
                 color = aj.c_orange
             else:
                 is_your_turn = False
-                if self.game.my_role == Role.white and self.game.current_turn == Role.white:
+                if (
+                    self.game.my_role == Role.white
+                    and self.game.current_turn == Role.white
+                ):
                     is_your_turn = True
-                elif self.game.my_role == Role.black and self.game.current_turn == Role.black:
+                elif (
+                    self.game.my_role == Role.black
+                    and self.game.current_turn == Role.black
+                ):
                     is_your_turn = True
                 turn_text = "Your turn" if is_your_turn else "Opponent's turn"
                 text = f"{turn_text}".strip()
@@ -430,9 +448,13 @@ class InputHandler(aj.GameObject):
 
                 if isinstance(pkt, AssignId):
                     self.my_id = pkt.sender_id.hex[:8]
-                    self.game.message_log.append((f"Connected as {self.my_id}", aj.c_lime))
+                    self.game.message_log.append(
+                        (f"Connected as {self.my_id}", aj.c_lime)
+                    )
                 elif isinstance(pkt, GameStart):
-                    is_white = self.my_id is not None and pkt.white_id.hex[:8] == self.my_id
+                    is_white = (
+                        self.my_id is not None and pkt.white_id.hex[:8] == self.my_id
+                    )
                     self.game.my_role = Role.white if is_white else Role.black
                     if is_white and pkt.black_id is not None:
                         self.game.opponent_id = pkt.black_id.hex[:8]
@@ -444,13 +466,17 @@ class InputHandler(aj.GameObject):
                 elif isinstance(pkt, LobbyUpdate):
                     self.game.lobby_status = pkt.status
                     if pkt.white_id and pkt.black_id:
-                        self.game.opponent_id = f"{pkt.white_id.hex[:8]} vs {pkt.black_id.hex[:8]}"
+                        self.game.opponent_id = (
+                            f"{pkt.white_id.hex[:8]} vs {pkt.black_id.hex[:8]}"
+                        )
                     self.game.message_log.append((f"Lobby: {pkt.status}", aj.c_gray))
                 elif isinstance(pkt, MoveResult):
                     if pkt.success:
                         self.game.message_log.append(("", aj.c_lime))
                     else:
-                        self.game.message_log.append((f"Rejected: {pkt.error}", aj.c_red))
+                        self.game.message_log.append(
+                            (f"Rejected: {pkt.error}", aj.c_red)
+                        )
                 elif isinstance(pkt, GameOver):
                     self.game.winner = Role(pkt.winner)
                     self.game.lobby_status = LobbyStatus.GAME_OVER
@@ -567,7 +593,9 @@ class InputHandler(aj.GameObject):
         for i, (line, color) in enumerate(self.game.message_log):
             if line:
                 y = _board_offset_y + _tile_size() * GRID_SIZE + 10 + i * 18
-                aj.draw_text(_board_offset_x + _tile_size() * GRID_SIZE + 10, y, line, color)
+                aj.draw_text(
+                    _board_offset_x + _tile_size() * GRID_SIZE + 10, y, line, color
+                )
 
 
 # ── Main ──────────────────────────────────────────────────────────────────

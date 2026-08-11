@@ -93,6 +93,12 @@
             "type": "debugpy",
             "request": "launch",
             "module": "demo_projects.rpg.main"
+        },
+        {
+            "name": "Moonlapse Server",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "demo_projects.moonlapse.server.main"
         }
     ]
 }

@@ -1,7 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from enum import IntEnum, auto
-from typing import ClassVar, override, final
+from typing import ClassVar, override, final, TypeVar, Callable
 from abc import ABC
 
 from demo_projects.moonlapse.shared.packets.base import Packet
@@ -15,9 +15,23 @@ class ClientboundPacketType(IntEnum):
     REGISTER_RESPONSE = auto()
 
 
+REGISTRY: dict[int, type[ClientboundPacket]] = {}
+
+
 @dataclass(frozen=True)
 class ClientboundPacket(Packet, ABC):
     IS_SERVERBOUND: ClassVar[bool] = False
+
+
+T = TypeVar("T", bound=ClientboundPacket)
+
+
+def register() -> Callable[[type[T]], type[T]]:
+    def decorator(cls: type[T]) -> type[T]:
+        REGISTRY[int(cls.TYPE)] = cls
+        return cls
+
+    return decorator
 
 
 @dataclass(frozen=True)
@@ -33,24 +47,23 @@ class ClientboundResponsePacket(ClientboundPacket, ABC):
 
 
 @final
+@register()
 @dataclass(frozen=True)
 class ChatResponse(ClientboundResponsePacket):
     TYPE = ClientboundPacketType.CHAT_RESPONSE
 
 
 @final
+@register()
 @dataclass(frozen=True)
 class MoveResponse(ClientboundResponsePacket):
     TYPE = ClientboundPacketType.MOVE_RESPONSE
 
 
 def get_packet_class(packet_type: ClientboundPacketType) -> type[ClientboundPacket]:
-    match packet_type:
-        case ClientboundPacketType.CHAT_RESPONSE:
-            return ChatResponse
-        case ClientboundPacketType.MOVE_RESPONSE:
-            return MoveResponse
-        case _:
-            raise NotImplementedError(
-                f"Packet type {packet_type} does not belong to clientbound registry"
-            )
+    key = int(packet_type)
+    if key in REGISTRY:
+        return REGISTRY[key]
+    raise NotImplementedError(
+        f"Packet type {packet_type} does not belong to clientbound registry"
+    )

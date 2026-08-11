@@ -1,6 +1,9 @@
 import demo_projects.moonlapse.shared.packets.serverbound as serverbound
 import demo_projects.moonlapse.shared.packets.clientbound as clientbound
-from demo_projects.moonlapse.shared.packets import deserialize_from_client, deserialize_from_server
+from demo_projects.moonlapse.shared.packets import (
+    deserialize_from_client,
+    deserialize_from_server,
+)
 
 
 chat_request = serverbound.ChatRequest("Hello?")

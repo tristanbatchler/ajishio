@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Collection
+from datetime import datetime, timezone
 import logging
 from websockets.asyncio.server import ServerConnection, serve
 
@@ -53,16 +54,20 @@ class Hub:
     async def send_to(
         self, client_id: int, packet: clientbound.ClientboundPacket
     ) -> None:
-        for sess in self._clients.values():
-            if sess.client_id == client_id:
+        for cid, session in self._clients.items():
+            if cid == client_id:
                 try:
-                    await sess.ws.send(packet.serialize())
+                    await session.ws.send(packet.serialize())
                 except Exception as exc:
                     log.warning("send_to %d failed: %s", client_id, exc)
                 return
 
-    async def broadcast(self, packet: clientbound.ClientboundPacket) -> None:
+    async def broadcast(
+        self, packet: clientbound.ClientboundPacket, except_for: int | None = None
+    ) -> None:
         for cid, session in self._clients.items():
+            if cid == except_for:
+                continue
             try:
                 await session.ws.send(packet.serialize())
             except Exception as exc:
@@ -74,11 +79,13 @@ async def _handle_client(hub: Hub, ws: ServerConnection) -> None:
     session = ClientSession(cid, ws)
     hub.register_client(cid, session)
 
+    await hub.send_to(cid, clientbound.ClientId(cid))
+
     log.info(f"connected {cid} as {ws.remote_address}, total={len(hub.get_clients())}")  # pyright: ignore[reportAny]
 
-    # Assign ID + notify
-    await hub.send_to(cid, clientbound.LoginResponse(ok=True))
-    await hub.broadcast(clientbound.LoginResponse(ok=True))
+    server_time = datetime.now(timezone.utc).isoformat()
+    motd_text = f"Welcome to Moonlapse!\nServer time: {server_time}\nType /login <user> <pass> to enter."
+    await hub.send_to(cid, clientbound.Motd(motd_text))
 
     try:
         async for raw in ws:
@@ -96,6 +103,10 @@ async def _handle_client(hub: Hub, ws: ServerConnection) -> None:
             elif isinstance(pkt, serverbound.LoginRequest):
                 log.info(f"login from {cid}")
                 await hub.send_to(cid, clientbound.LoginResponse(ok=True))
+                await hub.broadcast(
+                    clientbound.Announcement(f"Player {cid} joined the game."),
+                    except_for=cid,
+                )
 
             elif isinstance(pkt, serverbound.LogoutRequest):
                 log.info(f"log out from {cid}")
@@ -112,6 +123,7 @@ async def _handle_client(hub: Hub, ws: ServerConnection) -> None:
         log.info(f"disconnected {cid} ({exc})")
     finally:
         _ = hub.unregister_client(cid)
+        await hub.broadcast(clientbound.Announcement(f"Player {cid} left the game."))
         log.info(
             f"disconnected {cid} ({ws.remote_address}), total={len(hub.get_clients())}"  # pyright: ignore[reportAny]
         )

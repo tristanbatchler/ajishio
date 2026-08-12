@@ -36,6 +36,10 @@ class Manager(aj.GameObject):
         )
         self.connected: bool = False
 
+    def log(self, message: str, color: aj.Color) -> None:
+        self.message_log.append((message, color))
+        print(message)
+
     @override
     def step(self) -> None:
         super().step()
@@ -52,22 +56,53 @@ class Manager(aj.GameObject):
 
             if isinstance(pkt, clientbound.LoginResponse):
                 self.connected = True
-                self.my_id = 1
-                self.message_log.append(("* connected", aj.c_lime))
+                if not pkt.ok:
+                    self.log(f"Can't login: {pkt.err}", aj.c_orange)
+                else:
+                    self.log("Login success", aj.c_lime)
 
-            elif isinstance(pkt, clientbound.LogoutResponse):
+            elif isinstance(pkt, clientbound.ClientId):
+                self.my_id = pkt.id
                 self.message_log.append(
-                    (f"* {'ok' if pkt.ok else pkt.err}", aj.c_orange)
+                    (f"Obtained assigned ID: {self.my_id}", aj.c_aqua)
                 )
 
+            elif isinstance(pkt, clientbound.LogoutResponse):
+                if not pkt.ok:
+                    self.log(f"Can't logout: {pkt.err}", aj.c_orange)
+                else:
+                    self.log("Logout success", aj.c_lime)
+
             elif isinstance(pkt, clientbound.ChatResponse):
-                self.message_log.append((f"  server: ok={pkt.ok}", aj.c_aqua))
+                if not pkt.ok:
+                    self.message_log.append(
+                        (f"Can't send that: {pkt.err}", aj.c_orange)
+                    )
 
             elif isinstance(pkt, clientbound.MoveResponse):
-                self.message_log.append((f"  server: ok={pkt.ok}", aj.c_aqua))
+                if not pkt.ok:
+                    self.message_log.append(
+                        (f"Can't move there: {pkt.err}", aj.c_orange)
+                    )
+                else:
+                    self.log("Move successful", aj.c_lime)
 
             elif isinstance(pkt, clientbound.RegisterResponse):
-                self.message_log.append((f"  server: ok={pkt.ok}", aj.c_aqua))
+                if not pkt.ok:
+                    self.log(f"Can't register: {pkt.err}", aj.c_orange)
+                else:
+                    self.log("Register success", aj.c_lime)
+
+            elif isinstance(pkt, clientbound.Motd):
+                self.log(pkt.motd, aj.c_aqua)
+
+            elif isinstance(pkt, clientbound.Announcement):
+                self.log(f"{pkt.message}", aj.c_yellow)
+
+            elif isinstance(pkt, clientbound.ClientDisconnected):
+                self.message_log.append(
+                    (f"Player {pkt.client_id} disconnected", aj.c_yellow)
+                )
 
             incoming = self.client.recv()
 

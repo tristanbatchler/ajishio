@@ -13,6 +13,7 @@ dependencies = [
 [tool.uv.workspace]
 members = [
     "demo_projects",
+    "demo_projects/moonlapse",
 ]
 
 [tool.uv.sources]

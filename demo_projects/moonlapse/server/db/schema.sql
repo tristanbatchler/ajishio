@@ -1,4 +1,4 @@
-CREATE TABLE users
+CREATE TABLE IF NOT EXISTS users
 (
   id INTEGER PRIMARY KEY NOT NULL,
   username TEXT NOT NULL,
@@ -8,7 +8,7 @@ CREATE TABLE users
   last_updated TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE user_logins
+CREATE TABLE IF NOT EXISTS user_logins
 (
   id INTEGER PRIMARY KEY NOT NULL,
   user_id INTEGER NOT NULL,
@@ -17,7 +17,7 @@ CREATE TABLE user_logins
   FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
-CREATE TABLE user_login_failures
+CREATE TABLE IF NOT EXISTS user_login_failures
 (
   id INTEGER PRIMARY KEY NOT NULL,
   user_id INTEGER NOT NULL,
@@ -26,7 +26,7 @@ CREATE TABLE user_login_failures
   FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
-CREATE TABLE user_lockouts
+CREATE TABLE IF NOT EXISTS user_lockouts
 (
   id INTEGER PRIMARY KEY NOT NULL,
   user_id INTEGER NOT NULL,

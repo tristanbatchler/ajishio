@@ -4,16 +4,21 @@ version = "0.1.0"
 description = "Moonlapse multiplayer chat demo."
 requires-python = ">=3.14"
 dependencies = [
-    "ajishio",
     "websockets>=16.0",
     "aiosqlite>=0.20.0",
 ]
 
-[tool.uv.sources]
-ajishio = { path = "../../../ajishio", editable = true }
+[tool.setuptools.packages.find]
+include = ["moonlapse*"]
 
-[tool.setuptools.packages]
-find = { include = ["moonlapse*"] }
+[tool.basedpyright]
+stubPath = "server"
+ignore = [
+    "**/__pycache__/**",
+    "**/db/query.py",
+    "**/db/models.py",
+    "**/db/__init__.py",
+]
 
 [dependency-groups]
 dev = [

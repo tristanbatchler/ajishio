@@ -6,6 +6,16 @@ requires-python = ">=3.14"
 members = [
     "ajishio-demo-projects",
     "ajishio-workspace",
+    "moonlapse",
+]
+
+[[package]]
+name = "aiosqlite"
+version = "0.22.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/4e/8a/64761f4005f17809769d23e518d915db74e6310474e733e3593cfc854ef1/aiosqlite-0.22.1.tar.gz", hash = "sha256:043e0bd78d32888c0a9ca90fc788b38796843360c855a7262a532813133a0650", size = 14821, upload-time = "2025-12-23T19:25:43.997Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/00/b7/e3bf5133d697a08128598c8d0abc5e16377b51465a33756de24fa7dee953/aiosqlite-0.22.1-py3-none-any.whl", hash = "sha256:21c002eb13823fad740196c5a2e9d8e62f6243bd9e7e4a1f87fb5e44ecb4fceb", size = 17405, upload-time = "2025-12-23T19:25:42.139Z" },
 ]
 
 [[package]]
@@ -415,6 +425,29 @@ wheels = [
 ]
 
 [[package]]
+name = "moonlapse"
+version = "0.1.0"
+source = { virtual = "demo_projects/moonlapse" }
+dependencies = [
+    { name = "aiosqlite" },
+    { name = "websockets" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "sqlc-bin" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "aiosqlite", specifier = ">=0.20.0" },
+    { name = "websockets", specifier = ">=16.0" },
+]
+
+[package.metadata.requires-dev]
+dev = [{ name = "sqlc-bin", specifier = ">=1.0.0" }]
+
+[[package]]
 name = "nodejs-wheel-binaries"
 version = "24.15.0"
 source = { registry = "https://pypi.org/simple" }
@@ -644,6 +677,20 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/04/06/82f56563b16d33c2586ac2615a3034a83a4ff1969b84c8d79339e5d07d73/snakeviz-2.2.2.tar.gz", hash = "sha256:08028c6f8e34a032ff14757a38424770abb8662fb2818985aeea0d9bc13a7d83", size = 182039, upload-time = "2024-11-09T22:03:58.99Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/cd/f7/83b00cdf4f114f10750a18b64c27dc34636d0ac990ccac98282f5c0fbb43/snakeviz-2.2.2-py3-none-any.whl", hash = "sha256:77e7b9c82f6152edc330040319b97612351cd9b48c706434c535c2df31d10ac5", size = 183477, upload-time = "2024-11-09T22:03:57.049Z" },
+]
+
+[[package]]
+name = "sqlc-bin"
+version = "1.31.1.post1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/29/4e/62944acbd5c4a4773aa27e937484602b2f7a7b6d678a5c51982832bada69/sqlc_bin-1.31.1.post1.tar.gz", hash = "sha256:a898b2e79f49615bb96d6402b36c90ef65c81f1744568f9376eb9f3be25452af", size = 6208, upload-time = "2026-08-10T08:23:34.252Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f9/27/7fd250116ee674541a23ba1fae9eeff0689b3050fe64f05ebf0463993091/sqlc_bin-1.31.1.post1-py3-none-macosx_11_0_arm64.whl", hash = "sha256:7493fdc9dd16a330596fbdb1e91575b088b0a7e1b28e1cf510682e69937d133b", size = 14471638, upload-time = "2026-08-10T08:23:15.482Z" },
+    { url = "https://files.pythonhosted.org/packages/e2/fc/5768b57c0626eea11feb18c2ee866e069c034e5fc1ac8668dc12a11d46c5/sqlc_bin-1.31.1.post1-py3-none-macosx_11_0_x86_64.whl", hash = "sha256:38f20286deb026d3de26025a0ca06f947d8551f6e45a88f3f629eb4a30b57921", size = 15917628, upload-time = "2026-08-10T08:23:19.228Z" },
+    { url = "https://files.pythonhosted.org/packages/86/85/a09c3fb79953cd7875eeb6a96313d6a68894e562284a84750d498a2f2a27/sqlc_bin-1.31.1.post1-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.musllinux_1_1_aarch64.whl", hash = "sha256:55307be3b16c4a43a021ba04203c2033c8fcd493722d039b5491942827fadc0f", size = 13633531, upload-time = "2026-08-10T08:23:22.258Z" },
+    { url = "https://files.pythonhosted.org/packages/1e/9c/504173c47e63c831c5a8611319782526daa0b25324efa5b637104c5c78db/sqlc_bin-1.31.1.post1-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.musllinux_1_1_x86_64.whl", hash = "sha256:0547da025ecd2136e5700f56e72194c227779a4843a3f4dd297ceed0f119557e", size = 15058706, upload-time = "2026-08-10T08:23:25.477Z" },
+    { url = "https://files.pythonhosted.org/packages/1c/5a/15fa71eb49079305beb9ff94316fa21aef8243b7c9a2f977744c5ca52afb/sqlc_bin-1.31.1.post1-py3-none-win_amd64.whl", hash = "sha256:b4befd2178659e59237a4021455c20c85724a76d77ea23e8aabf20c0ec4ff1a8", size = 15385329, upload-time = "2026-08-10T08:23:28.866Z" },
+    { url = "https://files.pythonhosted.org/packages/89/37/76f2bea89b55bef435df507ac8f88583f4c85ef0eb345b3f730e269ae9c8/sqlc_bin-1.31.1.post1-py3-none-win_arm64.whl", hash = "sha256:b59d93bab220ac0d029a95df5bbb846a6a21c125631a15209ecdaa7ab7b7a1dc", size = 13747963, upload-time = "2026-08-10T08:23:32.43Z" },
 ]
 
 [[package]]

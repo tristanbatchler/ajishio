@@ -14,6 +14,7 @@ PORT = 8766
 
 async def main() -> None:
     hub = Hub()
+    await hub.init_db()
     async with serve(
         hub.register_client,
         HOST,
@@ -21,6 +22,7 @@ async def main() -> None:
     ):
         log.info("moonlapse server on %s:%d", HOST, PORT)
         await asyncio.Future()
+    await hub.close()
 
 
 if __name__ == "__main__":

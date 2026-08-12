@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from pathlib import Path
 from typing import Unpack, override
 import ajishio as aj
@@ -14,6 +15,8 @@ _TYPEABLE = ascii_lowercase + digits + " !?.,'-/"
 
 HOST = "127.0.0.1"
 PORT = 8766
+
+log = logging.getLogger("moonlapse.client")
 
 
 def _draw_wrapped_text(
@@ -72,10 +75,13 @@ class Manager(aj.GameObject):
             Path(__file__).parent / "CutiveMono-Regular.ttf", 24
         )
         self.connected: bool = False
+        self.logged_in: bool = False
 
     def log(self, message: str, color: aj.Color) -> None:
         self.message_log.append((message, color))
-        print(message)
+        log.info("%s", message)
+        if len(self.message_log) > 50:
+            self.message_log = self.message_log[-50:]
 
     @override
     def step(self) -> None:
@@ -92,17 +98,15 @@ class Manager(aj.GameObject):
             pkt = deserialize_from_server(incoming)
 
             if isinstance(pkt, clientbound.LoginResponse):
-                self.connected = True
                 if not pkt.ok:
                     self.log(f"Can't login: {pkt.err}", aj.c_orange)
                 else:
+                    self.logged_in = True
                     self.log("Login success", aj.c_lime)
 
             elif isinstance(pkt, clientbound.ClientId):
                 self.my_id = pkt.id
-                self.message_log.append(
-                    (f"Obtained assigned ID: {self.my_id}", aj.c_aqua)
-                )
+                self.log(f"Obtained assigned ID: {self.my_id}", aj.c_aqua)
 
             elif isinstance(pkt, clientbound.LogoutResponse):
                 if not pkt.ok:
@@ -112,15 +116,11 @@ class Manager(aj.GameObject):
 
             elif isinstance(pkt, clientbound.ChatResponse):
                 if not pkt.ok:
-                    self.message_log.append(
-                        (f"Can't send that: {pkt.err}", aj.c_orange)
-                    )
+                    self.log(f"Can't send that: {pkt.err}", aj.c_orange)
 
             elif isinstance(pkt, clientbound.MoveResponse):
                 if not pkt.ok:
-                    self.message_log.append(
-                        (f"Can't move there: {pkt.err}", aj.c_orange)
-                    )
+                    self.log(f"Can't move there: {pkt.err}", aj.c_orange)
                 else:
                     self.log("Move successful", aj.c_lime)
 
@@ -134,16 +134,14 @@ class Manager(aj.GameObject):
                 self.log(pkt.motd, aj.c_aqua)
 
             elif isinstance(pkt, clientbound.Announcement):
-                self.log(f"{pkt.message}", aj.c_yellow)
+                self.log(pkt.message, aj.c_yellow)
 
             elif isinstance(pkt, clientbound.ClientDisconnected):
-                self.message_log.append(
-                    (f"Player {pkt.client_id} disconnected", aj.c_yellow)
-                )
+                self.log(f"Player {pkt.client_id} disconnected", aj.c_yellow)
 
             elif isinstance(pkt, clientbound.PlayerChat):
-                self.message_log.append(
-                    (f"Player {pkt.from_client_id} says: '{pkt.message}'", aj.c_white)
+                self.log(
+                    f"Player {pkt.from_client_id} says: '{pkt.message}'", aj.c_white
                 )
 
             incoming = self.client.recv()
@@ -185,18 +183,25 @@ class Manager(aj.GameObject):
         aj.draw_set_font(self.font)
 
         title = "Moonlapse"
-        if self.connected:
+        if self.logged_in:
+            title += " (logged in)"
+            color = aj.c_lime
+        elif self.connected:
             title += " (connected)"
+            color = aj.c_aqua
         else:
             title += " (connecting...)"
-        aj.draw_text(10, 10, title, aj.c_lime if self.connected else aj.c_yellow)
+            color = aj.c_yellow
+        aj.draw_text(10, 10, title, color)
 
+        # Render visible messages with proper spacing based on wrapped line count
         max_msg_y = 50
-        visible: list[tuple[str, aj.Color]] = self.message_log[-10:]
-        for i, (line, color) in enumerate(visible):
-            _ = _draw_wrapped_text(
-                10, max_msg_y + i * 30, line, color, self.font, max_width=500
+        visible: list[tuple[str, aj.Color]] = self.message_log[-15:]
+        for line, color in visible:
+            num_lines = _draw_wrapped_text(
+                10, max_msg_y, line, color, self.font, max_width=500
             )
+            max_msg_y += num_lines * 24
 
         cursor = "|" if self.cursor_visible else " "
         aj.draw_text(10, 400, self.input_buffer + cursor)
@@ -206,6 +211,7 @@ async def main() -> None:
     client = aj.GameNetClient(f"ws://{HOST}:{PORT}")
     await client.connect()
     mgr = Manager(client=client)
+    mgr.connected = True
     aj.register_objects(Manager)
     aj.add_object(mgr)
 

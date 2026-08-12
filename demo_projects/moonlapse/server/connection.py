@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import logging
 from collections.abc import Set
 
@@ -17,6 +18,8 @@ class Hub:
         self._next_id: int = 1
         self._clients: dict[int, Client] = {}
         self.db_conn: aiosqlite.Connection = db_conn
+        self.ticks_per_second: int = 20
+        self.tick_rate: float = 1 / self.ticks_per_second
 
     @property
     def next_id(self) -> int:
@@ -42,13 +45,7 @@ class Hub:
             async for raw in client.ws:
                 data = raw if isinstance(raw, bytes) else raw.encode()
                 packet = deserialize_from_client(data)
-
-                new_state = await client.state.handle_packet(packet)
-
-                if new_state is not None:
-                    await client.state.on_exit()
-                    client.state = new_state
-                    await client.state.on_enter()
+                await client.input_packet_queue.put(packet)
 
         except Exception as exc:
             log.info("client %d disconnected: %s", cid, exc)
@@ -64,6 +61,29 @@ class Hub:
                 client.ws.remote_address,  # pyright: ignore[reportAny]
                 len(self.get_clients()),
             )
+
+    async def run(self) -> None:
+        loop = asyncio.get_running_loop()
+        next_tick = loop.time()
+
+        while True:
+            next_tick += self.tick_rate
+            await asyncio.sleep(max(0, next_tick - loop.time()))
+            await self.tick()
+
+    async def tick(self) -> None:
+        for client in self.get_clients():
+            if client.state is None:
+                continue
+
+            while not client.input_packet_queue.empty():
+                packet = await client.input_packet_queue.get()
+                new_state = await client.state.handle_packet(packet)
+
+                if new_state is not None:
+                    await client.state.on_exit()
+                    client.state = new_state
+                    await client.state.on_enter()
 
     async def send_client_ws(
         self, client_id: int, packet: clientbound.ClientboundPacket

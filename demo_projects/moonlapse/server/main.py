@@ -35,7 +35,7 @@ async def main() -> None:
         PORT,
     ):
         log.info("moonlapse server on %s:%d", HOST, PORT)
-        await asyncio.Future()
+        await hub.run()
     await hub.close()
 
 

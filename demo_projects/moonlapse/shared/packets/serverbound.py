@@ -95,12 +95,3 @@ class RegisterRequest(ServerboundPacket):
     @override
     def get_structure(self):
         return (self.username, self.password)
-
-
-def get_packet_class(packet_type: ServerboundPacketType) -> type[ServerboundPacket]:
-    key = packet_type
-    if key in REGISTRY:
-        return REGISTRY[key]
-    raise NotImplementedError(
-        f"Packet type {packet_type} does not belong to serverbound registry"
-    )

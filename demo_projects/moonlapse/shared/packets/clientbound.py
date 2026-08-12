@@ -103,12 +103,3 @@ class PlayerInfo(ClientboundPacket):
     @override
     def get_structure(self):
         return (self.name, self.x_pos, self.y_pos)
-
-
-def get_packet_class(packet_type: ClientboundPacketType) -> type[ClientboundPacket]:
-    key = packet_type
-    if key in REGISTRY:
-        return REGISTRY[key]
-    raise NotImplementedError(
-        f"Packet type {packet_type} does not belong to clientbound registry"
-    )

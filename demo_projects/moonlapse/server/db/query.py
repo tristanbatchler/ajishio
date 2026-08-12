@@ -32,7 +32,7 @@ if typing.TYPE_CHECKING:
 
     type QueryResultsArgsType = int | float | str | memoryview | datetime.date | datetime.time | datetime.datetime | datetime.timedelta | collections.abc.Sequence[QueryResultsArgsType] | None
 
-from db import models
+from demo_projects.moonlapse.server.db import models
 
 
 def _adapt_datetime(val: datetime.datetime) -> str:

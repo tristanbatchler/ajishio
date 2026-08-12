@@ -3,30 +3,20 @@ from __future__ import annotations
 import logging
 from collections.abc import Set
 
-import pathlib
-
 import aiosqlite
 from websockets.asyncio.server import ServerConnection
-from demo_projects.moonlapse.server.db import ops
 from demo_projects.moonlapse.shared.packets import clientbound, deserialize_from_client
 from demo_projects.moonlapse.server.client import Client
 from demo_projects.moonlapse.server.states import ConnectedState
 
 log = logging.getLogger("moonlapse.connection")
 
-_DB_PATH = str(pathlib.Path(__file__).parent / "moonlapse.db")
-
 
 class Hub:
-    def __init__(self) -> None:
+    def __init__(self, db_conn: aiosqlite.Connection) -> None:
         self._next_id: int = 1
         self._clients: dict[int, Client] = {}
-        self._conn: aiosqlite.Connection | None = None
-
-    async def init_db(self) -> None:
-        """Create/open the database and run schema."""
-        await ops.create_tables(_DB_PATH)
-        self._conn = await aiosqlite.connect(_DB_PATH)
+        self.db_conn: aiosqlite.Connection = db_conn
 
     @property
     def next_id(self) -> int:
@@ -104,5 +94,4 @@ class Hub:
                 log.warning(f"broadcast failed to {cid}: {exc}")
 
     async def close(self) -> None:
-        if self._conn is not None:
-            await self._conn.close()
+        await self.db_conn.close()

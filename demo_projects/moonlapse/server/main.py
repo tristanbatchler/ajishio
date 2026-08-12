@@ -3,18 +3,27 @@ from __future__ import annotations
 import asyncio
 import logging
 from websockets.asyncio.server import serve
-
+import aiosqlite
+import pathlib
 from demo_projects.moonlapse.server.connection import Hub
+from demo_projects.moonlapse.server.db import ops
 
 log = logging.getLogger("moonlapse")
 
 HOST = "0.0.0.0"
 PORT = 8766
+DB_PATH: str = str(pathlib.Path(__file__).parent / "moonlapse.db")
+
+
+async def _init_db() -> aiosqlite.Connection:
+    """Create/open the database and run schema."""
+    await ops.create_tables(DB_PATH)
+    return await aiosqlite.connect(DB_PATH)
 
 
 async def main() -> None:
-    hub = Hub()
-    await hub.init_db()
+    db_conn = await _init_db()
+    hub = Hub(db_conn)
     async with serve(
         hub.register_client,
         HOST,

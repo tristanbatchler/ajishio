@@ -1,12 +1,15 @@
 from typing import Protocol
 from collections.abc import Set
 
+import aiosqlite
 from websockets.asyncio.server import ServerConnection
 from demo_projects.moonlapse.server.client import Client
 from demo_projects.moonlapse.shared.packets.clientbound import ClientboundPacket
 
 
 class HubLike(Protocol):
+    db_conn: aiosqlite.Connection
+
     async def register_client(self, ws: ServerConnection) -> None: ...
     def unregister_client(self, client_id: int) -> Client | None: ...
     def get_clients(self) -> list[Client]: ...

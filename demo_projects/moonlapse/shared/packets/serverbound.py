@@ -39,7 +39,7 @@ def register(packet_type: ServerboundPacketType) -> Callable[[type[T]], type[T]]
 @register(ServerboundPacketType.CHAT_REQUEST)
 @dataclass(frozen=True)
 class ChatRequest(ServerboundPacket):
-    FORMAT_STRING = "128s"
+    FORMAT_STRING = "256s"
     message: str
 
     @override

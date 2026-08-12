@@ -15,6 +15,9 @@ class ClientboundPacketType(IntEnum):
     REGISTER_RESPONSE = auto()
     CLIENT_ID = auto()
     PLAYER_INFO = auto()
+    CLIENT_DISCONNECTED = auto()
+    MOTD = auto()
+    ANNOUNCEMENT = auto()
 
 
 REGISTRY: dict[ClientboundPacketType, type[ClientboundPacket]] = {}
@@ -103,3 +106,40 @@ class PlayerInfo(ClientboundPacket):
     @override
     def get_structure(self):
         return (self.name, self.x_pos, self.y_pos)
+
+
+@final
+@register(ClientboundPacketType.CLIENT_DISCONNECTED)
+@dataclass(frozen=True)
+class ClientDisconnected(ClientboundPacket):
+    FORMAT_STRING = "I128s"
+    client_id: int
+    reason: str | None = None
+
+    @override
+    def get_structure(self):
+        return (self.client_id, self.reason or "N/A")
+
+
+@final
+@register(ClientboundPacketType.MOTD)
+@dataclass(frozen=True)
+class Motd(ClientboundPacket):
+    FORMAT_STRING = "512s"
+    motd: str
+
+    @override
+    def get_structure(self):
+        return (self.motd,)
+
+
+@final
+@register(ClientboundPacketType.ANNOUNCEMENT)
+@dataclass(frozen=True)
+class Announcement(ClientboundPacket):
+    FORMAT_STRING = "512s"
+    message: str
+
+    @override
+    def get_structure(self):
+        return (self.message,)

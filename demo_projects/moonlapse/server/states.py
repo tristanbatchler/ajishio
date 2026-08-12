@@ -11,8 +11,8 @@ from demo_projects.moonlapse.server.state import State
 log = logging.getLogger("moonlapse.states")
 
 
-class ConnectingState(State):
-    NAME: ClassVar[str] = "connecting"
+class ConnectedState(State):
+    NAME: ClassVar[str] = "connected"
 
     def __init__(self, client: Client, hub: HubLike) -> None:
         self.client: Client = client
@@ -43,36 +43,31 @@ class ConnectingState(State):
     async def handle_packet(
         self, packet: serverbound.ServerboundPacket
     ) -> State | None:
+        cid = self.client.id
         if isinstance(packet, serverbound.LoginRequest):
-            pass
-        if isinstance(packet, serverbound.RegisterRequest):
-            pass
+            log.info(f"login from {cid}")
+            await self.hub.send_to(cid, clientbound.LoginResponse(ok=True))
+            await self.hub.broadcast(
+                clientbound.Announcement(f"Player {cid} joined the game."),
+                except_for=cid,
+            )
+            return InGameState(self.client, self.hub)
+
+        elif isinstance(packet, serverbound.RegisterRequest):
+            log.info(f"register from {cid}")
+            await self.hub.send_to(cid, clientbound.RegisterResponse(ok=True))
+            return None
+
+        # Reject everything else
+        name = type(packet).__name__
+        log.info(f"reject {cid}: {name} in {self.NAME}")
+        await self.hub.send_to(
+            cid,
+            clientbound.ChatResponse(
+                ok=False, err=f"'{name}' not allowed while connected"
+            ),
+        )
         return None
-
-
-class ConnectedState(State):
-    NAME: ClassVar[str] = "connected"
-
-    def __init__(self, client: Client, hub: HubLike) -> None:
-        self.client: Client = client
-        self.hub: HubLike = hub
-
-    @override
-    async def on_enter(self) -> None:
-        pass
-
-    @override
-    async def on_exit(self) -> None:
-        pass
-
-    @override
-    async def handle_packet(
-        self, packet: serverbound.ServerboundPacket
-    ) -> State | None:
-        if isinstance(packet, serverbound.LoginRequest):
-            pass
-        if isinstance(packet, serverbound.RegisterRequest):
-            pass
 
 
 class InGameState(State):
@@ -84,7 +79,11 @@ class InGameState(State):
 
     @override
     async def on_enter(self) -> None:
-        pass
+        cid = self.client.id
+        await self.hub.broadcast(
+            clientbound.Announcement(f"Player {cid} joined the game."),
+            except_for=cid,
+        )
 
     @override
     async def on_exit(self) -> None:
@@ -94,10 +93,38 @@ class InGameState(State):
     async def handle_packet(
         self, packet: serverbound.ServerboundPacket
     ) -> State | None:
+        cid = self.client.id
         if isinstance(packet, serverbound.ChatRequest):
-            pass
+            log.info(f"chat from {cid}: {packet.message}")
+            await self.hub.send_to(cid, clientbound.ChatResponse(ok=True))
+            await self._broadcast_chat(cid, packet.message)
+            return None
+
         elif isinstance(packet, serverbound.MoveRequest):
-            pass
+            log.info(f"move from {cid}: ({packet.dx},{packet.dy})")
+            await self.hub.send_to(cid, clientbound.MoveResponse(ok=True))
+            return None
+
         elif isinstance(packet, serverbound.LogoutRequest):
-            pass
+            log.info(f"log out from {cid}")
+            await self.hub.send_to(cid, clientbound.LogoutResponse(ok=True))
+            return ConnectedState(self.client, self.hub)
+
+        # Reject everything else
+        name = type(packet).__name__
+        log.info(f"reject {cid}: {name} in {self.NAME}")
+        await self.hub.send_to(
+            cid,
+            clientbound.ChatResponse(
+                ok=False, err=f"'{name}' not allowed while in game"
+            ),
+        )
         return None
+
+    async def _broadcast_chat(self, from_id: int, message: str) -> None:
+        """Broadcast chat only to clients in InGameState."""
+        for client in self.hub.get_clients():
+            if isinstance(client.state, InGameState):
+                await self.hub.send_to(
+                    client.id, clientbound.PlayerChat(from_id, message)
+                )

@@ -22,6 +22,7 @@ class ClientSession:
     def __init__(self, client_id: int, ws: ServerConnection) -> None:
         self.client_id: int = client_id
         self.ws: ServerConnection = ws
+        self.logged_in: bool = False
 
 
 class Hub:
@@ -47,6 +48,13 @@ class Hub:
                 del self._clients[ws]
                 return sess
         return None
+
+    def is_client_logged_in(self, cid: int) -> bool:
+        client = self._clients[cid]
+        return client.logged_in
+
+    def login_client(self, cid: int) -> None:
+        self._clients[cid].logged_in = True
 
     def get_clients(self) -> Collection[ClientSession]:
         return self._clients.values()
@@ -94,7 +102,17 @@ async def _handle_client(hub: Hub, ws: ServerConnection) -> None:
 
             if isinstance(pkt, serverbound.ChatRequest):
                 log.info(f"chat from {cid}: {pkt.message}")
+                if not hub.is_client_logged_in(cid):
+                    await hub.send_to(
+                        cid,
+                        clientbound.ChatResponse(
+                            ok=False, err="You must be logged in to chat"
+                        ),
+                    )
+                    continue
+
                 await hub.send_to(cid, clientbound.ChatResponse(ok=True))
+                await hub.broadcast(clientbound.PlayerChat(cid, pkt.message))
 
             elif isinstance(pkt, serverbound.MoveRequest):
                 log.info(f"move from {cid}: ({pkt.dx},{pkt.dy})")
@@ -102,6 +120,7 @@ async def _handle_client(hub: Hub, ws: ServerConnection) -> None:
 
             elif isinstance(pkt, serverbound.LoginRequest):
                 log.info(f"login from {cid}")
+                hub.login_client(cid)
                 await hub.send_to(cid, clientbound.LoginResponse(ok=True))
                 await hub.broadcast(
                     clientbound.Announcement(f"Player {cid} joined the game."),

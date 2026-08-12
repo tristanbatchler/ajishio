@@ -10,10 +10,47 @@ import demo_projects.moonlapse.shared.packets.clientbound as clientbound
 import demo_projects.moonlapse.shared.packets.serverbound as serverbound
 
 # Printable characters we accept as input.
-_TYPEABLE = ascii_lowercase + digits + " !?.,'-"
+_TYPEABLE = ascii_lowercase + digits + " !?.,'-/"
 
 HOST = "127.0.0.1"
 PORT = 8766
+
+
+def _draw_wrapped_text(
+    x: float,
+    y: float,
+    text: str,
+    color: aj.Color,
+    font: aj.Font,
+    *,
+    max_width: float = 0.0,
+    line_height: float = 24.0,
+) -> int:
+    """Draw text wrapped to max_width. Returns number of lines drawn."""
+    aj.draw_set_font(font)
+    effective_max = max_width if max_width > 0 else aj.room_width - x - 20
+    if effective_max <= 0:
+        effective_max = aj.room_width - x - 20
+    words = text.split()
+    if not words:
+        return 0
+    lines: list[str] = []
+    current_line: list[str] = []
+    current_width: float = 0.0
+    for word in words:
+        word_w = aj.text_width(word) + aj.text_width(" ")
+        if current_width + word_w > effective_max and current_line:
+            lines.append(" ".join(current_line))
+            current_line = [word]
+            current_width = word_w
+        else:
+            current_line.append(word)
+            current_width += word_w
+    if current_line:
+        lines.append(" ".join(current_line))
+    for i, line_text in enumerate(lines):
+        aj.draw_text(x, y + i * line_height, line_text, color)
+    return len(lines)
 
 
 class Manager(aj.GameObject):
@@ -104,6 +141,11 @@ class Manager(aj.GameObject):
                     (f"Player {pkt.client_id} disconnected", aj.c_yellow)
                 )
 
+            elif isinstance(pkt, clientbound.PlayerChat):
+                self.message_log.append(
+                    (f"Player {pkt.from_client_id} says: '{pkt.message}'", aj.c_white)
+                )
+
             incoming = self.client.recv()
 
         # Text input
@@ -115,8 +157,26 @@ class Manager(aj.GameObject):
             self.input_buffer = self.input_buffer[:-1]
 
         if aj.keyboard_check_pressed(aj.vk_enter) and self.input_buffer.strip():
-            pkt = serverbound.ChatRequest(self.input_buffer)
-            self.client.send(pkt.serialize())
+            raw = self.input_buffer.strip()
+
+            # Command parser
+            if raw.startswith("/"):
+                parts = raw.split()
+                cmd = parts[0]
+                if cmd == "/login" and len(parts) >= 3:
+                    login_pkt = serverbound.LoginRequest(
+                        username=parts[1], password=parts[2]
+                    )
+                    self.client.send(login_pkt.serialize())
+                    self.log(f"Sending login as {parts[1]}", aj.c_lime)
+                elif cmd == "/who":
+                    self.log(f"My ID: {self.my_id}", aj.c_aqua)
+                else:
+                    self.log(f"Unknown command: {cmd}", aj.c_red)
+            else:
+                pkt = serverbound.ChatRequest(self.input_buffer)
+                self.client.send(pkt.serialize())
+
             self.input_buffer = ""
 
     @override
@@ -131,8 +191,12 @@ class Manager(aj.GameObject):
             title += " (connecting...)"
         aj.draw_text(10, 10, title, aj.c_lime if self.connected else aj.c_yellow)
 
-        for i, (line, color) in enumerate(self.message_log[-10:]):
-            aj.draw_text(10, 50 + i * 30, line, color)
+        max_msg_y = 50
+        visible: list[tuple[str, aj.Color]] = self.message_log[-10:]
+        for i, (line, color) in enumerate(visible):
+            _ = _draw_wrapped_text(
+                10, max_msg_y + i * 30, line, color, self.font, max_width=500
+            )
 
         cursor = "|" if self.cursor_visible else " "
         aj.draw_text(10, 400, self.input_buffer + cursor)

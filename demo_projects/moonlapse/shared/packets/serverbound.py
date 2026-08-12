@@ -61,10 +61,48 @@ class MoveRequest(ServerboundPacket):
         return (self.dx, self.dy)
 
 
+@final
+@register()
+@dataclass(frozen=True)
+class LoginRequest(ServerboundPacket):
+    TYPE = ServerboundPacketType.LOGIN_REQUEST
+    FORMAT_STRING = "128s128s"
+    username: str
+    password: str
+
+    @override
+    def get_structure(self):
+        return (self.username, self.password)
+
+
+@final
+@register()
+@dataclass(frozen=True)
+class LogoutRequest(ServerboundPacket):
+    TYPE = ServerboundPacketType.LOGOUT_REQUEST
+    FORMAT_STRING = ""
+
+    @override
+    def get_structure(self):
+        return ()
+
+
+@final
+@register()
+@dataclass(frozen=True)
+class RegisterRequest(ServerboundPacket):
+    TYPE = ServerboundPacketType.REGISTER_REQUEST
+    FORMAT_STRING = "128s128s"
+    username: str
+    password: str
+
+    @override
+    def get_structure(self):
+        return (self.username, self.password)
+
+
 def get_packet_class(packet_type: ServerboundPacketType) -> type[ServerboundPacket]:
     key = int(packet_type)
     if key in REGISTRY:
         return REGISTRY[key]
-    raise NotImplementedError(
-        f"Packet type {packet_type} does not belong to serverbound registry"
-    )
+    raise NotImplementedError(f"Packet type {packet_type} does not belong to serverbound registry")

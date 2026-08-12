@@ -13,6 +13,8 @@ class ClientboundPacketType(IntEnum):
     LOGIN_RESPONSE = auto()
     LOGOUT_RESPONSE = auto()
     REGISTER_RESPONSE = auto()
+    CLIENT_ID = auto()
+    PLAYER_INFO = auto()
 
 
 REGISTRY: dict[int, type[ClientboundPacket]] = {}
@@ -60,10 +62,57 @@ class MoveResponse(ClientboundResponsePacket):
     TYPE = ClientboundPacketType.MOVE_RESPONSE
 
 
+@final
+@register()
+@dataclass(frozen=True)
+class LoginResponse(ClientboundResponsePacket):
+    TYPE = ClientboundPacketType.LOGIN_RESPONSE
+
+
+@final
+@register()
+@dataclass(frozen=True)
+class LogoutResponse(ClientboundResponsePacket):
+    TYPE = ClientboundPacketType.LOGOUT_RESPONSE
+
+
+@final
+@register()
+@dataclass(frozen=True)
+class RegisterResponse(ClientboundResponsePacket):
+    TYPE = ClientboundPacketType.REGISTER_RESPONSE
+
+
+@final
+@register()
+@dataclass(frozen=True)
+class ClientId(ClientboundPacket):
+    TYPE = ClientboundPacketType.CLIENT_ID
+    FORMAT_STRING = "I"
+    id: int
+
+    @override
+    def get_structure(self):
+        return (self.id,)
+
+
+@final
+@register()
+@dataclass(frozen=True)
+class PlayerInfo(ClientboundPacket):
+    TYPE = ClientboundPacketType.PLAYER_INFO
+    FORMAT_STRING = "128sii"
+    name: str
+    x_pos: int
+    y_pos: int
+
+    @override
+    def get_structure(self):
+        return (self.name, self.x_pos, self.y_pos)
+
+
 def get_packet_class(packet_type: ClientboundPacketType) -> type[ClientboundPacket]:
     key = int(packet_type)
     if key in REGISTRY:
         return REGISTRY[key]
-    raise NotImplementedError(
-        f"Packet type {packet_type} does not belong to clientbound registry"
-    )
+    raise NotImplementedError(f"Packet type {packet_type} does not belong to clientbound registry")

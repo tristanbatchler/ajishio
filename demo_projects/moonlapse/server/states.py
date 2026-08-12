@@ -53,7 +53,7 @@ class ConnectedState(State):
         pass
 
     async def _handle_login_request(self, p: sb.LoginRequest):
-        log.info(f"login from {self.cid}: {p}")
+        log.info(f"login from {self.cid}: {p.username}")
 
         lockout_period_minutes = 15
         lockout_max_attempts = 5
@@ -174,7 +174,7 @@ class ConnectedState(State):
         return InGameState(self.client, self.hub)
 
     async def _handle_register_request(self, p: sb.RegisterRequest) -> State | None:
-        log.info(f"register from {self.cid}: {p}")
+        log.info(f"register from {self.cid}: {p.username}")
         user = await query.get_user_by_username(self.hub.db_conn, username=p.username)
         if user is not None:
             await self.hub.send_client_ws(

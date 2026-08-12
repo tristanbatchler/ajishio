@@ -85,10 +85,7 @@ class InGameState(State):
 
     @override
     async def on_enter(self) -> None:
-        await self.hub.broadcast(
-            cb.Announcement(f"Player {self.cid} joined the game."),
-            except_for={self.cid},
-        )
+        pass
 
     @override
     async def on_exit(self) -> None:

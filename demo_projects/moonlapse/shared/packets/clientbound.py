@@ -28,8 +28,9 @@ class ClientboundPacket(Packet, ABC):
 T = TypeVar("T", bound=ClientboundPacket)
 
 
-def register() -> Callable[[type[T]], type[T]]:
+def register(packet_type: ClientboundPacketType) -> Callable[[type[T]], type[T]]:
     def decorator(cls: type[T]) -> type[T]:
+        cls.TYPE = packet_type
         REGISTRY[int(cls.TYPE)] = cls
         return cls
 
@@ -49,45 +50,39 @@ class ClientboundResponsePacket(ClientboundPacket, ABC):
 
 
 @final
-@register()
+@register(ClientboundPacketType.CHAT_RESPONSE)
 @dataclass(frozen=True)
-class ChatResponse(ClientboundResponsePacket):
-    TYPE = ClientboundPacketType.CHAT_RESPONSE
+class ChatResponse(ClientboundResponsePacket): ...
 
 
 @final
-@register()
+@register(ClientboundPacketType.MOVE_RESPONSE)
 @dataclass(frozen=True)
-class MoveResponse(ClientboundResponsePacket):
-    TYPE = ClientboundPacketType.MOVE_RESPONSE
+class MoveResponse(ClientboundResponsePacket): ...
 
 
 @final
-@register()
+@register(ClientboundPacketType.LOGIN_RESPONSE)
 @dataclass(frozen=True)
-class LoginResponse(ClientboundResponsePacket):
-    TYPE = ClientboundPacketType.LOGIN_RESPONSE
+class LoginResponse(ClientboundResponsePacket): ...
 
 
 @final
-@register()
+@register(ClientboundPacketType.LOGOUT_RESPONSE)
 @dataclass(frozen=True)
-class LogoutResponse(ClientboundResponsePacket):
-    TYPE = ClientboundPacketType.LOGOUT_RESPONSE
+class LogoutResponse(ClientboundResponsePacket): ...
 
 
 @final
-@register()
+@register(ClientboundPacketType.REGISTER_RESPONSE)
 @dataclass(frozen=True)
-class RegisterResponse(ClientboundResponsePacket):
-    TYPE = ClientboundPacketType.REGISTER_RESPONSE
+class RegisterResponse(ClientboundResponsePacket): ...
 
 
 @final
-@register()
+@register(ClientboundPacketType.CLIENT_ID)
 @dataclass(frozen=True)
 class ClientId(ClientboundPacket):
-    TYPE = ClientboundPacketType.CLIENT_ID
     FORMAT_STRING = "I"
     id: int
 
@@ -97,10 +92,9 @@ class ClientId(ClientboundPacket):
 
 
 @final
-@register()
+@register(ClientboundPacketType.PLAYER_INFO)
 @dataclass(frozen=True)
 class PlayerInfo(ClientboundPacket):
-    TYPE = ClientboundPacketType.PLAYER_INFO
     FORMAT_STRING = "128sii"
     name: str
     x_pos: int
@@ -115,4 +109,6 @@ def get_packet_class(packet_type: ClientboundPacketType) -> type[ClientboundPack
     key = int(packet_type)
     if key in REGISTRY:
         return REGISTRY[key]
-    raise NotImplementedError(f"Packet type {packet_type} does not belong to clientbound registry")
+    raise NotImplementedError(
+        f"Packet type {packet_type} does not belong to clientbound registry"
+    )

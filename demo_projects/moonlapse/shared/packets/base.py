@@ -3,7 +3,7 @@ from collections.abc import Iterable
 from abc import ABC, abstractmethod
 import struct
 
-from typing import ClassVar, Self
+from typing import ClassVar, Self, cast
 
 
 def _encode_structure(structure: Iterable[object]) -> Iterable[object]:
@@ -23,7 +23,9 @@ def _decode_structure(structure: Iterable[object]) -> Iterable[object]:
 
 
 class Packet(ABC):
-    TYPE: ClassVar[int]
+    TYPE: ClassVar[int] = cast(
+        int, cast(object, None)
+    )  # default to appease dynamic setting via decorator
     IS_SERVERBOUND: ClassVar[bool]
     FORMAT_STRING: ClassVar[str]
 

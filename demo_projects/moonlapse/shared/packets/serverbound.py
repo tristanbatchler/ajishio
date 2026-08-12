@@ -26,8 +26,9 @@ class ServerboundPacket(Packet, ABC):
 T = TypeVar("T", bound=ServerboundPacket)
 
 
-def register() -> Callable[[type[T]], type[T]]:
+def register(packet_type: ServerboundPacketType) -> Callable[[type[T]], type[T]]:
     def decorator(cls: type[T]) -> type[T]:
+        cls.TYPE = packet_type
         REGISTRY[int(cls.TYPE)] = cls
         return cls
 
@@ -35,10 +36,9 @@ def register() -> Callable[[type[T]], type[T]]:
 
 
 @final
-@register()
+@register(ServerboundPacketType.CHAT_REQUEST)
 @dataclass(frozen=True)
 class ChatRequest(ServerboundPacket):
-    TYPE = ServerboundPacketType.CHAT_REQUEST
     FORMAT_STRING = "128s"
     message: str
 
@@ -48,10 +48,9 @@ class ChatRequest(ServerboundPacket):
 
 
 @final
-@register()
+@register(ServerboundPacketType.MOVE_REQUEST)
 @dataclass(frozen=True)
 class MoveRequest(ServerboundPacket):
-    TYPE = ServerboundPacketType.MOVE_REQUEST
     FORMAT_STRING = "bb"
     dx: int
     dy: int
@@ -62,10 +61,9 @@ class MoveRequest(ServerboundPacket):
 
 
 @final
-@register()
+@register(ServerboundPacketType.LOGIN_REQUEST)
 @dataclass(frozen=True)
 class LoginRequest(ServerboundPacket):
-    TYPE = ServerboundPacketType.LOGIN_REQUEST
     FORMAT_STRING = "128s128s"
     username: str
     password: str
@@ -76,10 +74,9 @@ class LoginRequest(ServerboundPacket):
 
 
 @final
-@register()
+@register(ServerboundPacketType.LOGOUT_REQUEST)
 @dataclass(frozen=True)
 class LogoutRequest(ServerboundPacket):
-    TYPE = ServerboundPacketType.LOGOUT_REQUEST
     FORMAT_STRING = ""
 
     @override
@@ -88,10 +85,9 @@ class LogoutRequest(ServerboundPacket):
 
 
 @final
-@register()
+@register(ServerboundPacketType.REGISTER_REQUEST)
 @dataclass(frozen=True)
 class RegisterRequest(ServerboundPacket):
-    TYPE = ServerboundPacketType.REGISTER_REQUEST
     FORMAT_STRING = "128s128s"
     username: str
     password: str
@@ -105,4 +101,6 @@ def get_packet_class(packet_type: ServerboundPacketType) -> type[ServerboundPack
     key = int(packet_type)
     if key in REGISTRY:
         return REGISTRY[key]
-    raise NotImplementedError(f"Packet type {packet_type} does not belong to serverbound registry")
+    raise NotImplementedError(
+        f"Packet type {packet_type} does not belong to serverbound registry"
+    )

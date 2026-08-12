@@ -64,7 +64,7 @@ class ConnectedState(State):
         if not p.ok:
             self.mgr.log(f"Can't login: {p.err}", aj.c_orange)
         else:
-            self.mgr.log("Login success success", aj.c_lime)
+            self.mgr.log("Login success", aj.c_lime)
             return InGameState(self.mgr)
 
     def _handle_register_response(self, p: cb.RegisterResponse):

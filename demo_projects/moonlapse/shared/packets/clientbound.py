@@ -17,7 +17,7 @@ class ClientboundPacketType(IntEnum):
     PLAYER_INFO = auto()
 
 
-REGISTRY: dict[int, type[ClientboundPacket]] = {}
+REGISTRY: dict[ClientboundPacketType, type[ClientboundPacket]] = {}
 
 
 @dataclass(frozen=True)
@@ -31,7 +31,7 @@ T = TypeVar("T", bound=ClientboundPacket)
 def register(packet_type: ClientboundPacketType) -> Callable[[type[T]], type[T]]:
     def decorator(cls: type[T]) -> type[T]:
         cls.TYPE = packet_type
-        REGISTRY[int(cls.TYPE)] = cls
+        REGISTRY[cls.TYPE] = cls
         return cls
 
     return decorator
@@ -106,7 +106,7 @@ class PlayerInfo(ClientboundPacket):
 
 
 def get_packet_class(packet_type: ClientboundPacketType) -> type[ClientboundPacket]:
-    key = int(packet_type)
+    key = packet_type
     if key in REGISTRY:
         return REGISTRY[key]
     raise NotImplementedError(

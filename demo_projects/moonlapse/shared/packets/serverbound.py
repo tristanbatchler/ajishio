@@ -15,7 +15,7 @@ class ServerboundPacketType(IntEnum):
     REGISTER_REQUEST = auto()
 
 
-REGISTRY: dict[int, type[ServerboundPacket]] = {}
+REGISTRY: dict[ServerboundPacketType, type[ServerboundPacket]] = {}
 
 
 @dataclass(frozen=True)
@@ -29,7 +29,7 @@ T = TypeVar("T", bound=ServerboundPacket)
 def register(packet_type: ServerboundPacketType) -> Callable[[type[T]], type[T]]:
     def decorator(cls: type[T]) -> type[T]:
         cls.TYPE = packet_type
-        REGISTRY[int(cls.TYPE)] = cls
+        REGISTRY[cls.TYPE] = cls
         return cls
 
     return decorator
@@ -98,7 +98,7 @@ class RegisterRequest(ServerboundPacket):
 
 
 def get_packet_class(packet_type: ServerboundPacketType) -> type[ServerboundPacket]:
-    key = int(packet_type)
+    key = packet_type
     if key in REGISTRY:
         return REGISTRY[key]
     raise NotImplementedError(

@@ -31,7 +31,9 @@ class Manager(aj.GameObject):
         self.input_buffer: str = ""
         self.cursor_visible: bool = True
         self.cursor_timer: float = 0.5
-        self.font: aj.Font = aj.load_font(Path(__file__).parent / "CutiveMono-Regular.ttf", 24)
+        self.font: aj.Font = aj.load_font(
+            Path(__file__).parent / "CutiveMono-Regular.ttf", 24
+        )
         self.connected: bool = False
 
     @override
@@ -54,7 +56,9 @@ class Manager(aj.GameObject):
                 self.message_log.append(("* connected", aj.c_lime))
 
             elif isinstance(pkt, clientbound.LogoutResponse):
-                self.message_log.append((f"* {'ok' if pkt.ok else pkt.err}", aj.c_orange))
+                self.message_log.append(
+                    (f"* {'ok' if pkt.ok else pkt.err}", aj.c_orange)
+                )
 
             elif isinstance(pkt, clientbound.ChatResponse):
                 self.message_log.append((f"  server: ok={pkt.ok}", aj.c_aqua))

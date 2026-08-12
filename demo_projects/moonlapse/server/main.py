@@ -50,7 +50,9 @@ class Hub:
     def get_clients(self) -> Collection[ClientSession]:
         return self._clients.values()
 
-    async def send_to(self, client_id: int, packet: clientbound.ClientboundPacket) -> None:
+    async def send_to(
+        self, client_id: int, packet: clientbound.ClientboundPacket
+    ) -> None:
         for sess in self._clients.values():
             if sess.client_id == client_id:
                 try:

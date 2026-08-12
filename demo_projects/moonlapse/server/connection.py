@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Set
 
 from websockets.asyncio.server import ServerConnection
 from demo_projects.moonlapse.shared.packets import clientbound, deserialize_from_client
@@ -62,7 +63,7 @@ class Hub:
                 len(self.get_clients()),
             )
 
-    async def send_to(
+    async def send_client_ws(
         self, client_id: int, packet: clientbound.ClientboundPacket
     ) -> None:
         session = self._clients.get(client_id)
@@ -75,11 +76,16 @@ class Hub:
     async def broadcast(
         self,
         packet: clientbound.ClientboundPacket,
-        except_for: int | None = None,
+        only_to: Set[int] | None = None,
+        except_for: Set[int] | None = None,
     ) -> None:
-        for cid, client in self._clients.items():
-            if cid == except_for:
-                continue
+        if only_to is None:
+            only_to = self._clients.keys()
+        if except_for is None:
+            except_for = set()
+        recipients = only_to - except_for
+        for cid in recipients:
+            client = self._clients[cid]
             try:
                 await client.ws.send(packet.serialize())
             except Exception as exc:

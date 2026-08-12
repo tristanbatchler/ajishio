@@ -1,4 +1,5 @@
 from typing import Protocol
+from collections.abc import Set
 
 from websockets.asyncio.server import ServerConnection
 from demo_projects.moonlapse.server.client import Client
@@ -9,9 +10,12 @@ class HubLike(Protocol):
     async def register_client(self, ws: ServerConnection) -> None: ...
     def unregister_client(self, client_id: int) -> Client | None: ...
     def get_clients(self) -> list[Client]: ...
-    async def send_to(self, client_id: int, packet: ClientboundPacket) -> None: ...
+    async def send_client_ws(
+        self, client_id: int, packet: ClientboundPacket
+    ) -> None: ...
     async def broadcast(
         self,
         packet: ClientboundPacket,
-        except_for: int | None = None,
+        only_to: Set[int] | None = None,
+        except_for: Set[int] | None = None,
     ) -> None: ...

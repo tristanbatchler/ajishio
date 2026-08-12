@@ -21,7 +21,7 @@ class ConnectedState(State):
     @override
     async def on_enter(self) -> None:
         cid = self.client.id
-        await self.hub.send_to(cid, clientbound.ClientId(cid))
+        await self.hub.send_client_ws(cid, clientbound.ClientId(cid))
 
         log.info(
             f"connected {cid} as {self.client.ws.remote_address}, total={len(self.hub.get_clients())}"  # pyright: ignore[reportAny]
@@ -33,7 +33,7 @@ class ConnectedState(State):
             f"Server time: {server_time}\n"
             f"Type /login <user> <pass> to enter."
         )
-        await self.hub.send_to(cid, clientbound.Motd(motd_text))
+        await self.hub.send_client_ws(cid, clientbound.Motd(motd_text))
 
     @override
     async def on_exit(self) -> None:
@@ -46,22 +46,22 @@ class ConnectedState(State):
         cid = self.client.id
         if isinstance(packet, serverbound.LoginRequest):
             log.info(f"login from {cid}")
-            await self.hub.send_to(cid, clientbound.LoginResponse(ok=True))
+            await self.hub.send_client_ws(cid, clientbound.LoginResponse(ok=True))
             await self.hub.broadcast(
                 clientbound.Announcement(f"Player {cid} joined the game."),
-                except_for=cid,
+                except_for={cid},
             )
             return InGameState(self.client, self.hub)
 
         elif isinstance(packet, serverbound.RegisterRequest):
             log.info(f"register from {cid}")
-            await self.hub.send_to(cid, clientbound.RegisterResponse(ok=True))
+            await self.hub.send_client_ws(cid, clientbound.RegisterResponse(ok=True))
             return None
 
         # Reject everything else
         name = type(packet).__name__
         log.info(f"reject {cid}: {name} in {self.NAME}")
-        await self.hub.send_to(
+        await self.hub.send_client_ws(
             cid,
             clientbound.ChatResponse(
                 ok=False, err=f"'{name}' not allowed while connected"
@@ -82,7 +82,7 @@ class InGameState(State):
         cid = self.client.id
         await self.hub.broadcast(
             clientbound.Announcement(f"Player {cid} joined the game."),
-            except_for=cid,
+            except_for={cid},
         )
 
     @override
@@ -96,35 +96,35 @@ class InGameState(State):
         cid = self.client.id
         if isinstance(packet, serverbound.ChatRequest):
             log.info(f"chat from {cid}: {packet.message}")
-            await self.hub.send_to(cid, clientbound.ChatResponse(ok=True))
-            await self._broadcast_chat(cid, packet.message)
+            await self.hub.send_client_ws(cid, clientbound.ChatResponse(ok=True))
+            chat = clientbound.PlayerChat(cid, packet.message)
+            await self.hub.broadcast(
+                chat,
+                only_to={
+                    client.id
+                    for client in self.hub.get_clients()
+                    if isinstance(client.state, InGameState)
+                },
+            )
             return None
 
         elif isinstance(packet, serverbound.MoveRequest):
             log.info(f"move from {cid}: ({packet.dx},{packet.dy})")
-            await self.hub.send_to(cid, clientbound.MoveResponse(ok=True))
+            await self.hub.send_client_ws(cid, clientbound.MoveResponse(ok=True))
             return None
 
         elif isinstance(packet, serverbound.LogoutRequest):
             log.info(f"log out from {cid}")
-            await self.hub.send_to(cid, clientbound.LogoutResponse(ok=True))
+            await self.hub.send_client_ws(cid, clientbound.LogoutResponse(ok=True))
             return ConnectedState(self.client, self.hub)
 
         # Reject everything else
         name = type(packet).__name__
         log.info(f"reject {cid}: {name} in {self.NAME}")
-        await self.hub.send_to(
+        await self.hub.send_client_ws(
             cid,
             clientbound.ChatResponse(
                 ok=False, err=f"'{name}' not allowed while in game"
             ),
         )
         return None
-
-    async def _broadcast_chat(self, from_id: int, message: str) -> None:
-        """Broadcast chat only to clients in InGameState."""
-        for client in self.hub.get_clients():
-            if isinstance(client.state, InGameState):
-                await self.hub.send_to(
-                    client.id, clientbound.PlayerChat(from_id, message)
-                )

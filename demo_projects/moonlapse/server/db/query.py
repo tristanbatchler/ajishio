@@ -7,15 +7,16 @@ from __future__ import annotations
 
 __all__: collections.abc.Sequence[str] = (
     "QueryResults",
+    "count_user_login_failures_by_user_id_since",
     "count_users",
     "create_user",
     "create_user_lockout",
     "create_user_login",
     "create_user_login_failure",
     "delete_user_lockout_by_user_id",
+    "get_active_user_lockouts_by_user_id",
     "get_user",
     "get_user_by_username",
-    "get_user_lockouts_by_user_id",
     "list_users",
     "update_user_last_login",
     "update_user_last_updated",
@@ -95,13 +96,17 @@ INSERT INTO user_login_failures (user_id, ip_address) VALUES (?, ?)
 RETURNING id, user_id, added, ip_address
 """
 
+COUNT_USER_LOGIN_FAILURES_BY_USER_ID_SINCE: typing.Final[str] = """-- name: CountUserLoginFailuresByUserIdSince :one
+SELECT COUNT(*) FROM user_login_failures WHERE user_id = ? AND added >= ?
+"""
+
 CREATE_USER_LOCKOUT: typing.Final[str] = """-- name: CreateUserLockout :one
 INSERT INTO user_lockouts (user_id, expiration) VALUES (?, ?)
 RETURNING id, user_id, added, expiration
 """
 
-GET_USER_LOCKOUTS_BY_USER_ID: typing.Final[str] = """-- name: GetUserLockoutsByUserId :many
-SELECT id, user_id, added, expiration FROM user_lockouts WHERE user_id = ?
+GET_ACTIVE_USER_LOCKOUTS_BY_USER_ID: typing.Final[str] = """-- name: GetActiveUserLockoutsByUserId :many
+SELECT id, user_id, added, expiration FROM user_lockouts WHERE user_id = ? AND (expiration IS NULL OR expiration > CURRENT_TIMESTAMP)
 """
 
 DELETE_USER_LOCKOUT_BY_USER_ID: typing.Final[str] = """-- name: DeleteUserLockoutByUserId :exec
@@ -221,6 +226,13 @@ async def create_user_login_failure(conn: aiosqlite.Connection, *, user_id: int,
     return models.UserLoginFailure(id_=row[0], user_id=row[1], added=row[2], ip_address=row[3])
 
 
+async def count_user_login_failures_by_user_id_since(conn: aiosqlite.Connection, *, user_id: int, added: datetime.datetime) -> int | None:
+    row = await (await conn.execute(COUNT_USER_LOGIN_FAILURES_BY_USER_ID_SINCE, (user_id, added))).fetchone()
+    if row is None:
+        return None
+    return row[0]
+
+
 async def create_user_lockout(conn: aiosqlite.Connection, *, user_id: int, expiration: datetime.datetime | None) -> models.UserLockout | None:
     row = await (await conn.execute(CREATE_USER_LOCKOUT, (user_id, expiration))).fetchone()
     if row is None:
@@ -228,11 +240,11 @@ async def create_user_lockout(conn: aiosqlite.Connection, *, user_id: int, expir
     return models.UserLockout(id_=row[0], user_id=row[1], added=row[2], expiration=row[3])
 
 
-def get_user_lockouts_by_user_id(conn: aiosqlite.Connection, *, user_id: int) -> QueryResults[models.UserLockout]:
+def get_active_user_lockouts_by_user_id(conn: aiosqlite.Connection, *, user_id: int) -> QueryResults[models.UserLockout]:
     def _decode_hook(row: sqlite3.Row) -> models.UserLockout:
         return models.UserLockout(id_=row[0], user_id=row[1], added=row[2], expiration=row[3])
 
-    return QueryResults(conn, GET_USER_LOCKOUTS_BY_USER_ID, _decode_hook, user_id)
+    return QueryResults(conn, GET_ACTIVE_USER_LOCKOUTS_BY_USER_ID, _decode_hook, user_id)
 
 
 async def delete_user_lockout_by_user_id(conn: aiosqlite.Connection, *, user_id: int) -> None:

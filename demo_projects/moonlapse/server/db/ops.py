@@ -1,10 +1,5 @@
-"""Database initialization helpers."""
-
-from __future__ import annotations
-
 import logging
 import pathlib
-
 import aiosqlite
 
 log = logging.getLogger("moonlapse.db")

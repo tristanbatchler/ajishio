@@ -4,9 +4,11 @@ import asyncio
 import logging
 from websockets.asyncio.server import serve
 import aiosqlite
+import sqlite3
 import pathlib
 from demo_projects.moonlapse.server.connection import Hub
 from demo_projects.moonlapse.server.db import ops
+from datetime import datetime, timezone
 
 log = logging.getLogger("moonlapse")
 
@@ -17,8 +19,11 @@ DB_PATH: str = str(pathlib.Path(__file__).parent / "moonlapse.db")
 
 async def _init_db() -> aiosqlite.Connection:
     """Create/open the database and run schema."""
+    aiosqlite.register_adapter(
+        datetime, lambda val: val.astimezone(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+    )
     await ops.create_tables(DB_PATH)
-    return await aiosqlite.connect(DB_PATH)
+    return await aiosqlite.connect(DB_PATH, detect_types=sqlite3.PARSE_DECLTYPES)
 
 
 async def main() -> None:

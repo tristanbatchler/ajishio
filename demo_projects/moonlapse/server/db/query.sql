@@ -32,17 +32,21 @@ RETURNING *;
 INSERT INTO user_logins (user_id, ip_address) VALUES (?, ?)
 RETURNING *;
 
+/* USER_LOGIN_FAILURES */
 -- name: CreateUserLoginFailure :one
 INSERT INTO user_login_failures (user_id, ip_address) VALUES (?, ?)
 RETURNING *;
+
+-- name: CountUserLoginFailuresByUserIdSince :one
+SELECT COUNT(*) FROM user_login_failures WHERE user_id = ? AND added >= ?;
 
 /* USER_LOCKOUTS */
 -- name: CreateUserLockout :one
 INSERT INTO user_lockouts (user_id, expiration) VALUES (?, ?)
 RETURNING *;
 
--- name: GetUserLockoutsByUserId :many
-SELECT * FROM user_lockouts WHERE user_id = ?;
+-- name: GetActiveUserLockoutsByUserId :many
+SELECT * FROM user_lockouts WHERE user_id = ? AND (expiration IS NULL OR expiration > CURRENT_TIMESTAMP);
 
 -- name: DeleteUserLockoutByUserId :exec
 DELETE FROM user_lockouts WHERE user_id = ?;

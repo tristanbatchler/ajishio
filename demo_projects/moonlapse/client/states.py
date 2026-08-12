@@ -39,7 +39,9 @@ class ConnectingState(State):
             case cb.ClientId():
                 return self._handle_client_id(p)
             case _:
-                self.mgr.log(f"Unexpected while connecting: {p.TYPE}", aj.c_ltgray)
+                self.mgr.log(
+                    f"Unexpected while connecting: {type(p).__name__}", aj.c_ltgray
+                )
 
     @override
     def handle_text_input(self, text: str) -> None:
@@ -96,7 +98,9 @@ class ConnectedState(State):
             case clientbound.ClientDisconnected():
                 return self._handle_client_disconnected(p)
             case _:
-                self.mgr.log(f"Unexpected while connected: {p.TYPE}", aj.c_ltgray)
+                self.mgr.log(
+                    f"Unexpected while connected: {type(p).__name__}", aj.c_ltgray
+                )
 
     @override
     def handle_text_input(self, text: str):
@@ -173,7 +177,7 @@ class InGameState(State):
             case clientbound.PlayerChat():
                 return self._handle_player_chat(p)
             case _:
-                self.mgr.log(f"Unexpected in game: {p.TYPE}", aj.c_ltgray)
+                self.mgr.log(f"Unexpected in game: {type(p).__name__}", aj.c_ltgray)
 
     @override
     def handle_text_input(self, text: str):

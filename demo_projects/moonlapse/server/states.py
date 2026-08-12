@@ -10,6 +10,10 @@ from demo_projects.moonlapse.server.state import State
 
 log = logging.getLogger("moonlapse.states")
 
+# Convenient aliases
+sb = serverbound
+cb = clientbound
+
 
 class ConnectedState(State):
     NAME: ClassVar[str] = "connected"
@@ -17,6 +21,9 @@ class ConnectedState(State):
     def __init__(self, client: Client, hub: HubLike) -> None:
         self.client: Client = client
         self.hub: HubLike = hub
+
+        # Convenient shorthand
+        self.cid: int = self.client.id
 
     @override
     async def on_enter(self) -> None:
@@ -39,35 +46,33 @@ class ConnectedState(State):
     async def on_exit(self) -> None:
         pass
 
-    @override
-    async def handle_packet(
-        self, packet: serverbound.ServerboundPacket
-    ) -> State | None:
-        cid = self.client.id
-        if isinstance(packet, serverbound.LoginRequest):
-            log.info(f"login from {cid}")
-            await self.hub.send_client_ws(cid, clientbound.LoginResponse(ok=True))
-            await self.hub.broadcast(
-                clientbound.Announcement(f"Player {cid} joined the game."),
-                except_for={cid},
-            )
-            return InGameState(self.client, self.hub)
-
-        elif isinstance(packet, serverbound.RegisterRequest):
-            log.info(f"register from {cid}")
-            await self.hub.send_client_ws(cid, clientbound.RegisterResponse(ok=True))
-            return None
-
-        # Reject everything else
-        name = type(packet).__name__
-        log.info(f"reject {cid}: {name} in {self.NAME}")
-        await self.hub.send_client_ws(
-            cid,
-            clientbound.ChatResponse(
-                ok=False, err=f"'{name}' not allowed while connected"
-            ),
+    async def _handle_login_request(self, p: sb.LoginRequest):
+        log.info(f"login from {self.cid}: {p}")
+        await self.hub.send_client_ws(self.cid, clientbound.LoginResponse(ok=True))
+        await self.hub.broadcast(
+            clientbound.Announcement(f"Player {self.cid} joined the game."),
+            except_for={self.cid},
         )
+        return InGameState(self.client, self.hub)
+
+    async def _handle_register_request(self, p: sb.RegisterRequest):
+        log.info(f"register from {self.cid}: {p}")
+        await self.hub.send_client_ws(self.cid, cb.RegisterResponse(ok=True))
         return None
+
+    @override
+    async def handle_packet(self, p: sb.ServerboundPacket) -> State | None:
+        match p:
+            case sb.LoginRequest():
+                return await self._handle_login_request(p)
+            case sb.RegisterRequest():
+                return await self._handle_register_request(p)
+            case t:
+                log.info(f"reject {self.cid}: {t} in {self.NAME}")
+                await self.hub.send_client_ws(
+                    self.cid, cb.ServerError("You can't do that here")
+                )
+                return None
 
 
 class InGameState(State):
@@ -76,55 +81,52 @@ class InGameState(State):
     def __init__(self, client: Client, hub: HubLike) -> None:
         self.client: Client = client
         self.hub: HubLike = hub
+        self.cid: int = self.client.id
 
     @override
     async def on_enter(self) -> None:
-        cid = self.client.id
         await self.hub.broadcast(
-            clientbound.Announcement(f"Player {cid} joined the game."),
-            except_for={cid},
+            cb.Announcement(f"Player {self.cid} joined the game."),
+            except_for={self.cid},
         )
 
     @override
     async def on_exit(self) -> None:
         pass
 
-    @override
-    async def handle_packet(
-        self, packet: serverbound.ServerboundPacket
-    ) -> State | None:
-        cid = self.client.id
-        if isinstance(packet, serverbound.ChatRequest):
-            log.info(f"chat from {cid}: {packet.message}")
-            await self.hub.send_client_ws(cid, clientbound.ChatResponse(ok=True))
-            chat = clientbound.PlayerChat(cid, packet.message)
-            await self.hub.broadcast(
-                chat,
-                only_to={
-                    client.id
-                    for client in self.hub.get_clients()
-                    if isinstance(client.state, InGameState)
-                },
-            )
-            return None
-
-        elif isinstance(packet, serverbound.MoveRequest):
-            log.info(f"move from {cid}: ({packet.dx},{packet.dy})")
-            await self.hub.send_client_ws(cid, clientbound.MoveResponse(ok=True))
-            return None
-
-        elif isinstance(packet, serverbound.LogoutRequest):
-            log.info(f"log out from {cid}")
-            await self.hub.send_client_ws(cid, clientbound.LogoutResponse(ok=True))
-            return ConnectedState(self.client, self.hub)
-
-        # Reject everything else
-        name = type(packet).__name__
-        log.info(f"reject {cid}: {name} in {self.NAME}")
-        await self.hub.send_client_ws(
-            cid,
-            clientbound.ChatResponse(
-                ok=False, err=f"'{name}' not allowed while in game"
-            ),
+    async def _handle_chat_request(self, p: sb.ChatRequest) -> None:
+        log.info(f"chat from {self.cid}: {p.message}")
+        await self.hub.send_client_ws(self.cid, cb.ChatResponse(ok=True))
+        await self.hub.broadcast(
+            cb.PlayerChat(self.cid, p.message),
+            only_to={
+                c.id for c in self.hub.get_clients() if isinstance(c.state, InGameState)
+            },
         )
-        return None
+
+    async def _handle_move_request(self, p: sb.MoveRequest) -> None:
+        log.info(f"move from {self.cid}: ({p.dx},{p.dy})")
+        await self.hub.send_client_ws(self.cid, cb.MoveResponse(ok=True))
+
+    async def _handle_logout_request(self, p: sb.LogoutRequest) -> State | None:
+        log.info(f"log out from {self.cid}: {p}")
+        await self.hub.send_client_ws(self.cid, cb.LogoutResponse(ok=True))
+        return ConnectedState(self.client, self.hub)
+
+    @override
+    async def handle_packet(self, p: sb.ServerboundPacket) -> State | None:
+        match p:
+            case sb.ChatRequest():
+                await self._handle_chat_request(p)
+                return None
+            case sb.MoveRequest():
+                await self._handle_move_request(p)
+                return None
+            case sb.LogoutRequest():
+                return await self._handle_logout_request(p)
+            case t:
+                log.info(f"reject {self.cid}: {t} in {self.NAME}")
+                await self.hub.send_client_ws(
+                    self.cid, cb.ServerError("You can't do that here")
+                )
+                return None

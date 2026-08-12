@@ -144,6 +144,9 @@ class Manager(aj.GameObject):
                     f"Player {pkt.from_client_id} says: '{pkt.message}'", aj.c_white
                 )
 
+            elif isinstance(pkt, clientbound.ServerError):
+                self.log(f"Server says: '{pkt.message}'", aj.c_red)
+
             incoming = self.client.recv()
 
         # Text input

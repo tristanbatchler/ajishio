@@ -19,6 +19,7 @@ class ClientboundPacketType(IntEnum):
     MOTD = auto()
     ANNOUNCEMENT = auto()
     PLAYER_CHAT = auto()
+    SERVER_ERROR = auto()
 
 
 REGISTRY: dict[ClientboundPacketType, type[ClientboundPacket]] = {}
@@ -157,3 +158,15 @@ class PlayerChat(ClientboundPacket):
     @override
     def get_structure(self):
         return (self.from_client_id, self.message)
+
+
+@final
+@register(ClientboundPacketType.SERVER_ERROR)
+@dataclass(frozen=True)
+class ServerError(ClientboundPacket):
+    FORMAT_STRING = "256s"
+    message: str
+
+    @override
+    def get_structure(self):
+        return (self.message,)

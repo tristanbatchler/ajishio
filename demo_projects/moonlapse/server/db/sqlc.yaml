@@ -1,0 +1,20 @@
+version: "2"
+plugins:
+- name: python
+  wasm:
+    url: https://github.com/rayakame/sqlc-gen-better-python/releases/download/v0.8.0/sqlc-gen-better-python.wasm
+    sha256: c98cffe9024c3c8e802426a4babec460c2d17adc440181324e3d707b1e723c48
+sql:
+- engine: "sqlite"
+  queries: "query.sql"
+  schema: "schema.sql"
+  codegen:
+    - out: "."
+      plugin: python
+      options:
+        package: "db"
+        emit_init_file: true
+        sql_driver: "aiosqlite"
+        model_type: "dataclass"
+        import_text: true
+        import_datetime: true

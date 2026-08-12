@@ -67,8 +67,8 @@ class ConnectedState(State):
                 return await self._handle_login_request(p)
             case sb.RegisterRequest():
                 return await self._handle_register_request(p)
-            case t:
-                log.info(f"reject {self.cid}: {t} in {self.NAME}")
+            case _:
+                log.info(f"reject {self.cid}: {p.TYPE} in {self.NAME}")
                 await self.hub.send_client_ws(
                     self.cid, cb.ServerError("You can't do that here")
                 )
@@ -124,8 +124,8 @@ class InGameState(State):
                 return None
             case sb.LogoutRequest():
                 return await self._handle_logout_request(p)
-            case t:
-                log.info(f"reject {self.cid}: {t} in {self.NAME}")
+            case _:
+                log.info(f"reject {self.cid}: {p.TYPE} in {self.NAME}")
                 await self.hub.send_client_ws(
                     self.cid, cb.ServerError("You can't do that here")
                 )

@@ -92,60 +92,66 @@ class Manager(aj.GameObject):
             self.cursor_visible = not self.cursor_visible
             self.cursor_timer = 0.5
 
-        # Drain incoming packets (non-blocking, like multiplayerv2)
         incoming = self.client.recv()
         while incoming is not None:
-            pkt = deserialize_from_server(incoming)
+            p = deserialize_from_server(incoming)
 
-            if isinstance(pkt, clientbound.LoginResponse):
-                if not pkt.ok:
-                    self.log(f"Can't login: {pkt.err}", aj.c_orange)
-                else:
-                    self.logged_in = True
-                    self.log("Login success", aj.c_lime)
+            match p:
+                case clientbound.LoginResponse():
+                    if not p.ok:
+                        self.log(f"Can't login: {p.err}", aj.c_orange)
+                    else:
+                        self.logged_in = True
+                        self.log("Login success", aj.c_lime)
 
-            elif isinstance(pkt, clientbound.ClientId):
-                self.my_id = pkt.id
-                self.log(f"Obtained assigned ID: {self.my_id}", aj.c_aqua)
+                case clientbound.ClientId():
+                    self.my_id = p.id
+                    self.log(f"Obtained assigned ID: {self.my_id}", aj.c_aqua)
 
-            elif isinstance(pkt, clientbound.LogoutResponse):
-                if not pkt.ok:
-                    self.log(f"Can't logout: {pkt.err}", aj.c_orange)
-                else:
-                    self.log("Logout success", aj.c_lime)
+                case clientbound.LogoutResponse():
+                    if not p.ok:
+                        self.log(f"Can't logout: {p.err}", aj.c_orange)
+                    else:
+                        self.log("Logout success", aj.c_lime)
 
-            elif isinstance(pkt, clientbound.ChatResponse):
-                if not pkt.ok:
-                    self.log(f"Can't send that: {pkt.err}", aj.c_orange)
+                case clientbound.ChatResponse():
+                    if not p.ok:
+                        self.log(f"Can't send that: {p.err}", aj.c_orange)
 
-            elif isinstance(pkt, clientbound.MoveResponse):
-                if not pkt.ok:
-                    self.log(f"Can't move there: {pkt.err}", aj.c_orange)
-                else:
-                    self.log("Move successful", aj.c_lime)
+                case clientbound.MoveResponse():
+                    if not p.ok:
+                        self.log(f"Can't move there: {p.err}", aj.c_orange)
+                    else:
+                        self.log("Move successful", aj.c_lime)
 
-            elif isinstance(pkt, clientbound.RegisterResponse):
-                if not pkt.ok:
-                    self.log(f"Can't register: {pkt.err}", aj.c_orange)
-                else:
-                    self.log("Register success", aj.c_lime)
+                case clientbound.RegisterResponse():
+                    if not p.ok:
+                        self.log(f"Can't register: {p.err}", aj.c_orange)
+                    else:
+                        self.log("Register success", aj.c_lime)
 
-            elif isinstance(pkt, clientbound.Motd):
-                self.log(pkt.motd, aj.c_aqua)
+                case clientbound.Motd():
+                    self.log(p.motd, aj.c_aqua)
 
-            elif isinstance(pkt, clientbound.Announcement):
-                self.log(pkt.message, aj.c_yellow)
+                case clientbound.Announcement():
+                    self.log(p.message, aj.c_yellow)
 
-            elif isinstance(pkt, clientbound.ClientDisconnected):
-                self.log(f"Player {pkt.client_id} disconnected", aj.c_yellow)
+                case clientbound.ClientDisconnected():
+                    self.log(f"Player {p.client_id} disconnected", aj.c_yellow)
 
-            elif isinstance(pkt, clientbound.PlayerChat):
-                self.log(
-                    f"Player {pkt.from_client_id} says: '{pkt.message}'", aj.c_white
-                )
+                case clientbound.PlayerChat():
+                    self.log(
+                        f"Player {p.from_client_id} says: '{p.message}'", aj.c_white
+                    )
 
-            elif isinstance(pkt, clientbound.ServerError):
-                self.log(f"Server says: '{pkt.message}'", aj.c_red)
+                case clientbound.ServerError():
+                    self.log(f"Server says: '{p.message}'", aj.c_red)
+
+                case _:
+                    self.log(
+                        f"Received unexpected packet and don't know what to do with it ({p.TYPE})",
+                        aj.c_ltgray,
+                    )
 
             incoming = self.client.recv()
 
@@ -175,8 +181,8 @@ class Manager(aj.GameObject):
                 else:
                     self.log(f"Unknown command: {cmd}", aj.c_red)
             else:
-                pkt = serverbound.ChatRequest(self.input_buffer)
-                self.client.send(pkt.serialize())
+                p = serverbound.ChatRequest(self.input_buffer)
+                self.client.send(p.serialize())
 
             self.input_buffer = ""
 

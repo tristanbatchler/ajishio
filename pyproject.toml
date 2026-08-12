@@ -32,6 +32,9 @@ dev = [
 exclude = [
     "**/_web_build/",
     "ajishio/src/ajishio/pyqtree.py",
+    "demo_projects/moonlapse/server/db/query.py",
+    "demo_projects/moonlapse/server/db/models.py",
+    "demo_projects/moonlapse/server/db/__init__.py",
 ]
 
 [tool.basedpyright]
@@ -40,4 +43,7 @@ stubPath = "ajishio/typings"
 ignore = [
     "**/_web_build/",
     "ajishio/src/ajishio/pyqtree.py",
+    "demo_projects/moonlapse/server/db/query.py",
+    "demo_projects/moonlapse/server/db/models.py",
+    "demo_projects/moonlapse/server/db/__init__.py",
 ]

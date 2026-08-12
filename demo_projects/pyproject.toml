@@ -8,5 +8,23 @@ dependencies = [
 ]
 
 [tool.setuptools.packages.find]
+where = ["."]
 include = ["demo_projects*"]
+exclude = ["demo_projects.moonlapse*"]
+
+[tool.basedpyright]
+exclude = [
+    "**/*generated*",
+    "**/db/query.py",
+    "**/db/models.py",
+    "**/db/__init__.py",
+]
+
+[tool.ruff]
+exclude = [
+    "**/*generated*",
+    "**/db/query.py",
+    "**/db/models.py",
+    "**/db/__init__.py",
+]
 

@@ -1,0 +1,17 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "sqlc generate (moonlapse)",
+            "type": "shell",
+            "command": "uv",
+            "args": ["tool", "run", "sqlc", "generate"],
+            "options": {
+                "cwd": "${workspaceFolder}/demo_projects/moonlapse/server/db"
+            },
+            "problemMatcher": [],
+            "group": "build",
+            "detail": "Regenerates db/query.py, db/models.py from schema.sql + query.sql"
+        }
+    ]
+}

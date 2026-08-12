@@ -1,7 +1,26 @@
 {
-    "editor.defaultFormatter": "charliermarsh.ruff",
-    "editor.formatOnSave": true,
-    "python.analysis.diagnosticSeverityOverrides": {
-        "reportMissingModuleSource": "none"
+    "files.watcherExcludes": {
+        "**/db/query.py": true,
+        "**/db/models.py": true,
+        "**/db/__init__.py": true
+    },
+    "sqlc.config": "${workspaceFolder}/demo_projects/moonlapse/server/db/sqlc.yaml",
+    "emeraldwalk.runonsave": {
+        "commands": [
+            {
+                "match": "moonlapse[/\\\\]server[/\\\\]db[/\\\\]schema\\.sql$",
+                "cmd": "cd ${workspaceFolder}/demo_projects/moonlapse/server/db && uv tool run sqlc generate",
+                "isAsync": true,
+                "autoShowOutputPanel": "error",
+                "message": "sqlc generate: schema.sql changed..."
+            },
+            {
+                "match": "moonlapse[/\\\\]server[/\\\\]db[/\\\\]query\\.sql$",
+                "cmd": "cd ${workspaceFolder}/demo_projects/moonlapse/server/db && uv tool run sqlc generate",
+                "isAsync": true,
+                "autoShowOutputPanel": "error",
+                "message": "sqlc generate: query.sql changed..."
+            }
+        ]
     }
 }

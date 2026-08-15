@@ -8,8 +8,10 @@ import ajishio as aj
 import string
 
 from demo_projects.moonlapse.shared.packets import deserialize_from_server
+from demo_projects.moonlapse.shared.packets import serverbound
 from demo_projects.moonlapse.client.protocol import State
 from demo_projects.moonlapse.client import states
+from demo_projects.moonlapse.client.world import World
 
 log = logging.getLogger("moonlapse.manager")
 
@@ -26,6 +28,7 @@ class Manager(aj.GameObject):
         self.client: aj.GameNetClient = client
         self.state: State = states.ConnectingState(self)
         self.client_id: int | None = None
+        self.world: World | None = None
         self.message_log: list[tuple[str, aj.Color]] = []
         self.input_buffer: str = ""
         self.cursor_visible: bool = True
@@ -46,6 +49,19 @@ class Manager(aj.GameObject):
     def get_client_id(self):
         return self.client_id
 
+    def enter_world(self) -> None:
+        self.world = World()
+        aj.add_object(self.world)
+        self.log("Entering world.", aj.c_lime)
+
+    def leave_world(self) -> None:
+        if self.world is not None:
+            # destroy all entities in world
+            for _obj in list(self.world.entities.values()):
+                aj.instance_destroy(_obj)
+            self.world.entities.clear()
+            self.world = None
+
     def _process_network(self) -> None:
         incoming = self.client.recv()
         while incoming is not None:
@@ -58,6 +74,26 @@ class Manager(aj.GameObject):
             incoming = self.client.recv()
 
     def _process_input(self) -> None:
+        # Movement when not typing
+        if not self.input_buffer and self.world is not None:
+            dx = 0
+            dy = 0
+            if aj.keyboard_check_pressed(ord("a")):
+                dx = -1
+            if aj.keyboard_check_pressed(ord("d")):
+                dx = 1
+            if aj.keyboard_check_pressed(ord("w")):
+                dy = -1
+            if aj.keyboard_check_pressed(ord("s")):
+                dy = 1
+            if dx != 0 or dy != 0:
+                pkt = serverbound.EntityMoveRequest(
+                    entity_id=self.client_id or 0,
+                    dx=dx,
+                    dy=dy,
+                )
+                self.client.send(pkt.serialize())
+
         for ch in string.printable:
             if aj.keyboard_check_pressed(ord(ch)):
                 self.input_buffer += ch

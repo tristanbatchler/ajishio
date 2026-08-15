@@ -56,10 +56,7 @@ class Hub:
                 clientbound.Announcement(f"Player {cid} left the game.")
             )
             log.info(
-                "disconnected %d (%s), total=%d",
-                cid,
-                client.ws.remote_address,  # pyright: ignore[reportAny]
-                len(self.get_clients()),
+                f"disconnected {cid} ({client.ip_address}), total={len(self.get_clients())}"
             )
 
     async def run(self) -> None:

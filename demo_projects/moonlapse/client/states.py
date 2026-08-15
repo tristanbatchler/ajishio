@@ -5,8 +5,10 @@ from typing import ClassVar, override
 
 import ajishio as aj
 
-from demo_projects.moonlapse.shared.packets import clientbound, serverbound
+from demo_projects.moonlapse.shared import entities
 from demo_projects.moonlapse.client.protocol import ManagerLike, State
+from demo_projects.moonlapse.shared.packets import clientbound, serverbound
+from demo_projects.moonlapse.shared.packets.base import Packet
 
 # Convenient aliases
 cb = clientbound
@@ -85,17 +87,17 @@ class ConnectedState(State):
         self.mgr.log(f"Player {p.client_id} disconnected", aj.c_yellow)
 
     @override
-    def handle_packet(self, p: clientbound.ClientboundPacket):
+    def handle_packet(self, p: cb.ClientboundPacket):
         match p:
-            case clientbound.LoginResponse():
+            case cb.LoginResponse():
                 return self._handle_login_response(p)
-            case clientbound.RegisterResponse():
+            case cb.RegisterResponse():
                 return self._handle_register_response(p)
-            case clientbound.Motd():
+            case cb.Motd():
                 return self._handle_motd(p)
-            case clientbound.Announcement():
+            case cb.Announcement():
                 return self._handle_announcement(p)
-            case clientbound.ClientDisconnected():
+            case cb.ClientDisconnected():
                 return self._handle_client_disconnected(p)
             case _:
                 self.mgr.log(
@@ -108,13 +110,13 @@ class ConnectedState(State):
         if not parts:
             return
         if parts[0] == "/login" and len(parts) >= 3:
-            pkt = serverbound.LoginRequest(username=parts[1], password=parts[2])
+            pkt = sb.LoginRequest(username=parts[1], password=parts[2])
             self.mgr.client.send(pkt.serialize())
             self.mgr.log(f"Sending login as {parts[1]}", aj.c_lime)
         elif parts[0] == "/who":
             self.mgr.log(f"My ID: {self.mgr.get_client_id()}", aj.c_aqua)
         elif parts[0] == "/register" and len(parts) >= 3:
-            pkt = serverbound.RegisterRequest(username=parts[1], password=parts[2])
+            pkt = sb.RegisterRequest(username=parts[1], password=parts[2])
             self.mgr.client.send(pkt.serialize())
             self.mgr.log("Sending register...", aj.c_yellow)
         else:
@@ -140,6 +142,7 @@ class InGameState(State):
             self.mgr.log(f"Can't logout: {p.err}", aj.c_orange)
         else:
             self.mgr.log("Logout success", aj.c_lime)
+            self.mgr.leave_world()
             return ConnectedState(self.mgr)
 
     def _handle_chat_response(self, p: cb.ChatResponse):
@@ -161,21 +164,66 @@ class InGameState(State):
     def _handle_player_chat(self, p: cb.PlayerChat):
         self.mgr.log(f"Player {p.from_client_id} says: '{p.message}'", aj.c_white)
 
+    def _handle_entity_spawn(self, p: cb.EntitySpawn):
+        if self.mgr.world is not None:
+            entity_details = Packet.from_bytes(p.entity_details)
+            entity: entities.Entity | None = None
+            match entity_details:
+                case cb.ActorDetails():
+                    entity = entities.Actor(
+                        name=entity_details.name, x=entity_details.x, y=entity_details.y
+                    )
+                case cb.TreeDetails():
+                    entity = entities.Tree(
+                        level=entity_details.level,
+                        name=entity_details.name,
+                        x=entity_details.x,
+                        y=entity_details.y,
+                    )
+                case cb.OreDetails():
+                    entity = entities.Ore(
+                        x=entity_details.x,
+                        y=entity_details.y,
+                        level=entity_details.level,
+                        name=entity_details.name,
+                    )
+                case cb.FishDetails():
+                    entity = entities.Fish(
+                        x=entity_details.x,
+                        y=entity_details.y,
+                        level=entity_details.level,
+                        name=entity_details.name,
+                    )
+                case _:
+                    raise NotImplementedError(
+                        f"Entity details {entity_details} does not have an implementation for client.InGameState._handle_entity_spawn"
+                    )
+
+            self.mgr.world.spawn_entity(entity)
+
+    def _handle_entity_destroy(self, p: cb.EntityDestroy):
+        if self.mgr.world is not None:
+            self.mgr.world.destroy_entity(p.entity_id)
+
     @override
-    def handle_packet(self, p: clientbound.ClientboundPacket):
+    def handle_packet(self, p: cb.ClientboundPacket):
         match p:
-            case clientbound.LogoutResponse():
+            case cb.LogoutResponse():
                 return self._handle_logout_response(p)
-            case clientbound.ChatResponse():
+            case cb.ChatResponse():
                 return self._handle_chat_response(p)
-            case clientbound.MoveResponse():
+            case cb.MoveResponse():
                 return self._handle_move_response(p)
-            case clientbound.Announcement():
+            case cb.Announcement():
                 return self._handle_announcement(p)
-            case clientbound.ClientDisconnected():
+            case cb.ClientDisconnected():
                 return self._handle_client_disconnected(p)
-            case clientbound.PlayerChat():
+            case cb.PlayerChat():
                 return self._handle_player_chat(p)
+            case cb.EntitySpawn():
+                return self._handle_entity_spawn(p)
+            case cb.EntityDestroy():
+                return self._handle_entity_destroy(p)
             case _:
                 self.mgr.log(f"Unexpected in game: {type(p).__name__}", aj.c_ltgray)
 
@@ -187,9 +235,9 @@ class InGameState(State):
         if parts[0] == "/who":
             self.mgr.log(f"My ID: {self.mgr.get_client_id()}", aj.c_aqua)
         elif parts[0] == "/logout":
-            pkt = serverbound.LogoutRequest()
+            pkt = sb.LogoutRequest()
             self.mgr.client.send(pkt.serialize())
             self.mgr.log("Sending logout...", aj.c_yellow)
         else:
-            pkt = serverbound.ChatRequest(text)
+            pkt = sb.ChatRequest(text)
             self.mgr.client.send(pkt.serialize())

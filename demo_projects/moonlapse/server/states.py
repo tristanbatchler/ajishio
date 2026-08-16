@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 from typing import ClassVar, override
+from base64 import b64encode
 
 from datetime import datetime, timedelta, timezone
 
@@ -196,8 +197,8 @@ class InGameState(State):
         self.cid: int = self.client.id
         self.actor: Actor = actor
 
-    def _serialize_actor_details(self) -> bytes:
-        return cb.EntityDetails.from_entity(self.actor).serialize()
+    def _serialize_actor_details(self) -> str:
+        return b64encode(cb.ActorDetails.from_entity(self.actor).to_bytes()).decode()
 
     @override
     async def on_enter(self) -> None:
@@ -208,7 +209,7 @@ class InGameState(State):
         # Broadcast this player's spawn to everyone
         await self.hub.broadcast(
             cb.EntitySpawn(
-                entity_type=Actor.TYPE, entity_details=self._serialize_actor_details()
+                entity_type=Actor.TYPE, entity_details_blob=self._serialize_actor_details()
             )
         )
 
@@ -239,7 +240,7 @@ class InGameState(State):
         self.actor.y += p.dy
         # Broadcast position to everyone (including self)
         await self.hub.broadcast(
-            cb.EntityUpdate(entity_details=self._serialize_actor_details())
+            cb.EntityUpdate(entity_details_blob=self._serialize_actor_details())
         )
         await self.hub.send_client_ws(self.cid, cb.MoveResponse(ok=True))
 

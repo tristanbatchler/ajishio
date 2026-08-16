@@ -96,6 +96,19 @@ class Packet(ABC):
         structure = _decode_structure(struct.unpack(fmt_str, payload))
         return cls(*structure)
 
+    def to_bytes(self) -> bytes:
+        fmt_str = self.get_fmt_string()
+        header_bytes = struct.pack(
+            f"!{len(fmt_str)}s",
+            fmt_str.encode(),  # The first part is payload-unpacking instructions
+        )
+        structure = _encode_structure(self.get_structure())
+        payload_bytes = struct.pack(
+            fmt_str,
+            *structure,  # The second part is the actual data
+        )
+        return header_bytes + b"|" + payload_bytes
+
     def serialize(self) -> bytes:
         fmt_str = self.get_fmt_string()
         header_bytes = struct.pack(

@@ -283,11 +283,11 @@ class FishDetails(ResourceDetails):
 @dataclass(frozen=True)
 class EntitySpawn(ClientboundPacket):
     entity_type: entities.EntityType
-    entity_details: bytes
+    entity_details_blob: str
 
     @override
     def get_structure(self):
-        return (self.entity_type, self.entity_details)
+        return (self.entity_type, self.entity_details_blob)
 
 
 @final
@@ -305,8 +305,8 @@ class EntityDestroy(ClientboundPacket):
 @register(ClientboundPacketType.ENTITY_UPDATE)
 @dataclass(frozen=True)
 class EntityUpdate(ClientboundPacket):
-    entity_details: bytes
+    entity_details_blob: str
 
     @override
     def get_structure(self):
-        return (self.entity_details,)
+        return (self.entity_details_blob,)

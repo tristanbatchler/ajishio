@@ -4,6 +4,7 @@ import ajishio as aj
 import logging
 import string
 from typing import ClassVar, override, Unpack
+from base64 import b64decode
 
 
 from demo_projects.moonlapse.shared import entities
@@ -227,38 +228,42 @@ class InGameState(aj.GameObject, State):
         logger.info(f"Player {p.from_client_id} says: '{p.message}'", aj.c_white)
 
     def _handle_entity_spawn(self, p: cb.EntitySpawn):
-        entity_details = cb.EntityDetails.from_bytes(p.entity_details)
-        entity: entities.Entity | None = None
-        match entity_details:
-            case cb.ActorDetails():
+        data = b64decode(p.entity_details_blob)
+        
+        entity_details: cb.EntityDetails | None = None
+        match p.entity_type:
+            case entities.EntityType.ACTOR:
+                entity_details = cb.ActorDetails.from_bytes(data)
                 entity = entities.Actor(
                     name=entity_details.name, x=entity_details.x, y=entity_details.y
                 )
-            case cb.TreeDetails():
+            case entities.EntityType.TREE:
+                entity_details = cb.TreeDetails.from_bytes(data)
                 entity = entities.Tree(
                     level=entity_details.level,
                     name=entity_details.name,
                     x=entity_details.x,
                     y=entity_details.y,
                 )
-            case cb.OreDetails():
+            case entities.EntityType.ORE:
+                entity_details= cb.OreDetails.from_bytes(data)
                 entity = entities.Ore(
                     x=entity_details.x,
                     y=entity_details.y,
                     level=entity_details.level,
                     name=entity_details.name,
                 )
-            case cb.FishDetails():
+            case entities.EntityType.FISH:
+                entity_details = cb.FishDetails.from_bytes(data)
                 entity = entities.Fish(
                     x=entity_details.x,
                     y=entity_details.y,
                     level=entity_details.level,
                     name=entity_details.name,
                 )
-            case _:
-                raise NotImplementedError(
-                    f"Entity details {entity_details} does not have an implementation for client.InGameState._handle_entity_spawn"
-                )
+            case _:  # pyright: ignore[reportUnnecessaryComparison]
+                raise NotImplementedError(f"Entity spawn for type {p.entity_type} is unhandled")  # pyright: ignore[reportUnreachable]
+        
 
         self.world.spawn_entity(entity)
 

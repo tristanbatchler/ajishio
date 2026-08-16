@@ -314,7 +314,10 @@ class InGameState(State):
             cb.EntityUpdate(
                 self.actor.entity_id,
                 entity_details_blob=self._serialize_actor_details(),
-            )
+            ),
+            only_to={
+                c.id for c in self.hub.get_clients() if isinstance(c.state, InGameState)
+            }
         )
         await self.hub.send_client_ws(self.cid, cb.MoveResponse(ok=True))
 

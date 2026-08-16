@@ -99,10 +99,13 @@ class Packet(ABC):
     def serialize(self) -> bytes:
         fmt_str = self.get_fmt_string()
         header_bytes = struct.pack(
-            f"!H{len(fmt_str)}s", self.TYPE, fmt_str.encode() # The first part a fixed 2 bytes containing the packet type enum, followed by payload-unpacking instructions
-        )  
+            f"!H{len(fmt_str)}s",
+            self.TYPE,
+            fmt_str.encode(),  # The first part a fixed 2 bytes containing the packet type enum, followed by payload-unpacking instructions
+        )
         structure = _encode_structure(self.get_structure())
         payload_bytes = struct.pack(
-            fmt_str, *structure # The second part is the actual data
-        )  
+            fmt_str,
+            *structure,  # The second part is the actual data
+        )
         return header_bytes + b"|" + payload_bytes

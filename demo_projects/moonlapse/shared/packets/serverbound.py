@@ -39,7 +39,6 @@ def register(packet_type: ServerboundPacketType) -> Callable[[type[T]], type[T]]
 @register(ServerboundPacketType.CHAT_REQUEST)
 @dataclass(frozen=True)
 class ChatRequest(ServerboundPacket):
-    FORMAT_STRING = "256s"
     message: str
 
     @override
@@ -51,7 +50,6 @@ class ChatRequest(ServerboundPacket):
 @register(ServerboundPacketType.MOVE_REQUEST)
 @dataclass(frozen=True)
 class MoveRequest(ServerboundPacket):
-    FORMAT_STRING = "bb"
     dx: int
     dy: int
 
@@ -64,7 +62,6 @@ class MoveRequest(ServerboundPacket):
 @register(ServerboundPacketType.LOGIN_REQUEST)
 @dataclass(frozen=True)
 class LoginRequest(ServerboundPacket):
-    FORMAT_STRING = "128s128s"
     username: str
     password: str
 
@@ -77,8 +74,6 @@ class LoginRequest(ServerboundPacket):
 @register(ServerboundPacketType.LOGOUT_REQUEST)
 @dataclass(frozen=True)
 class LogoutRequest(ServerboundPacket):
-    FORMAT_STRING = ""
-
     @override
     def get_structure(self):
         return ()
@@ -88,7 +83,6 @@ class LogoutRequest(ServerboundPacket):
 @register(ServerboundPacketType.REGISTER_REQUEST)
 @dataclass(frozen=True)
 class RegisterRequest(ServerboundPacket):
-    FORMAT_STRING = "128s128s"
     username: str
     password: str
 
@@ -101,7 +95,6 @@ class RegisterRequest(ServerboundPacket):
 @register(ServerboundPacketType.ENTITY_MOVE_REQUEST)
 @dataclass(frozen=True)
 class EntityMoveRequest(ServerboundPacket):
-    FORMAT_STRING = "Ibb"
     entity_id: int
     dx: int
     dy: int

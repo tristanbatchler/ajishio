@@ -40,12 +40,13 @@ class Actor(Entity):
         self,
         entity_id: int,
         name: str,
+        sprite_image_index: int, 
         x: float = 0,
         y: float = 0,
         **kwargs: Unpack[aj.GameObjectKwargs],
     ) -> None:
         super().__init__(entity_id, name, x, y, **kwargs)
-        self.image_index = SpritesheetIndex.MAN_UNARMED
+        self.image_index = sprite_image_index
 
     @override
     def draw_gui(self) -> None:

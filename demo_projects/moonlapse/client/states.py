@@ -233,6 +233,7 @@ class InGameState(aj.GameObject, State):
                     else entities.Actor(
                         entity_id=details.entity_id,
                         name=details.name,
+                        sprite_image_index=details.sprite_image_index,
                         x=details.x,
                         y=details.y,
                     )

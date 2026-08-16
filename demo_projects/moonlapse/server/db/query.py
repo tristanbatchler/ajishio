@@ -62,6 +62,7 @@ class GetActorByUserIdRow:
     user_id: int
     entity_type: int
     entity_name: str
+    sprite_image_index: int
     x_position: int
     y_position: int
     added: datetime.datetime
@@ -138,7 +139,7 @@ INSERT INTO entities (
   x_position,
   y_position
 ) VALUES (?, ?, ?, ?)
-RETURNING id, entity_type, added, last_updated, x_position, y_position, entity_name, sprite_image_index
+RETURNING id, entity_type, added, last_updated, x_position, y_position, entity_name
 """
 
 UPDATE_ENTITY_POSITION: typing.Final[str] = """-- name: UpdateEntityPosition :one
@@ -148,7 +149,7 @@ SET
     y_position = ?,
     last_updated = CURRENT_TIMESTAMP
 WHERE id = ?
-RETURNING id, entity_type, added, last_updated, x_position, y_position, entity_name, sprite_image_index
+RETURNING id, entity_type, added, last_updated, x_position, y_position, entity_name
 """
 
 GET_ACTOR_BY_USER_ID: typing.Final[str] = """-- name: GetActorByUserId :one
@@ -157,6 +158,7 @@ SELECT
   a.user_id,
   e.entity_type,
   e.entity_name,
+  a.sprite_image_index, 
   e.x_position,
   e.y_position,
   e.added,
@@ -169,9 +171,10 @@ WHERE a.user_id = ?
 CREATE_ACTOR: typing.Final[str] = """-- name: CreateActor :one
 INSERT INTO actors (
   entity_id,
-  user_id
-) VALUES (?, ?)
-RETURNING entity_id, user_id
+  user_id,
+  sprite_image_index
+) VALUES (?, ?, ?)
+RETURNING entity_id, user_id, sprite_image_index
 """
 
 
@@ -316,25 +319,25 @@ async def create_entity(conn: aiosqlite.Connection, *, entity_type: int, entity_
     row = await (await conn.execute(CREATE_ENTITY, (entity_type, entity_name, x_position, y_position))).fetchone()
     if row is None:
         return None
-    return models.Entity(id_=row[0], entity_type=row[1], added=row[2], last_updated=row[3], x_position=row[4], y_position=row[5], entity_name=row[6], sprite_image_index=row[7])
+    return models.Entity(id_=row[0], entity_type=row[1], added=row[2], last_updated=row[3], x_position=row[4], y_position=row[5], entity_name=row[6])
 
 
 async def update_entity_position(conn: aiosqlite.Connection, *, x_position: int, y_position: int, id_: int) -> models.Entity | None:
     row = await (await conn.execute(UPDATE_ENTITY_POSITION, (x_position, y_position, id_))).fetchone()
     if row is None:
         return None
-    return models.Entity(id_=row[0], entity_type=row[1], added=row[2], last_updated=row[3], x_position=row[4], y_position=row[5], entity_name=row[6], sprite_image_index=row[7])
+    return models.Entity(id_=row[0], entity_type=row[1], added=row[2], last_updated=row[3], x_position=row[4], y_position=row[5], entity_name=row[6])
 
 
 async def get_actor_by_user_id(conn: aiosqlite.Connection, *, user_id: int) -> GetActorByUserIdRow | None:
     row = await (await conn.execute(GET_ACTOR_BY_USER_ID, (user_id,))).fetchone()
     if row is None:
         return None
-    return GetActorByUserIdRow(entity_id=row[0], user_id=row[1], entity_type=row[2], entity_name=row[3], x_position=row[4], y_position=row[5], added=row[6], last_updated=row[7])
+    return GetActorByUserIdRow(entity_id=row[0], user_id=row[1], entity_type=row[2], entity_name=row[3], sprite_image_index=row[4], x_position=row[5], y_position=row[6], added=row[7], last_updated=row[8])
 
 
-async def create_actor(conn: aiosqlite.Connection, *, entity_id: int, user_id: int) -> models.Actor | None:
-    row = await (await conn.execute(CREATE_ACTOR, (entity_id, user_id))).fetchone()
+async def create_actor(conn: aiosqlite.Connection, *, entity_id: int, user_id: int, sprite_image_index: int) -> models.Actor | None:
+    row = await (await conn.execute(CREATE_ACTOR, (entity_id, user_id, sprite_image_index))).fetchone()
     if row is None:
         return None
-    return models.Actor(entity_id=row[0], user_id=row[1])
+    return models.Actor(entity_id=row[0], user_id=row[1], sprite_image_index=row[2])

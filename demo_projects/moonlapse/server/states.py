@@ -13,6 +13,7 @@ from demo_projects.moonlapse.server.hub import HubLike
 from demo_projects.moonlapse.server.state import State
 from demo_projects.moonlapse.shared.entities import Actor, Entity, EntityType
 from demo_projects.moonlapse.shared.packets import clientbound, serverbound
+from demo_projects.moonlapse.shared.sprites import SpritesheetIndex
 
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
@@ -170,6 +171,7 @@ class ConnectedState(State):
             Actor(
                 entity_id=self.hub.next_entity_id,
                 name=actor_entity.entity_name,
+                sprite_image_index=actor_entity.sprite_image_index,
                 x=actor_entity.x_position,
                 y=actor_entity.y_position,
             ),
@@ -217,7 +219,7 @@ class ConnectedState(State):
             return
 
         _ = await query.create_actor(
-            self.hub.db_conn, entity_id=entity.id_, user_id=user.id_
+            self.hub.db_conn, entity_id=entity.id_, user_id=user.id_, sprite_image_index=SpritesheetIndex.WOMAN_UNARMED
         )
         await self.hub.db_conn.commit()
         await self.hub.send_client_ws(self.cid, cb.RegisterResponse(ok=True))

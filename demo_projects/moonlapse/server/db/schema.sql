@@ -43,8 +43,7 @@ CREATE TABLE IF NOT EXISTS entities
   last_updated TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   x_position INTEGER NOT NULL,
   y_position INTEGER NOT NULL,
-  entity_name TEXT NOT NULL,
-  sprite_image_index INTEGER
+  entity_name TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS entities_resources
@@ -58,6 +57,7 @@ CREATE TABLE IF NOT EXISTS actors
 (
   entity_id INTEGER PRIMARY KEY NOT NULL,
   user_id INTEGER NOT NULL UNIQUE, -- Only one actor per user 
+  sprite_image_index INTEGER NOT NULL,
   FOREIGN KEY (entity_id) REFERENCES entities(id) ON DELETE CASCADE,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );

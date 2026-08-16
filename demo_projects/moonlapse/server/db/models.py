@@ -26,6 +26,7 @@ if typing.TYPE_CHECKING:
 class Actor:
     entity_id: int
     user_id: int
+    sprite_image_index: int
 
 
 @dataclasses.dataclass()
@@ -43,7 +44,6 @@ class Entity:
     x_position: int
     y_position: int
     entity_name: str
-    sprite_image_index: int | None
 
 
 @dataclasses.dataclass()

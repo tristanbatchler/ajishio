@@ -77,6 +77,7 @@ SELECT
   a.user_id,
   e.entity_type,
   e.entity_name,
+  a.sprite_image_index, 
   e.x_position,
   e.y_position,
   e.added,
@@ -88,6 +89,7 @@ WHERE a.user_id = ?;
 -- name: CreateActor :one
 INSERT INTO actors (
   entity_id,
-  user_id
-) VALUES (?, ?)
+  user_id,
+  sprite_image_index
+) VALUES (?, ?, ?)
 RETURNING *;

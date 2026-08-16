@@ -1,31 +1,42 @@
 from __future__ import annotations
+import ajishio as aj
 
 import logging
-from typing import ClassVar, override
+import string
+from typing import ClassVar, override, Unpack
 
-import ajishio as aj
 
 from demo_projects.moonlapse.shared import entities
 from demo_projects.moonlapse.client.protocol import ManagerLike, State
 from demo_projects.moonlapse.shared.packets import clientbound, serverbound
 from demo_projects.moonlapse.shared.packets.base import Packet
+from demo_projects.moonlapse.client.util import draw_wrapped_text
+from demo_projects.moonlapse.client.world import World
+
 
 # Convenient aliases
 cb = clientbound
 sb = serverbound
 
-log = logging.getLogger("moonlapse.states")
+logger = logging.getLogger("moonlapse.states")
 
 
-class ConnectingState(State):
+class ConnectingState(aj.GameObject, State):
     NAME: ClassVar[str] = "connecting"
 
-    def __init__(self, manager: ManagerLike):
+    def __init__(
+        self,
+        manager: ManagerLike,
+        x: float = 0,
+        y: float = 0,
+        **kwargs: Unpack[aj.GameObjectKwargs],
+    ) -> None:
+        super().__init__(x, y, **kwargs)
         self.mgr: ManagerLike = manager
 
     @override
     def on_enter(self):
-        self.mgr.log("Waiting for acknowledgement from the server...", aj.c_ltgray)
+        logger.info("Waiting for acknowledgement from the server...", aj.c_ltgray)
 
     @override
     def on_exit(self):
@@ -41,24 +52,31 @@ class ConnectingState(State):
             case cb.ClientId():
                 return self._handle_client_id(p)
             case _:
-                self.mgr.log(
+                logger.error(
                     f"Unexpected while connecting: {type(p).__name__}", aj.c_ltgray
                 )
 
-    @override
-    def handle_text_input(self, text: str) -> None:
-        pass
 
-
-class ConnectedState(State):
+class ConnectedState(aj.GameObject, State):
     NAME: ClassVar[str] = "connected"
 
-    def __init__(self, manager: ManagerLike):
+    def __init__(
+        self,
+        manager: ManagerLike,
+        x: float = 0,
+        y: float = 0,
+        **kwargs: Unpack[aj.GameObjectKwargs],
+    ) -> None:
+        super().__init__(x, y, **kwargs)
         self.mgr: ManagerLike = manager
+        self.input_buffer: str = ""
+        self.message_log: list[tuple[str, aj.Color]] = []
+        self.cursor_visible: bool = True
+        self.cursor_timer: float = 0.5
 
     @override
     def on_enter(self):
-        self.mgr.log("Connected (not logged in).", aj.c_aqua)
+        self.log("Connected (not logged in).", aj.c_aqua)
 
     @override
     def on_exit(self):
@@ -66,25 +84,26 @@ class ConnectedState(State):
 
     def _handle_login_response(self, p: cb.LoginResponse):
         if not p.ok:
-            self.mgr.log(f"Can't login: {p.err}", aj.c_orange)
+            self.log(f"Can't login: {p.err}", aj.c_orange)
         else:
-            self.mgr.log("Login success", aj.c_lime)
-            return InGameState(self.mgr)
+            self.log("Login success", aj.c_lime)
+            world = World()
+            return InGameState(self.mgr, world)
 
     def _handle_register_response(self, p: cb.RegisterResponse):
         if not p.ok:
-            self.mgr.log(f"Can't register: {p.err}", aj.c_orange)
+            self.log(f"Can't register: {p.err}", aj.c_orange)
         else:
-            self.mgr.log("Register success", aj.c_lime)
+            self.log("Register success", aj.c_lime)
 
     def _handle_motd(self, p: cb.Motd):
-        self.mgr.log(p.motd, aj.c_aqua)
+        self.log(p.motd, aj.c_aqua)
 
     def _handle_announcement(self, p: cb.Announcement):
-        self.mgr.log(p.message, aj.c_yellow)
+        self.log(p.message, aj.c_yellow)
 
     def _handle_client_disconnected(self, p: cb.ClientDisconnected):
-        self.mgr.log(f"Player {p.client_id} disconnected", aj.c_yellow)
+        self.log(f"Player {p.client_id} disconnected", aj.c_yellow)
 
     @override
     def handle_packet(self, p: cb.ClientboundPacket):
@@ -100,11 +119,14 @@ class ConnectedState(State):
             case cb.ClientDisconnected():
                 return self._handle_client_disconnected(p)
             case _:
-                self.mgr.log(
-                    f"Unexpected while connected: {type(p).__name__}", aj.c_ltgray
-                )
+                self.log(f"Unexpected while connected: {type(p).__name__}", aj.c_ltgray)
 
-    @override
+    def log(self, message: str, color: aj.Color):
+        self.message_log.append((message, color))
+        logger.info("%s", message)
+        if len(self.message_log) > 50:
+            self.message_log = self.message_log[-50:]
+
     def handle_text_input(self, text: str):
         parts = text.split()
         if not parts:
@@ -112,98 +134,133 @@ class ConnectedState(State):
         if parts[0] == "/login" and len(parts) >= 3:
             pkt = sb.LoginRequest(username=parts[1], password=parts[2])
             self.mgr.client.send(pkt.serialize())
-            self.mgr.log(f"Sending login as {parts[1]}", aj.c_lime)
+            self.log(f"Sending login as {parts[1]}", aj.c_lime)
         elif parts[0] == "/who":
-            self.mgr.log(f"My ID: {self.mgr.get_client_id()}", aj.c_aqua)
+            self.log(f"My ID: {self.mgr.get_client_id()}", aj.c_aqua)
         elif parts[0] == "/register" and len(parts) >= 3:
             pkt = sb.RegisterRequest(username=parts[1], password=parts[2])
             self.mgr.client.send(pkt.serialize())
-            self.mgr.log("Sending register...", aj.c_yellow)
+            self.log("Sending register...", aj.c_yellow)
         else:
-            self.mgr.log("Must be logged in to send messages.", aj.c_orange)
+            self.log("Must be logged in to send messages.", aj.c_orange)
+
+    @override
+    def step(self) -> None:
+        for ch in string.printable:
+            if aj.keyboard_check_pressed(ord(ch)):
+                self.input_buffer += ch
+
+        if aj.keyboard_check_pressed(aj.vk_backspace) and self.input_buffer:
+            self.input_buffer = self.input_buffer[:-1]
+
+        self.cursor_timer -= aj.delta_time
+        if self.cursor_timer <= 0:
+            self.cursor_visible = not self.cursor_visible
+            self.cursor_timer = 0.5
+
+    @override
+    def draw(self) -> None:
+        super().draw()
+        title = f"Moonlapse ({self.NAME})"
+        aj.draw_text(10, 10, title, aj.c_lime)
+
+        max_msg_y = 50
+        visible: list[tuple[str, aj.Color]] = self.message_log[-15:]
+        for line, color in visible:
+            num_lines = draw_wrapped_text(10, max_msg_y, line, color, max_width=500)
+            max_msg_y += num_lines * 24
+
+        cursor = "|" if self.cursor_visible else " "
+        aj.draw_text(10, 400, self.input_buffer + cursor)
 
 
-class InGameState(State):
+class InGameState(aj.GameObject, State):
     NAME: ClassVar[str] = "in_game"
 
-    def __init__(self, manager: ManagerLike):
+    def __init__(
+        self,
+        manager: ManagerLike,
+        world: World,
+        x: float = 0,
+        y: float = 0,
+        **kwargs: Unpack[aj.GameObjectKwargs],
+    ) -> None:
+        super().__init__(x, y, **kwargs)
         self.mgr: ManagerLike = manager
+        self.world: World = world
 
     @override
     def on_enter(self):
-        self.mgr.log("Logged in.", aj.c_lime)
+        logger.info("Logged in.", aj.c_lime)
 
     @override
     def on_exit(self) -> None:
-        pass
+        aj.instance_destroy(self.world)
 
     def _handle_logout_response(self, p: cb.LogoutResponse):
         if not p.ok:
-            self.mgr.log(f"Can't logout: {p.err}", aj.c_orange)
+            logger.warning(f"Can't logout: {p.err}", aj.c_orange)
         else:
-            self.mgr.log("Logout success", aj.c_lime)
-            self.mgr.leave_world()
+            logger.info("Logout success", aj.c_lime)
             return ConnectedState(self.mgr)
 
     def _handle_chat_response(self, p: cb.ChatResponse):
         if not p.ok:
-            self.mgr.log(f"Can't send that: {p.err}", aj.c_orange)
+            logger.warning(f"Can't send that: {p.err}", aj.c_orange)
 
     def _handle_move_response(self, p: cb.MoveResponse):
         if not p.ok:
-            self.mgr.log(f"Can't move there: {p.err}", aj.c_orange)
+            logger.warning(f"Can't move there: {p.err}", aj.c_orange)
         else:
-            self.mgr.log("Move successful", aj.c_lime)
+            logger.info("Move successful", aj.c_lime)
 
     def _handle_announcement(self, p: cb.Announcement):
-        self.mgr.log(p.message, aj.c_yellow)
+        logger.info(p.message, aj.c_yellow)
 
     def _handle_client_disconnected(self, p: cb.ClientDisconnected):
-        self.mgr.log(f"Player {p.client_id} disconnected", aj.c_yellow)
+        logger.info(f"Player {p.client_id} disconnected", aj.c_yellow)
 
     def _handle_player_chat(self, p: cb.PlayerChat):
-        self.mgr.log(f"Player {p.from_client_id} says: '{p.message}'", aj.c_white)
+        logger.info(f"Player {p.from_client_id} says: '{p.message}'", aj.c_white)
 
     def _handle_entity_spawn(self, p: cb.EntitySpawn):
-        if self.mgr.world is not None:
-            entity_details = Packet.from_bytes(p.entity_details)
-            entity: entities.Entity | None = None
-            match entity_details:
-                case cb.ActorDetails():
-                    entity = entities.Actor(
-                        name=entity_details.name, x=entity_details.x, y=entity_details.y
-                    )
-                case cb.TreeDetails():
-                    entity = entities.Tree(
-                        level=entity_details.level,
-                        name=entity_details.name,
-                        x=entity_details.x,
-                        y=entity_details.y,
-                    )
-                case cb.OreDetails():
-                    entity = entities.Ore(
-                        x=entity_details.x,
-                        y=entity_details.y,
-                        level=entity_details.level,
-                        name=entity_details.name,
-                    )
-                case cb.FishDetails():
-                    entity = entities.Fish(
-                        x=entity_details.x,
-                        y=entity_details.y,
-                        level=entity_details.level,
-                        name=entity_details.name,
-                    )
-                case _:
-                    raise NotImplementedError(
-                        f"Entity details {entity_details} does not have an implementation for client.InGameState._handle_entity_spawn"
-                    )
+        entity_details = Packet.from_bytes(p.entity_details)
+        entity: entities.Entity | None = None
+        match entity_details:
+            case cb.ActorDetails():
+                entity = entities.Actor(
+                    name=entity_details.name, x=entity_details.x, y=entity_details.y
+                )
+            case cb.TreeDetails():
+                entity = entities.Tree(
+                    level=entity_details.level,
+                    name=entity_details.name,
+                    x=entity_details.x,
+                    y=entity_details.y,
+                )
+            case cb.OreDetails():
+                entity = entities.Ore(
+                    x=entity_details.x,
+                    y=entity_details.y,
+                    level=entity_details.level,
+                    name=entity_details.name,
+                )
+            case cb.FishDetails():
+                entity = entities.Fish(
+                    x=entity_details.x,
+                    y=entity_details.y,
+                    level=entity_details.level,
+                    name=entity_details.name,
+                )
+            case _:
+                raise NotImplementedError(
+                    f"Entity details {entity_details} does not have an implementation for client.InGameState._handle_entity_spawn"
+                )
 
-            self.mgr.world.spawn_entity(entity)
+        self.world.spawn_entity(entity)
 
     def _handle_entity_destroy(self, p: cb.EntityDestroy):
-        if self.mgr.world is not None:
-            self.mgr.world.destroy_entity(p.entity_id)
+        self.world.destroy_entity(p.entity_id)
 
     @override
     def handle_packet(self, p: cb.ClientboundPacket):
@@ -225,19 +282,22 @@ class InGameState(State):
             case cb.EntityDestroy():
                 return self._handle_entity_destroy(p)
             case _:
-                self.mgr.log(f"Unexpected in game: {type(p).__name__}", aj.c_ltgray)
+                logger.warning(f"Unexpected in game: {type(p).__name__}", aj.c_ltgray)
 
-    @override
     def handle_text_input(self, text: str):
         parts = text.split()
         if not parts:
             return
         if parts[0] == "/who":
-            self.mgr.log(f"My ID: {self.mgr.get_client_id()}", aj.c_aqua)
+            logger.info(f"My ID: {self.mgr.get_client_id()}", aj.c_aqua)
         elif parts[0] == "/logout":
             pkt = sb.LogoutRequest()
             self.mgr.client.send(pkt.serialize())
-            self.mgr.log("Sending logout...", aj.c_yellow)
+            logger.debug("Sending logout...", aj.c_yellow)
         else:
             pkt = sb.ChatRequest(text)
             self.mgr.client.send(pkt.serialize())
+
+    @override
+    def step(self) -> None:
+        pass

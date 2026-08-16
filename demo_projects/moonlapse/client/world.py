@@ -11,17 +11,10 @@ log = logging.getLogger("moonlapse.world")
 
 
 class World(aj.GameObject):
-    """Manages all game entities. Server-authoritative.
-
-    Receives spawn/destroy/snapshot packets from server and updates
-    the entity registry. Each entity is its own aj.GameObject.
-    """
-
     def __init__(
-        self,
-        **kwargs: Unpack[aj.GameObjectKwargs],
+        self, x: float = 0, y: float = 0, **kwargs: Unpack[aj.GameObjectKwargs]
     ) -> None:
-        super().__init__(**kwargs)
+        super().__init__(x, y, **kwargs)
         self.entities: dict[int, entities.Entity] = {}
 
     def spawn_entity(self, entity: entities.Entity) -> None:

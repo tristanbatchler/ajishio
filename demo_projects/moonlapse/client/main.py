@@ -13,9 +13,7 @@ PORT = 8766
 async def main() -> None:
     client = aj.GameNetClient(f"ws://{HOST}:{PORT}")
     await client.connect()
-    mgr = Manager(client=client)
-    aj.register_objects(Manager)
-    aj.add_object(mgr)
+    _ = Manager(client=client)
 
     aj.room_set_caption("Moonlapse Client")
     await aj.game_start_async()

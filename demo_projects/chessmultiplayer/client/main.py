@@ -628,16 +628,9 @@ async def main() -> None:
         print(f"Failed to connect to multiplayer server: {e}")
         raise
 
-    aj.register_objects(BoardRenderer, TurnDisplay, InputHandler)
-    br = BoardRenderer(game)
-    br.persistent = True
-    aj.add_object(br)
-    td = TurnDisplay(game)
-    td.persistent = True
-    aj.add_object(td)
-    ih = InputHandler(game, client)
-    ih.persistent = True
-    aj.add_object(ih)
+    _ = BoardRenderer(game)
+    _ = TurnDisplay(game)
+    _ = InputHandler(game, client)
 
     await aj.game_start_async()
 

@@ -43,7 +43,8 @@ CREATE TABLE IF NOT EXISTS entities
   last_updated TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   x_position INTEGER NOT NULL,
   y_position INTEGER NOT NULL,
-  entity_name TEXT NOT NULL
+  entity_name TEXT NOT NULL,
+  sprite_image_index INTEGER
 );
 
 CREATE TABLE IF NOT EXISTS entities_resources

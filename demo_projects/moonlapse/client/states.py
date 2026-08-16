@@ -9,6 +9,7 @@ from base64 import b64decode
 
 from demo_projects.moonlapse.shared import entities
 from demo_projects.moonlapse.client.protocol import ManagerLike, State
+from demo_projects.moonlapse.shared.constants import GRID_SIZE
 from demo_projects.moonlapse.shared.packets import clientbound, serverbound
 from demo_projects.moonlapse.client.util import draw_wrapped_text
 from demo_projects.moonlapse.shared.world import World
@@ -361,5 +362,5 @@ class InGameState(aj.GameObject, State):
         dy = aj.keyboard_check_pressed(aj.vk_down) - aj.keyboard_check_pressed(aj.vk_up)
         if dx == dy == 0:
             return
-        self.mgr.send(sb.MoveRequest(dx, dy))
+        self.mgr.send(sb.MoveRequest(dx * GRID_SIZE, dy * GRID_SIZE))
         logger.debug("Sent a move request")

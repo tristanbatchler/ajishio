@@ -2,7 +2,7 @@ from __future__ import annotations
 import ajishio as aj
 from abc import ABC
 from typing import Unpack, ClassVar, override, final
-from demo_projects.moonlapse.shared.constants import GRID_SIZE
+from demo_projects.moonlapse.shared.sprites import spritesheet, SpritesheetIndex
 
 from enum import IntEnum, auto
 
@@ -28,15 +28,21 @@ class Entity(aj.GameObject, ABC):
         super().__init__(x, y, **kwargs)
         self.entity_id: int = entity_id
         self.name: str = name
+        self.sprite_index: aj.GameSprite | None = spritesheet
 
 
+@final
 class Actor(Entity):
     TYPE: ClassVar[EntityType] = EntityType.ACTOR
+
+    def __init__(self, entity_id: int, name: str, x: float = 0, y: float = 0, **kwargs: Unpack[aj.GameObjectKwargs]) -> None:
+        super().__init__(entity_id, name, x, y, **kwargs)
+        self.image_index = SpritesheetIndex.MAN_UNARMED
 
     @override
     def draw(self) -> None:
         super().draw()
-        aj.draw_text(self.x * GRID_SIZE, self.y * GRID_SIZE, self.name, aj.c_fuchsia)
+        aj.draw_text(self.x, self.y, self.name, aj.c_fuchsia)
 
 
 class Resource(Entity, ABC):
@@ -67,6 +73,7 @@ class RegularTree(Tree):
         **kwargs: Unpack[aj.GameObjectKwargs],
     ) -> None:
         super().__init__(entity_id=entity_id, level=1, name="Tree", x=x, y=y, **kwargs)
+        self.image_index = SpritesheetIndex.TREE_NORMAL
 
 
 @final
@@ -81,6 +88,7 @@ class OakTree(Tree):
         super().__init__(
             entity_id=entity_id, level=2, name="Oak Tree", x=x, y=y, **kwargs
         )
+        self.image_index = SpritesheetIndex.TREE_OAK
 
 
 @final
@@ -95,6 +103,7 @@ class WillowTree(Tree):
         super().__init__(
             entity_id=entity_id, level=3, name="Willow Tree", x=x, y=y, **kwargs
         )
+        self.image_index = SpritesheetIndex.TREE_WILLOW
 
 
 class Ore(Resource):

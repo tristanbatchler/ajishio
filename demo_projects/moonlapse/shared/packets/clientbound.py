@@ -1,7 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from enum import IntEnum, auto
-from typing import Callable, ClassVar, override, final, TypeVar
+from typing import Callable, override, final, TypeVar
 from abc import ABC
 
 from demo_projects.moonlapse.shared.packets.base import Packet
@@ -172,14 +172,15 @@ class ServerError(ClientboundPacket):
 
 @dataclass(frozen=True)
 class EntityDetails(ClientboundPacket, ABC):
-    BASE_FORMAT_STRING: ClassVar[str] = "Iii"
     entity_id: int
     x: int
     y: int
+    name: str
+    sprite_image_index: int
 
     @override
     def get_structure(self) -> tuple[object, ...]:
-        return (self.entity_id, self.x, self.y)
+        return (self.entity_id, self.x, self.y, self.name, self.sprite_image_index)
 
     @staticmethod
     def from_entity(entity: entities.Entity) -> EntityDetails:
@@ -190,6 +191,7 @@ class EntityDetails(ClientboundPacket, ABC):
                     x=int(entity.x),
                     y=int(entity.y),
                     name=entity.name,
+                    sprite_image_index=entity.image_index,
                 )
             case entities.Tree():
                 return TreeDetails(
@@ -198,6 +200,7 @@ class EntityDetails(ClientboundPacket, ABC):
                     y=int(entity.y),
                     level=entity.level,
                     name=entity.name,
+                    sprite_image_index=entity.image_index,
                 )
             case entities.Ore():
                 return OreDetails(
@@ -206,6 +209,7 @@ class EntityDetails(ClientboundPacket, ABC):
                     y=int(entity.y),
                     level=entity.level,
                     name=entity.name,
+                    sprite_image_index=entity.image_index,
                 )
             case entities.Fish():
                 return FishDetails(
@@ -214,6 +218,7 @@ class EntityDetails(ClientboundPacket, ABC):
                     y=int(entity.y),
                     level=entity.level,
                     name=entity.name,
+                    sprite_image_index=entity.image_index,
                 )
             case _:
                 raise NotImplementedError(
@@ -225,16 +230,11 @@ class EntityDetails(ClientboundPacket, ABC):
 @register(ClientboundPacketType.ACTOR_DETAILS)
 @dataclass(frozen=True)
 class ActorDetails(EntityDetails):
-    name: str
-
-    @override
-    def get_structure(self):
-        return super().get_structure() + (self.name,)
+    ...
 
 
 @dataclass(frozen=True)
 class ResourceDetails(EntityDetails, ABC):
-    BASE_FORMAT_STRING: ClassVar[str] = EntityDetails.BASE_FORMAT_STRING + "i"
     level: int
 
     @override
@@ -246,8 +246,6 @@ class ResourceDetails(EntityDetails, ABC):
 @register(ClientboundPacketType.TREE_DETAILS)
 @dataclass(frozen=True)
 class TreeDetails(ResourceDetails):
-    name: str
-
     @override
     def get_structure(self):
         return super().get_structure() + (self.name,)
@@ -257,23 +255,13 @@ class TreeDetails(ResourceDetails):
 @register(ClientboundPacketType.ORE_DETAILS)
 @dataclass(frozen=True)
 class OreDetails(ResourceDetails):
-    name: str
-
-    @override
-    def get_structure(self):
-        return super().get_structure() + (self.name,)
-
+    ...
 
 @final
 @register(ClientboundPacketType.FISH_DETAILS)
 @dataclass(frozen=True)
 class FishDetails(ResourceDetails):
-    name: str
-
-    @override
-    def get_structure(self):
-        return super().get_structure() + (self.name,)
-
+    ...
 
 @final
 @register(ClientboundPacketType.ENTITY_SPAWN)

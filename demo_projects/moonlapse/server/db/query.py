@@ -138,7 +138,7 @@ INSERT INTO entities (
   x_position,
   y_position
 ) VALUES (?, ?, ?, ?)
-RETURNING id, entity_type, added, last_updated, x_position, y_position, entity_name
+RETURNING id, entity_type, added, last_updated, x_position, y_position, entity_name, sprite_image_index
 """
 
 UPDATE_ENTITY_POSITION: typing.Final[str] = """-- name: UpdateEntityPosition :one
@@ -148,7 +148,7 @@ SET
     y_position = ?,
     last_updated = CURRENT_TIMESTAMP
 WHERE id = ?
-RETURNING id, entity_type, added, last_updated, x_position, y_position, entity_name
+RETURNING id, entity_type, added, last_updated, x_position, y_position, entity_name, sprite_image_index
 """
 
 GET_ACTOR_BY_USER_ID: typing.Final[str] = """-- name: GetActorByUserId :one
@@ -316,14 +316,14 @@ async def create_entity(conn: aiosqlite.Connection, *, entity_type: int, entity_
     row = await (await conn.execute(CREATE_ENTITY, (entity_type, entity_name, x_position, y_position))).fetchone()
     if row is None:
         return None
-    return models.Entity(id_=row[0], entity_type=row[1], added=row[2], last_updated=row[3], x_position=row[4], y_position=row[5], entity_name=row[6])
+    return models.Entity(id_=row[0], entity_type=row[1], added=row[2], last_updated=row[3], x_position=row[4], y_position=row[5], entity_name=row[6], sprite_image_index=row[7])
 
 
 async def update_entity_position(conn: aiosqlite.Connection, *, x_position: int, y_position: int, id_: int) -> models.Entity | None:
     row = await (await conn.execute(UPDATE_ENTITY_POSITION, (x_position, y_position, id_))).fetchone()
     if row is None:
         return None
-    return models.Entity(id_=row[0], entity_type=row[1], added=row[2], last_updated=row[3], x_position=row[4], y_position=row[5], entity_name=row[6])
+    return models.Entity(id_=row[0], entity_type=row[1], added=row[2], last_updated=row[3], x_position=row[4], y_position=row[5], entity_name=row[6], sprite_image_index=row[7])
 
 
 async def get_actor_by_user_id(conn: aiosqlite.Connection, *, user_id: int) -> GetActorByUserIdRow | None:

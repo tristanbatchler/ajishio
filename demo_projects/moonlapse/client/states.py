@@ -220,11 +220,15 @@ class InGameState(aj.GameObject, State):
             case entities.EntityType.ACTOR:
                 details = cb.ActorDetails.from_bytes(data)
                 return details if details_only else entities.Actor(
-                    name=details.name, x=details.x, y=details.y
+                    entity_id=details.entity_id,
+                    name=details.name, 
+                    x=details.x, 
+                    y=details.y,
                 )
             case entities.EntityType.TREE:
                 details = cb.TreeDetails.from_bytes(data)
                 return details if details_only else entities.Tree(
+                    entity_id=details.entity_id,
                     level=details.level,
                     name=details.name,
                     x=details.x,
@@ -233,6 +237,7 @@ class InGameState(aj.GameObject, State):
             case entities.EntityType.ORE:
                 details= cb.OreDetails.from_bytes(data)
                 return details if details_only else entities.Ore(
+                    entity_id=details.entity_id,
                     x=details.x,
                     y=details.y,
                     level=details.level,
@@ -241,6 +246,7 @@ class InGameState(aj.GameObject, State):
             case entities.EntityType.FISH:
                 details = cb.FishDetails.from_bytes(data)
                 return details if details_only else entities.Fish(
+                    entity_id=details.entity_id,
                     x=details.x,
                     y=details.y,
                     level=details.level,

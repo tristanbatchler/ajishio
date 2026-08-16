@@ -16,16 +16,23 @@ log = logging.getLogger("moonlapse.connection")
 
 class Hub:
     def __init__(self, db_conn: aiosqlite.Connection) -> None:
-        self._next_id: int = 1
+        self._next_client_id: int = 1
+        self._next_entity_id: int = 1
         self._clients: dict[int, Client] = {}
         self.db_conn: aiosqlite.Connection = db_conn
         self.tick_rate: float = 1 / TICKS_PER_SECOND
 
     @property
-    def next_id(self) -> int:
-        cid = self._next_id
-        self._next_id += 1
+    def next_client_id(self) -> int:
+        cid = self._next_client_id
+        self._next_client_id += 1
         return cid
+
+    @property
+    def next_entity_id(self) -> int:
+        eid = self._next_entity_id
+        self._next_entity_id += 1
+        return eid
 
     def unregister_client(self, client_id: int) -> Client | None:
         return self._clients.pop(client_id, None)
@@ -34,7 +41,7 @@ class Hub:
         return list(self._clients.values())
 
     async def register_client(self, ws: ServerConnection) -> None:
-        cid = self.next_id
+        cid = self.next_client_id
         client = Client(cid, ws)
         client.state = ConnectedState(client, self)
         self._clients[cid] = client

@@ -153,6 +153,10 @@ class ConnectedState(aj.GameObject, State):
         if aj.keyboard_check_pressed(aj.vk_backspace) and self.input_buffer:
             self.input_buffer = self.input_buffer[:-1]
 
+        if aj.keyboard_check_pressed(aj.vk_enter):
+            self.handle_text_input(self.input_buffer)
+            self.input_buffer = ""
+
         self.cursor_timer -= aj.delta_time
         if self.cursor_timer <= 0:
             self.cursor_visible = not self.cursor_visible
@@ -283,20 +287,6 @@ class InGameState(aj.GameObject, State):
                 return self._handle_entity_destroy(p)
             case _:
                 logger.warning(f"Unexpected in game: {type(p).__name__}", aj.c_ltgray)
-
-    def handle_text_input(self, text: str):
-        parts = text.split()
-        if not parts:
-            return
-        if parts[0] == "/who":
-            logger.info(f"My ID: {self.mgr.get_client_id()}", aj.c_aqua)
-        elif parts[0] == "/logout":
-            pkt = sb.LogoutRequest()
-            self.mgr.client.send(pkt.serialize())
-            logger.debug("Sending logout...", aj.c_yellow)
-        else:
-            pkt = sb.ChatRequest(text)
-            self.mgr.client.send(pkt.serialize())
 
     @override
     def step(self) -> None:

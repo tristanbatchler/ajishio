@@ -269,6 +269,9 @@ class InGameState(State):
         self._actor_position_db_sync_task = asyncio.create_task(
             self._sync_db_actor_position_loop()
         )
+        self._actor_position_db_sync_task.add_done_callback(
+            lambda t: log.warning("position sync task died: %s", t.exception()) if t.exception() else None
+        )
 
         # Send them all the entities in the world
         for entity in self.hub.world.entities.values():
@@ -284,6 +287,12 @@ class InGameState(State):
     async def on_exit(self) -> None:
         self.hub.world.destroy_entity(self.actor.entity_id)
         await self._sync_db_actor_position()
+        if self._actor_position_db_sync_task:
+            _ = self._actor_position_db_sync_task.cancel()
+            try:
+                await self._actor_position_db_sync_task
+            except asyncio.CancelledError:
+                pass
         await self.hub.send_client_ws(
             self.cid, cb.Announcement(f"{self.actor.name} left the game.")
         )
@@ -292,6 +301,7 @@ class InGameState(State):
         await self.hub.broadcast(cb.EntityDestroy(entity_id=self.actor.entity_id))
 
     async def _sync_db_actor_position(self):
+    
         _ = await query.update_entity_position(
             self.hub.db_conn,
             x_position=int(self.actor.x),
@@ -301,9 +311,14 @@ class InGameState(State):
         await self.hub.db_conn.commit()
 
     async def _sync_db_actor_position_loop(self):
-        while True:
-            await asyncio.sleep(5)
-            await self._sync_db_actor_position()
+        try:
+            while True:
+                await asyncio.sleep(5)
+                await self._sync_db_actor_position()
+        except asyncio.CancelledError:
+            pass
+        except Exception:
+            log.exception("position sync loop failed")
 
     async def _handle_chat_request(self, p: sb.ChatRequest) -> None:
         log.info("chat from %s: %s", self.cid, p.message)
@@ -340,7 +355,7 @@ class InGameState(State):
 
     @override
     async def handle_packet(self, p: sb.ServerboundPacket) -> State | None:
-        log.info(f"InGameState got packet: {type(p).__name__}", type(p).__name__)
+        log.debug("InGameState got packet: %s", type(p).__name__)
         match p:
             case sb.ChatRequest():
                 return await self._handle_chat_request(p)

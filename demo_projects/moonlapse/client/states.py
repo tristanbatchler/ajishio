@@ -327,8 +327,8 @@ class InGameState(aj.GameObject, State):
     @override
     def step(self) -> None:
         super().step()
-        dx = aj.keyboard_check_released(aj.vk_right) - aj.keyboard_check_released(aj.vk_left)
-        dy = aj.keyboard_check_released(aj.vk_down) - aj.keyboard_check_released(aj.vk_up)
+        dx = aj.keyboard_check_pressed(aj.vk_right) - aj.keyboard_check_pressed(aj.vk_left)
+        dy = aj.keyboard_check_pressed(aj.vk_down) - aj.keyboard_check_pressed(aj.vk_up)
         if dx == dy == 0:
             return
         self.mgr.send(sb.MoveRequest(dx, dy))

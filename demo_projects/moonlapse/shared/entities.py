@@ -1,7 +1,8 @@
 from __future__ import annotations
+import ajishio as aj
 from abc import ABC
 from typing import Unpack, ClassVar, override
-import ajishio as aj
+from demo_projects.moonlapse.shared.constants import GRID_SIZE
 
 from enum import IntEnum, auto
 
@@ -42,7 +43,7 @@ class Actor(NamedEntity):
     @override
     def draw(self) -> None:
         super().draw()
-        aj.draw_text(self.x, self.y, self.name, aj.c_fuchsia)
+        aj.draw_text(self.x * GRID_SIZE, self.y * GRID_SIZE, self.name, aj.c_fuchsia)
 
 
 class Resource(NamedEntity, ABC):

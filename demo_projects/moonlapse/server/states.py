@@ -54,7 +54,7 @@ class ConnectedState(State):
         log.info("login from %s: %s", self.cid, p.username)
         # Create the in-game state with entity data
         new_state = InGameState(
-            self.client, self.hub, Actor(entity_id=self.hub.next_entity_id,name=p.username, x=100, y=100)
+            self.client, self.hub, Actor(entity_id=self.hub.next_entity_id,name=p.username, x=0, y=0)
         )
         lockout_period_minutes = 15
         lockout_max_attempts = 5

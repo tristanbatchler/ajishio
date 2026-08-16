@@ -39,8 +39,10 @@ def set_window_icon() -> None:
 
 
 class Engine:
-    def __init__(self, renderer: Renderer) -> None:
+    def __init__(self, renderer: Renderer, gui_renderer: Renderer) -> None:
         self.renderer: Renderer = renderer
+        self.gui_renderer: Renderer = gui_renderer
+        self._active_renderer: Renderer = self.renderer
         self.room_width: float
         self.room_height: float
         self.room_speed: float
@@ -414,17 +416,22 @@ class Engine:
         self._last_render_time += self.delta_time
         if self._last_render_time >= 1 / self.room_speed:
             self._last_render_time %= 1 / self.room_speed
+
+            # Clear and prepare world renderer
+            self._active_renderer = self.renderer
             self.renderer.fit_display()
             self.renderer.fill_background_color(self.room_background_color)
             self.renderer.draw_background_images()
 
             self._add_pending_objects()
             self._free_destroyed_objects()
-
             self._rebuild_spatial_index()
 
+            # Step pass
             for obj in self._game_objects.values():
                 obj.step()
+
+            self.gui_renderer.display = pg.Surface((view.window_width, view.window_height), pg.SRCALPHA)
 
             draw_buffer = sorted(
                 self._game_objects.values(),
@@ -432,15 +439,31 @@ class Engine:
                 reverse=True,
             )
 
+            # World Draw Pass
             for obj in draw_buffer:
                 obj.draw()
 
-            # Only clear the input after all objects have had a chance to process it
+            self.renderer.draw_display()
+
+            # GUI Draw pass
+            self.gui_renderer.display.fill((0, 0, 0, 0))
+
+            self._active_renderer = self.gui_renderer
+            for obj in draw_buffer:
+                obj.draw_gui()
+
+            # self.renderer._screen.blit(self.gui_renderer.display, (0, 0))
+            self.gui_renderer.draw_display()
+            pg.display.update()
+
+            # Reset active renderer back to standard world renderer for next frame logic
+            self._active_renderer = self.renderer
+
+            # Input cleanup
             input.prev_events = input.events.copy()
             input.events.clear()
 
-            pg.display.update()
-            self.renderer.draw_display()
+        return True
 
         self._audio_playing = [
             audio
@@ -514,3 +537,135 @@ class Engine:
         for obj in self._game_objects_to_add:
             self._game_objects[obj.id] = obj
         self._game_objects_to_add.clear()
+
+    # Thin wrappers for the proper implementations in rendering.py - only thing this'll do is choose the correct renderer
+    def draw_set_color(self, color: Color) -> None:
+        self._active_renderer.draw_set_color(color)
+
+    def draw_set_circle_precision(self, precision: int) -> None:
+        self._active_renderer.draw_set_circle_precision(precision)
+
+    def draw_circle(
+        self,
+        x: float,
+        y: float,
+        r: float,
+        outline: bool = False,
+        color: Color | None = None,
+        alpha: float = 1.0,
+    ) -> None:
+        self._active_renderer.draw_circle(
+            x, y, r, outline=outline, color=color, alpha=alpha
+        )
+
+    def draw_ellipse(
+        self,
+        x1: float,
+        y1: float,
+        x2: float,
+        y2: float,
+        outline: bool = False,
+        color: Color | None = None,
+        alpha: float = 1.0,
+    ) -> None:
+        self._active_renderer.draw_ellipse(
+            x1, y1, x2, y2, outline=outline, color=color, alpha=alpha
+        )
+
+    def draw_rectangle(
+        self,
+        x1: float,
+        y1: float,
+        x2: float,
+        y2: float,
+        outline: bool = False,
+        color: Color | None = None,
+        alpha: float = 1.0,
+    ) -> None:
+        self._active_renderer.draw_rectangle(
+            x1, y1, x2, y2, outline=outline, color=color, alpha=alpha
+        )
+
+    def draw_triangle(
+        self,
+        x1: float,
+        y1: float,
+        x2: float,
+        y2: float,
+        x3: float,
+        y3: float,
+        col1: Color | None = None,
+        col2: Color | None = None,
+        col3: Color | None = None,
+        outline: bool = False,
+        alpha: float = 1.0,
+    ) -> None:
+        self._active_renderer.draw_triangle(
+            x1,
+            y1,
+            x2,
+            y2,
+            x3,
+            y3,
+            col1=col1,
+            col2=col2,
+            col3=col3,
+            outline=outline,
+            alpha=alpha,
+        )
+
+    def draw_point(
+        self, x: float, y: float, color: Color | None = None, alpha: float = 1.0
+    ) -> None:
+        self._active_renderer.draw_point(x, y, color=color, alpha=alpha)
+
+    def draw_line(
+        self,
+        x1: float,
+        y1: float,
+        x2: float,
+        y2: float,
+        color: Color | None = None,
+        alpha: float = 1.0,
+    ) -> None:
+        self._active_renderer.draw_line(x1, y1, x2, y2, color=color, alpha=alpha)
+
+    def draw_text(
+        self, x: float, y: float, string: str, color: Color | None = None
+    ) -> None:
+        self._active_renderer.draw_text(x, y, string, color=color)
+
+    def draw_sprite(
+        self,
+        x: float,
+        y: float,
+        sprite_index,
+        image_index: int,
+        x_scale: float = 1.0,
+        y_scale: float = 1.0,
+        rotation: float = 0.0,
+        color: Color = Color(255, 255, 255),
+        alpha: float = 1.0,
+    ) -> None:
+        self._active_renderer.draw_sprite(
+            x,
+            y,
+            sprite_index,
+            image_index,
+            x_scale=x_scale,
+            y_scale=y_scale,
+            rotation=rotation,
+            color=color,
+            alpha=alpha,
+        )
+
+    def draw_set_font(
+        self, font: pg.font.Font, fallbacks: Iterable[pg.font.Font] | None = None
+    ) -> None:
+        self._active_renderer.draw_set_font(font, fallbacks=fallbacks)
+
+    def text_width(self, string: str) -> int:
+        return self._active_renderer.text_width(string)
+
+    def text_height(self, string: str) -> int:
+        return self._active_renderer.text_height(string)

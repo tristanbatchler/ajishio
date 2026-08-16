@@ -2,6 +2,7 @@ from pathlib import Path
 import ajishio as aj
 from enum import IntEnum
 
+
 class SpritesheetIndex(IntEnum):
     MAN_UNARMED = 104
     MAN_PICKAXE_UP = 105
@@ -55,4 +56,7 @@ class SpritesheetIndex(IntEnum):
     GROUND_SAPLING_2_SMALL = 1866
     GROUND_SAPLING_2_BIGGER = 1865
 
-spritesheet =  aj.load_sprite_from_sheet(Path(__file__).parent / "spritesheet.png", 12, 12, 1, rows=50, columns=206)
+
+spritesheet = aj.load_sprite_from_sheet(
+    Path(__file__).parent / "spritesheet.png", 12, 12, 1, rows=50, columns=206
+)

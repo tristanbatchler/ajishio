@@ -88,6 +88,9 @@ class GameObject(IGameObject):
                 y_scale=self.image_yscale,
             )
 
+    def draw_gui(self) -> None:
+        pass
+
     @override
     def on_game_end(self) -> None:
         pass

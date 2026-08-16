@@ -35,14 +35,22 @@ class Entity(aj.GameObject, ABC):
 class Actor(Entity):
     TYPE: ClassVar[EntityType] = EntityType.ACTOR
 
-    def __init__(self, entity_id: int, name: str, x: float = 0, y: float = 0, **kwargs: Unpack[aj.GameObjectKwargs]) -> None:
+    def __init__(
+        self,
+        entity_id: int,
+        name: str,
+        x: float = 0,
+        y: float = 0,
+        **kwargs: Unpack[aj.GameObjectKwargs],
+    ) -> None:
         super().__init__(entity_id, name, x, y, **kwargs)
         self.image_index = SpritesheetIndex.MAN_UNARMED
 
     @override
-    def draw(self) -> None:
-        super().draw()
-        aj.draw_text(self.x, self.y, self.name, aj.c_fuchsia)
+    def draw_gui(self) -> None:
+        super().draw_gui()
+        # TODO: Calculate this based on view ports etc.
+        aj.draw_text(self.x * 10, self.y * 10, self.name, aj.c_fuchsia)
 
 
 class Resource(Entity, ABC):

@@ -40,6 +40,6 @@ class World(aj.GameObject):
             entity.__setattr__(field.name, entity_details.__getattribute__(field.name))
 
     @override
-    def draw(self) -> None:
-        super().draw()
+    def draw_gui(self) -> None:
+        super().draw_gui()
         aj.draw_text(10, 10, f"WORLD ({len(self.entities)}) entities")

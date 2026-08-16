@@ -14,8 +14,8 @@ PORT = 8766
 async def main() -> None:
     # Large window, small viewport → everything gets pixel-scaled up.
     aj.window_set_size(1280, 720)
-    aj.view_set_wport(0, 96)   # viewport covers 96 units of world space
-    aj.view_set_hport(0, 96)
+    aj.view_set_wport(aj.view_current, 128)  # viewport covers 96 units of world space
+    aj.view_set_hport(aj.view_current, 72)
 
     client = aj.GameNetClient(f"ws://{HOST}:{PORT}")
     await client.connect()

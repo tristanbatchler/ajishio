@@ -229,8 +229,7 @@ class EntityDetails(ClientboundPacket, ABC):
 @final
 @register(ClientboundPacketType.ACTOR_DETAILS)
 @dataclass(frozen=True)
-class ActorDetails(EntityDetails):
-    ...
+class ActorDetails(EntityDetails): ...
 
 
 @dataclass(frozen=True)
@@ -254,14 +253,14 @@ class TreeDetails(ResourceDetails):
 @final
 @register(ClientboundPacketType.ORE_DETAILS)
 @dataclass(frozen=True)
-class OreDetails(ResourceDetails):
-    ...
+class OreDetails(ResourceDetails): ...
+
 
 @final
 @register(ClientboundPacketType.FISH_DETAILS)
 @dataclass(frozen=True)
-class FishDetails(ResourceDetails):
-    ...
+class FishDetails(ResourceDetails): ...
+
 
 @final
 @register(ClientboundPacketType.ENTITY_SPAWN)

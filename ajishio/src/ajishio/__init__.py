@@ -106,32 +106,34 @@ if _os.environ.get("AJISHIO_DOCS"):
             return lambda *args, **kwargs: None
 
     _renderer: Renderer = cast(Renderer, cast(object, _Dummy()))
+    _gui_renderer: Renderer = cast(Renderer, cast(object, _Dummy()))
     _engine: Engine = cast(Engine, cast(object, _Dummy()))
 else:
     _ = _pg.init()
-    _renderer = Renderer()
+    _renderer = Renderer(use_view_offset=True)
+    _gui_renderer: Renderer = Renderer(use_view_offset=False)
+
     set_window_icon()
     _pg.display.set_caption("Ajishio Game")
-    _engine = Engine(_renderer)
-
+    _engine = Engine(_renderer, _gui_renderer)
 
 # Populate the lazy context so game_object / game_sound can access the engine.
 _ctx.engine = _engine
 
 # --- Rendering: bound methods on the renderer singleton ---
-draw_set_color = _renderer.draw_set_color
-draw_set_circle_precision = _renderer.draw_set_circle_precision
-draw_circle = _renderer.draw_circle
-draw_ellipse = _renderer.draw_ellipse
-draw_rectangle = _renderer.draw_rectangle
-draw_triangle = _renderer.draw_triangle
-draw_point = _renderer.draw_point
-draw_line = _renderer.draw_line
-draw_text = _renderer.draw_text
-draw_sprite = _renderer.draw_sprite
-draw_set_font = _renderer.draw_set_font
-text_width = _renderer.text_width
-text_height = _renderer.text_height
+draw_set_color = _engine.draw_set_color
+draw_set_circle_precision = _engine.draw_set_circle_precision
+draw_circle = _engine.draw_circle
+draw_ellipse = _engine.draw_ellipse
+draw_rectangle = _engine.draw_rectangle
+draw_triangle = _engine.draw_triangle
+draw_point = _engine.draw_point
+draw_line = _engine.draw_line
+draw_text = _engine.draw_text
+draw_sprite = _engine.draw_sprite
+draw_set_font = _engine.draw_set_font
+text_width = _engine.text_width
+text_height = _engine.text_height
 
 # --- View: bound methods delegated through engine so the renderer stays in sync ---
 view_set_wport = _engine.view_set_wport

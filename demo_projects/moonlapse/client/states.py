@@ -164,8 +164,8 @@ class ConnectedState(aj.GameObject, State):
             self.cursor_timer = 0.5
 
     @override
-    def draw(self) -> None:
-        super().draw()
+    def draw_gui(self) -> None:
+        super().draw_gui()
         title = f"Moonlapse ({self.NAME})"
         aj.draw_text(10, 10, title, aj.c_lime)
 

@@ -34,10 +34,6 @@ c_white = Color(255, 255, 255)
 c_yellow = Color(255, 255, 0)
 
 
-def _translate_offset(x: float, y: float) -> tuple[float, float]:
-    return (x + view.offset[0], y + view.offset[1])
-
-
 def _color_with_alpha(color: Color, alpha: float) -> Color:
     clamped_alpha = max(0.0, min(1.0, alpha))
     return Color(color.r, color.g, color.b, int(clamped_alpha * 255))
@@ -55,7 +51,8 @@ def load_font(font_path: Path | str, size: int) -> pg.font.Font:
 
 
 class Renderer:
-    def __init__(self) -> None:
+    def __init__(self, use_view_offset: bool) -> None:
+        self.use_view_offset: bool = use_view_offset
         self._screen: pg.Surface | None = None
         self.set_screen_size(view.window_width, view.window_height)
         self.fit_display()
@@ -65,6 +62,11 @@ class Renderer:
         self.draw_circle_precision: int = 24
         self.draw_font: pg.font.Font = pg.font.Font(None, 32)
         self.draw_font_fallbacks: Iterable[pg.font.Font] = []
+
+    def _translate_offset(self, x: float, y: float) -> tuple[float, float]:
+        if not self.use_view_offset:
+            return (x, y)
+        return (x + view.offset[0], y + view.offset[1])
 
     def draw_set_color(self, color: Color) -> None:
         """
@@ -170,7 +172,7 @@ class Renderer:
         if r <= 0:
             return
 
-        x, y = _translate_offset(x, y)
+        x, y = self._translate_offset(x, y)
         draw_color = _color_with_alpha(
             self.draw_color if color is None else color, alpha
         )
@@ -207,8 +209,8 @@ class Renderer:
             color: The color to draw with. If None, uses the current draw color.
             alpha: The opacity of the ellipse, between 0.0 (fully transparent) and 1.0 (fully opaque).
         """
-        x1, y1 = _translate_offset(x1, y1)
-        x2, y2 = _translate_offset(x2, y2)
+        x1, y1 = self._translate_offset(x1, y1)
+        x2, y2 = self._translate_offset(x2, y2)
         radius_x = abs(x2 - x1) / 2
         radius_y = abs(y2 - y1) / 2
         if radius_x <= 0 or radius_y <= 0:
@@ -233,7 +235,7 @@ class Renderer:
     def draw_point(
         self, x: float, y: float, color: pg.Color | None = None, alpha: float = 1.0
     ) -> None:
-        x, y = _translate_offset(x, y)
+        x, y = self._translate_offset(x, y)
         draw_color = _color_with_alpha(
             self.draw_color if color is None else color, alpha
         )
@@ -269,7 +271,7 @@ class Renderer:
             color: The color to draw with. If None, uses the current draw color.
             alpha: The opacity of the rectangle, between 0.0 (fully transparent) and 1.0 (fully opaque).
         """
-        x, y = _translate_offset(x1, y1)
+        x, y = self._translate_offset(x1, y1)
         width = abs(x2 - x1)
         height = abs(y2 - y1)
         color = _color_with_alpha(self.draw_color if color is None else color, alpha)
@@ -311,9 +313,9 @@ class Renderer:
             col3: The colour of the third corner. If None, uses the current draw color.
             outline: Whether the triangle is an outline (true) or filled in (false).
         """
-        x1, y1 = _translate_offset(x1, y1)
-        x2, y2 = _translate_offset(x2, y2)
-        x3, y3 = _translate_offset(x3, y3)
+        x1, y1 = self._translate_offset(x1, y1)
+        x2, y2 = self._translate_offset(x2, y2)
+        x3, y3 = self._translate_offset(x3, y3)
 
         col1 = _color_with_alpha(self.draw_color if col1 is None else col1, alpha)
         col2 = _color_with_alpha(self.draw_color if col2 is None else col2, alpha)
@@ -402,8 +404,8 @@ class Renderer:
         color: pg.Color | None = None,
         alpha: float = 1.0,
     ) -> None:
-        x1, y1 = _translate_offset(x1, y1)
-        x2, y2 = _translate_offset(x2, y2)
+        x1, y1 = self._translate_offset(x1, y1)
+        x2, y2 = self._translate_offset(x2, y2)
         draw_color = _color_with_alpha(
             self.draw_color if color is None else color, alpha
         )
@@ -419,7 +421,7 @@ class Renderer:
     def draw_text(
         self, x: float, y: float, string: str, color: pg.Color | None = None
     ) -> None:
-        x, y = _translate_offset(x, y)
+        x, y = self._translate_offset(x, y)
         surface = self._render_text_with_fallback(
             string, self.draw_color if color is None else color
         )
@@ -462,7 +464,7 @@ class Renderer:
 
         draw_x: float = x - offset_x * scale_x_abs
         draw_y: float = y - offset_y * scale_y_abs
-        draw_x, draw_y = _translate_offset(draw_x, draw_y)
+        draw_x, draw_y = self._translate_offset(draw_x, draw_y)
 
         image_index = image_index % len(sprite_index.images)
         image = sprite_index.images[image_index]

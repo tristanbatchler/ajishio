@@ -1,7 +1,7 @@
 from __future__ import annotations
 import ajishio as aj
 from abc import ABC
-from typing import Unpack, ClassVar, override
+from typing import Unpack, ClassVar, override, final
 from demo_projects.moonlapse.shared.constants import GRID_SIZE
 
 from enum import IntEnum, auto
@@ -18,26 +18,15 @@ class Entity(aj.GameObject, ABC):
     TYPE: ClassVar[EntityType]
 
     def __init__(
-        self, entity_id: int, x: float = 0, y: float = 0, **kwargs: Unpack[aj.GameObjectKwargs]
+        self, entity_id: int, name: str, x: float = 0, y: float = 0, **kwargs: Unpack[aj.GameObjectKwargs]
     ) -> None:
         super().__init__(x, y, **kwargs)
         self.entity_id: int = entity_id
-
-
-class NamedEntity(Entity, ABC):
-    def __init__(
-        self,
-        entity_id: int, 
-        name: str,
-        x: float = 0,
-        y: float = 0,
-        **kwargs: Unpack[aj.GameObjectKwargs],
-    ) -> None:
-        super().__init__(entity_id, x, y, **kwargs)
         self.name: str = name
 
 
-class Actor(NamedEntity):
+
+class Actor(Entity):
     TYPE: ClassVar[EntityType] = EntityType.ACTOR
 
     @override
@@ -46,7 +35,7 @@ class Actor(NamedEntity):
         aj.draw_text(self.x * GRID_SIZE, self.y * GRID_SIZE, self.name, aj.c_fuchsia)
 
 
-class Resource(NamedEntity, ABC):
+class Resource(Entity, ABC):
     def __init__(
         self,
         entity_id: int, 
@@ -64,6 +53,7 @@ class Tree(Resource):
     TYPE: ClassVar[EntityType] = EntityType.TREE
 
 
+@final
 class RegularTree(Tree):
     def __init__(
         self, entity_id: int, x: float = 0, y: float = 0, **kwargs: Unpack[aj.GameObjectKwargs]
@@ -71,6 +61,7 @@ class RegularTree(Tree):
         super().__init__(entity_id=entity_id, level=1, name="Tree", x=x, y=y, **kwargs)
 
 
+@final
 class OakTree(Tree):
     def __init__(
         self, entity_id: int, x: float = 0, y: float = 0, **kwargs: Unpack[aj.GameObjectKwargs]
@@ -78,6 +69,7 @@ class OakTree(Tree):
         super().__init__(entity_id=entity_id, level=2, name="Oak Tree", x=x, y=y, **kwargs)
 
 
+@final
 class WillowTree(Tree):
     def __init__(
         self, entity_id: int, x: float = 0, y: float = 0, **kwargs: Unpack[aj.GameObjectKwargs]
@@ -89,6 +81,7 @@ class Ore(Resource):
     TYPE: ClassVar[EntityType] = EntityType.ORE
 
 
+@final
 class IronOre(Ore):
     def __init__(
         self, entity_id: int, x: float = 0, y: float = 0, **kwargs: Unpack[aj.GameObjectKwargs]
@@ -96,6 +89,7 @@ class IronOre(Ore):
         super().__init__(entity_id=entity_id, level=1, name="Iron Ore", x=x, y=y, **kwargs)
 
 
+@final
 class GoldOre(Ore):
     def __init__(
         self, entity_id: int, x: float = 0, y: float = 0, **kwargs: Unpack[aj.GameObjectKwargs]
@@ -103,6 +97,7 @@ class GoldOre(Ore):
         super().__init__(entity_id=entity_id, level=2, name="Gold Ore", x=x, y=y, **kwargs)
 
 
+@final
 class DiamondOre(Ore):
     def __init__(
         self, entity_id: int, x: float = 0, y: float = 0, **kwargs: Unpack[aj.GameObjectKwargs]
@@ -114,6 +109,7 @@ class Fish(Resource):
     TYPE: ClassVar[EntityType] = EntityType.FISH
 
 
+@final
 class Shrimp(Fish):
     def __init__(
         self, entity_id: int, x: float = 0, y: float = 0, **kwargs: Unpack[aj.GameObjectKwargs]
@@ -121,6 +117,7 @@ class Shrimp(Fish):
         super().__init__(entity_id=entity_id, level=1, name="Shrimp", x=x, y=y, **kwargs)
 
 
+@final
 class Salmon(Fish):
     def __init__(
         self, entity_id: int, x: float = 0, y: float = 0, **kwargs: Unpack[aj.GameObjectKwargs]
@@ -128,6 +125,7 @@ class Salmon(Fish):
         super().__init__(entity_id=entity_id, level=2, name="Salmon", x=x, y=y, **kwargs)
 
 
+@final
 class Tuna(Fish):
     def __init__(
         self, entity_id: int, x: float = 0, y: float = 0, **kwargs: Unpack[aj.GameObjectKwargs]

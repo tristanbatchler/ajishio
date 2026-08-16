@@ -50,3 +50,35 @@ SELECT * FROM user_lockouts WHERE user_id = ? AND (expiration IS NULL OR expirat
 
 -- name: DeleteUserLockoutByUserId :exec
 DELETE FROM user_lockouts WHERE user_id = ?;
+
+/* ENTITIES */
+-- name: CreateEntity :one
+INSERT INTO entities (
+  entity_type,
+  entity_name,
+  x_position,
+  y_position
+) VALUES (?, ?, ?, ?)
+RETURNING *;
+
+/* ACTORS */
+-- name: GetActorByUserId :one
+SELECT
+  a.entity_id,
+  a.user_id,
+  e.entity_type,
+  e.entity_name,
+  e.x_position,
+  e.y_position,
+  e.added,
+  e.last_updated
+FROM actors AS a
+JOIN entities AS e ON e.id = a.entity_id
+WHERE a.user_id = ?;
+
+-- name: CreateActor :one
+INSERT INTO actors (
+  entity_id,
+  user_id
+) VALUES (?, ?)
+RETURNING *;

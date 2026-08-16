@@ -10,7 +10,7 @@ from demo_projects.moonlapse.server.client import Client
 from demo_projects.moonlapse.server.db import query
 from demo_projects.moonlapse.server.hub import HubLike
 from demo_projects.moonlapse.server.state import State
-from demo_projects.moonlapse.shared.entities import Actor
+from demo_projects.moonlapse.shared.entities import Actor, EntityType
 from demo_projects.moonlapse.shared.packets import clientbound, serverbound
 
 from argon2 import PasswordHasher
@@ -52,10 +52,8 @@ class ConnectedState(State):
 
     async def _handle_login_request(self, p: sb.LoginRequest):
         log.info("login from %s: %s", self.cid, p.username)
-        # Create the in-game state with entity data
-        new_state = InGameState(
-            self.client, self.hub, Actor(entity_id=self.hub.next_entity_id,name=p.username, x=0, y=0)
-        )
+        
+        
         lockout_period_minutes = 15
         lockout_max_attempts = 5
 
@@ -154,6 +152,18 @@ class ConnectedState(State):
         )
         await self.hub.db_conn.commit()
 
+        actor_entity = await query.get_actor_by_user_id(self.hub.db_conn, user_id=user.id_)
+        if actor_entity is None:
+            await self.hub.send_client_ws(
+                self.cid,
+                cb.ServerError("Login succeeded, but no player information was found. Please contact support.")
+            )
+            return
+
+        new_state = InGameState(
+            self.client, self.hub, Actor(entity_id=self.hub.next_entity_id,name=actor_entity.entity_name, x=actor_entity.x_position, y=actor_entity.y_position)
+        )
+
         return new_state
 
     async def _handle_register_request(self, p: sb.RegisterRequest) -> State | None:
@@ -163,15 +173,26 @@ class ConnectedState(State):
             await self.hub.send_client_ws(
                 self.cid, cb.RegisterResponse(ok=False, err="User already exists")
             )
-            return None
+            return
 
         pw_hash = self.PASSWORD_HASHER.hash(p.password)
-        _ = await query.create_user(
+        user = await query.create_user(
             self.hub.db_conn, username=p.username, password_hash=pw_hash
         )
+        if user is None:
+            await self.hub.send_client_ws(self.cid, cb.RegisterResponse(ok=False, err="Registration failed due to an unknown error. Please contact support"))
+            return
+
+        entity = await query.create_entity(
+            self.hub.db_conn, entity_type=EntityType.ACTOR, entity_name=p.username, x_position=0, y_position=0
+        )
+        if entity is None:
+            await self.hub.send_client_ws(self.cid, cb.ServerError("Registration succeeded, but was unable to create player. Please contact support."))
+            return
+        
+        _ = await query.create_actor(self.hub.db_conn, entity_id=entity.id_, user_id=user.id_)
         await self.hub.db_conn.commit()
         await self.hub.send_client_ws(self.cid, cb.RegisterResponse(ok=True))
-        return None
 
     @override
     async def handle_packet(self, p: sb.ServerboundPacket) -> State | None:

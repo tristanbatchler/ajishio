@@ -6,15 +6,19 @@
 from __future__ import annotations
 
 __all__: collections.abc.Sequence[str] = (
+    "GetActorByUserIdRow",
     "QueryResults",
     "count_user_login_failures_by_user_id_since",
     "count_users",
+    "create_actor",
+    "create_entity",
     "create_user",
     "create_user_lockout",
     "create_user_login",
     "create_user_login_failure",
     "delete_user_lockout_by_user_id",
     "get_active_user_lockouts_by_user_id",
+    "get_actor_by_user_id",
     "get_user",
     "get_user_by_username",
     "list_users",
@@ -24,6 +28,7 @@ __all__: collections.abc.Sequence[str] = (
 )
 
 import aiosqlite
+import dataclasses
 import datetime
 import typing
 
@@ -48,6 +53,18 @@ aiosqlite.register_adapter(datetime.datetime, _adapt_datetime)
 
 aiosqlite.register_converter("datetime", _convert_datetime)
 aiosqlite.register_converter("timestamp", _convert_datetime)
+
+
+@dataclasses.dataclass()
+class GetActorByUserIdRow:
+    entity_id: int
+    user_id: int
+    entity_type: int
+    entity_name: str
+    x_position: int
+    y_position: int
+    added: datetime.datetime
+    last_updated: datetime.datetime
 
 
 GET_USER: typing.Final[str] = """-- name: GetUser :one
@@ -111,6 +128,39 @@ SELECT id, user_id, added, expiration FROM user_lockouts WHERE user_id = ? AND (
 
 DELETE_USER_LOCKOUT_BY_USER_ID: typing.Final[str] = """-- name: DeleteUserLockoutByUserId :exec
 DELETE FROM user_lockouts WHERE user_id = ?
+"""
+
+CREATE_ENTITY: typing.Final[str] = """-- name: CreateEntity :one
+INSERT INTO entities (
+  entity_type,
+  entity_name,
+  x_position,
+  y_position
+) VALUES (?, ?, ?, ?)
+RETURNING id, entity_type, added, last_updated, x_position, y_position, entity_name
+"""
+
+GET_ACTOR_BY_USER_ID: typing.Final[str] = """-- name: GetActorByUserId :one
+SELECT
+  a.entity_id,
+  a.user_id,
+  e.entity_type,
+  e.entity_name,
+  e.x_position,
+  e.y_position,
+  e.added,
+  e.last_updated
+FROM actors AS a
+JOIN entities AS e ON e.id = a.entity_id
+WHERE a.user_id = ?
+"""
+
+CREATE_ACTOR: typing.Final[str] = """-- name: CreateActor :one
+INSERT INTO actors (
+  entity_id,
+  user_id
+) VALUES (?, ?)
+RETURNING entity_id, user_id
 """
 
 
@@ -249,3 +299,24 @@ def get_active_user_lockouts_by_user_id(conn: aiosqlite.Connection, *, user_id: 
 
 async def delete_user_lockout_by_user_id(conn: aiosqlite.Connection, *, user_id: int) -> None:
     await conn.execute(DELETE_USER_LOCKOUT_BY_USER_ID, (user_id,))
+
+
+async def create_entity(conn: aiosqlite.Connection, *, entity_type: int, entity_name: str, x_position: int, y_position: int) -> models.Entity | None:
+    row = await (await conn.execute(CREATE_ENTITY, (entity_type, entity_name, x_position, y_position))).fetchone()
+    if row is None:
+        return None
+    return models.Entity(id_=row[0], entity_type=row[1], added=row[2], last_updated=row[3], x_position=row[4], y_position=row[5], entity_name=row[6])
+
+
+async def get_actor_by_user_id(conn: aiosqlite.Connection, *, user_id: int) -> GetActorByUserIdRow | None:
+    row = await (await conn.execute(GET_ACTOR_BY_USER_ID, (user_id,))).fetchone()
+    if row is None:
+        return None
+    return GetActorByUserIdRow(entity_id=row[0], user_id=row[1], entity_type=row[2], entity_name=row[3], x_position=row[4], y_position=row[5], added=row[6], last_updated=row[7])
+
+
+async def create_actor(conn: aiosqlite.Connection, *, entity_id: int, user_id: int) -> models.Actor | None:
+    row = await (await conn.execute(CREATE_ACTOR, (entity_id, user_id))).fetchone()
+    if row is None:
+        return None
+    return models.Actor(entity_id=row[0], user_id=row[1])

@@ -5,6 +5,9 @@
 from __future__ import annotations
 
 __all__: collections.abc.Sequence[str] = (
+    "Actor",
+    "EntitiesResource",
+    "Entity",
     "User",
     "UserLockout",
     "UserLogin",
@@ -17,6 +20,29 @@ import typing
 if typing.TYPE_CHECKING:
     import collections.abc
     import datetime
+
+
+@dataclasses.dataclass()
+class Actor:
+    entity_id: int
+    user_id: int
+
+
+@dataclasses.dataclass()
+class EntitiesResource:
+    entity_id: int
+    level_required: int
+
+
+@dataclasses.dataclass()
+class Entity:
+    id_: int
+    entity_type: int
+    added: datetime.datetime
+    last_updated: datetime.datetime
+    x_position: int
+    y_position: int
+    entity_name: str
 
 
 @dataclasses.dataclass()

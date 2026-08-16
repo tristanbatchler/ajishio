@@ -3,6 +3,7 @@ import ajishio as aj
 from abc import ABC
 from typing import Unpack, ClassVar, override, final
 from demo_projects.moonlapse.shared.sprites import spritesheet, SpritesheetIndex
+from demo_projects.moonlapse.shared.constants import VIEW_ZOOM
 
 from enum import IntEnum, auto
 
@@ -49,8 +50,7 @@ class Actor(Entity):
     @override
     def draw_gui(self) -> None:
         super().draw_gui()
-        # TODO: Calculate this based on view ports etc.
-        aj.draw_text(self.x * 10, self.y * 10, self.name, aj.c_fuchsia)
+        aj.draw_text(self.x * VIEW_ZOOM, self.y * VIEW_ZOOM, self.name, aj.c_fuchsia)
 
 
 class Resource(Entity, ABC):

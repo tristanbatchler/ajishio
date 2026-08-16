@@ -10,6 +10,7 @@ from demo_projects.moonlapse.shared.packets import clientbound, deserialize_from
 from demo_projects.moonlapse.shared.constants import TICKS_PER_SECOND
 from demo_projects.moonlapse.server.client import Client
 from demo_projects.moonlapse.server.states import ConnectedState
+from demo_projects.moonlapse.shared.world import World
 
 log = logging.getLogger("moonlapse.connection")
 
@@ -21,6 +22,9 @@ class Hub:
         self._clients: dict[int, Client] = {}
         self.db_conn: aiosqlite.Connection = db_conn
         self.tick_rate: float = 1 / TICKS_PER_SECOND
+        self.world: World = (
+            World()
+        )  # TODO: A world loader is needed eventually to load all entities in the DB
 
     @property
     def next_client_id(self) -> int:
@@ -43,12 +47,10 @@ class Hub:
     async def register_client(self, ws: ServerConnection) -> None:
         cid = self.next_client_id
         client = Client(cid, ws)
-        client.state = ConnectedState(client, self)
         self._clients[cid] = client
+        await client.change_state(ConnectedState(client, self))
 
         try:
-            await client.state.on_enter()
-
             async for raw in client.ws:
                 data = raw if isinstance(raw, bytes) else raw.encode()
                 packet = deserialize_from_client(data)
@@ -59,9 +61,7 @@ class Hub:
 
         finally:
             _ = self.unregister_client(cid)
-            await self.broadcast(
-                clientbound.Announcement(f"Player {cid} left the game.")
-            )
+            await self.broadcast(clientbound.ClientDisconnected(cid))
             log.info(
                 f"disconnected {cid} ({client.ip_address}), total={len(self.get_clients())}"
             )
@@ -85,9 +85,7 @@ class Hub:
                 new_state = await client.state.handle_packet(packet)
 
                 if new_state is not None:
-                    await client.state.on_exit()
-                    client.state = new_state
-                    await client.state.on_enter()
+                    await client.change_state(new_state)
 
     async def send_client_ws(
         self, client_id: int, packet: clientbound.ClientboundPacket

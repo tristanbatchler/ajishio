@@ -183,17 +183,16 @@ class EntityDetails(ClientboundPacket, ABC):
 
     @staticmethod
     def from_entity(entity: entities.Entity) -> EntityDetails:
-        details: EntityDetails | None = None
         match entity:
             case entities.Actor():
-                details = ActorDetails(
+                return ActorDetails(
                     entity_id=entity.entity_id,
                     x=int(entity.x),
                     y=int(entity.y),
                     name=entity.name,
                 )
             case entities.Tree():
-                details = TreeDetails(
+                return TreeDetails(
                     entity_id=entity.entity_id,
                     x=int(entity.x),
                     y=int(entity.y),
@@ -201,7 +200,7 @@ class EntityDetails(ClientboundPacket, ABC):
                     name=entity.name,
                 )
             case entities.Ore():
-                details = OreDetails(
+                return OreDetails(
                     entity_id=entity.entity_id,
                     x=int(entity.x),
                     y=int(entity.y),
@@ -209,7 +208,7 @@ class EntityDetails(ClientboundPacket, ABC):
                     name=entity.name,
                 )
             case entities.Fish():
-                details = FishDetails(
+                return FishDetails(
                     entity_id=entity.entity_id,
                     x=int(entity.x),
                     y=int(entity.y),
@@ -220,8 +219,6 @@ class EntityDetails(ClientboundPacket, ABC):
                 raise NotImplementedError(
                     f"Entity type {entity.TYPE} does not have an implementation for EntityDetails.from_entity"
                 )
-
-        return details
 
 
 @final

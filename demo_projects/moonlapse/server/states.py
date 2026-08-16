@@ -11,7 +11,7 @@ from demo_projects.moonlapse.server.client import Client
 from demo_projects.moonlapse.server.db import query
 from demo_projects.moonlapse.server.hub import HubLike
 from demo_projects.moonlapse.server.state import State
-from demo_projects.moonlapse.shared.entities import Actor, EntityType
+from demo_projects.moonlapse.shared.entities import Actor, Entity, EntityType
 from demo_projects.moonlapse.shared.packets import clientbound, serverbound
 
 from argon2 import PasswordHasher
@@ -247,8 +247,9 @@ class InGameState(State):
         self.actor: Actor = actor
         self._actor_position_db_sync_task: asyncio.Task[None] | None = None
 
-    def _serialize_actor_details(self) -> str:
-        return b64encode(cb.ActorDetails.from_entity(self.actor).to_bytes()).decode()
+    @staticmethod
+    def _serialize_entity_details(entity: Entity) -> str:
+        return b64encode(cb.EntityDetails.from_entity(entity).to_bytes()).decode()
 
     @override
     async def on_enter(self) -> None:
@@ -261,7 +262,7 @@ class InGameState(State):
             cb.EntitySpawn(
                 self.actor.entity_id,
                 entity_type=self.actor.TYPE,
-                entity_details_blob=self._serialize_actor_details(),
+                entity_details_blob=self._serialize_entity_details(self.actor),
             )
         )
 
@@ -269,8 +270,19 @@ class InGameState(State):
             self._sync_db_actor_position_loop()
         )
 
+        # Send them all the entities in the world
+        for entity in self.hub.world.entities.values():
+            details = self._serialize_entity_details(entity)
+            await self.hub.send_client_ws(
+                self.cid, cb.EntitySpawn(entity.entity_id, entity.TYPE, details)
+            )
+
+        # Add us to the world
+        self.hub.world.spawn_entity(self.actor)
+
     @override
     async def on_exit(self) -> None:
+        self.hub.world.destroy_entity(self.actor.entity_id)
         await self._sync_db_actor_position()
         await self.hub.send_client_ws(
             self.cid, cb.Announcement(f"{self.actor.name} left the game.")
@@ -313,11 +325,11 @@ class InGameState(State):
         await self.hub.broadcast(
             cb.EntityUpdate(
                 self.actor.entity_id,
-                entity_details_blob=self._serialize_actor_details(),
+                entity_details_blob=self._serialize_entity_details(self.actor),
             ),
             only_to={
                 c.id for c in self.hub.get_clients() if isinstance(c.state, InGameState)
-            }
+            },
         )
         await self.hub.send_client_ws(self.cid, cb.MoveResponse(ok=True))
 

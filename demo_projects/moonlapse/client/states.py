@@ -11,7 +11,7 @@ from demo_projects.moonlapse.shared import entities
 from demo_projects.moonlapse.client.protocol import ManagerLike, State
 from demo_projects.moonlapse.shared.packets import clientbound, serverbound
 from demo_projects.moonlapse.client.util import draw_wrapped_text
-from demo_projects.moonlapse.client.world import World
+from demo_projects.moonlapse.shared.world import World
 
 
 # Convenient aliases

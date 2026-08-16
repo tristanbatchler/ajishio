@@ -21,3 +21,9 @@ class Client:
     @property
     def ip_address(self) -> str:
         return self.ws.remote_address[0]  # pyright: ignore[reportAny]
+
+    async def change_state(self, new_state: State):
+        if self.state is not None:
+            await self.state.on_exit()
+        self.state = new_state
+        await self.state.on_enter()

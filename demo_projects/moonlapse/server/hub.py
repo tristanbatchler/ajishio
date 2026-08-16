@@ -5,10 +5,12 @@ import aiosqlite
 from websockets.asyncio.server import ServerConnection
 from demo_projects.moonlapse.server.client import Client
 from demo_projects.moonlapse.shared.packets.clientbound import ClientboundPacket
+from demo_projects.moonlapse.shared.world import World
 
 
 class HubLike(Protocol):
     db_conn: aiosqlite.Connection
+    world: World
 
     @property
     def next_entity_id(self) -> int: ...

@@ -111,7 +111,7 @@ if _os.environ.get("AJISHIO_DOCS"):
 else:
     _ = _pg.init()
     _renderer = Renderer(use_view_offset=True)
-    _gui_renderer: Renderer = Renderer(use_view_offset=False)
+    _gui_renderer = Renderer(use_view_offset=False)
 
     set_window_icon()
     _pg.display.set_caption("Ajishio Game")

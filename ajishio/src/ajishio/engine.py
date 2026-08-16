@@ -8,8 +8,8 @@ from typing import TYPE_CHECKING, cast
 from uuid import UUID
 from ajishio.input import input
 from ajishio.view import view
-from ajishio.types import CollisionMask, GameLevel, IGameObject
-from ajishio.rendering import Renderer, Color
+from ajishio.types import CollisionMask, GameLevel, IGameObject, GameSprite
+from ajishio.rendering import Renderer, Color, c_white
 import ajishio.pyqtree as pyqtree
 import pygame as pg
 import sys
@@ -446,7 +446,7 @@ class Engine:
             self.renderer.draw_display()
 
             # GUI Draw pass
-            self.gui_renderer.display.fill((0, 0, 0, 0))
+            _ = self.gui_renderer.display.fill((0, 0, 0, 0))
 
             self._active_renderer = self.gui_renderer
             for obj in draw_buffer:
@@ -462,8 +462,6 @@ class Engine:
             # Input cleanup
             input.prev_events = input.events.copy()
             input.events.clear()
-
-        return True
 
         self._audio_playing = [
             audio
@@ -639,12 +637,12 @@ class Engine:
         self,
         x: float,
         y: float,
-        sprite_index,
+        sprite_index: GameSprite,
         image_index: int,
         x_scale: float = 1.0,
         y_scale: float = 1.0,
         rotation: float = 0.0,
-        color: Color = Color(255, 255, 255),
+        color: Color = c_white,
         alpha: float = 1.0,
     ) -> None:
         self._active_renderer.draw_sprite(

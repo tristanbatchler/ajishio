@@ -33,9 +33,9 @@ Your default goal is to make pragmatic, typed, demo-friendly changes quickly whi
 - Run a demo module:
   - `uv run -m demo_projects.platformer.main`
 - Type check/lint (configured in workspace):
-  - basedpyright and ruff via editor or uv tools
+  - `uv run ruff check .` and `uv run basedpyright .`
 - Quick syntax check for a file:
-  - `.venv/bin/python -m py_compile <path>`
+  - `uv run -m py_compile <path>`
 - Run docs locally without pygame window init:
   - `AJISHIO_DOCS=1 uv run mkdocs serve`
 - Build static docs:
@@ -65,7 +65,8 @@ Relevant config:
 - Read [ajishio/src/ajishio/game_object.py](ajishio/src/ajishio/game_object.py) for gameplay hooks and collision helpers.
 
 3. Validate your edit workflow.
-- Syntax-check any touched Python file with `.venv/bin/python -m py_compile <path>`.
+- Syntax-check any touched Python file with `uv -m py_compile <path>`.
+- Run the linter and type checker on any touched Python file with the commands explained above.
 - If behavior changed, run the smallest relevant demo module.
 
 ## Task Routing (Where To Look First)

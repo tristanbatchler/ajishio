@@ -34,8 +34,7 @@ REGISTRY: dict[ClientboundPacketType, type[ClientboundPacket]] = {}
 
 
 @dataclass(frozen=True)
-class ClientboundPacket(Packet, ABC):
-    IS_SERVERBOUND: ClassVar[bool] = False
+class ClientboundPacket(Packet, ABC): ...
 
 
 T = TypeVar("T", bound=ClientboundPacket)

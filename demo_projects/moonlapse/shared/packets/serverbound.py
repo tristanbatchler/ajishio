@@ -1,7 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from enum import IntEnum, auto
-from typing import ClassVar, final, TypeVar, Callable, override
+from typing import final, TypeVar, Callable, override
 from abc import ABC
 
 from demo_projects.moonlapse.shared.packets.base import Packet
@@ -20,8 +20,7 @@ REGISTRY: dict[ServerboundPacketType, type[ServerboundPacket]] = {}
 
 
 @dataclass(frozen=True)
-class ServerboundPacket(Packet, ABC):
-    IS_SERVERBOUND: ClassVar[bool] = True
+class ServerboundPacket(Packet, ABC): ...
 
 
 T = TypeVar("T", bound=ServerboundPacket)

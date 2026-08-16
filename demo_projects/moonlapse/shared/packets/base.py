@@ -25,7 +25,6 @@ def _decode_structure(structure: Iterable[object]) -> Iterable[object]:
 class Packet(ABC):
     # TYPE is injected by @register, so set a default pyright is happy with here
     TYPE: ClassVar[int] = cast(int, cast(object, None))
-    IS_SERVERBOUND: ClassVar[bool]
     FORMAT_STRING: ClassVar[str]
 
     @abstractmethod

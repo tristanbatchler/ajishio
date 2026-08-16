@@ -8,6 +8,7 @@ import ajishio as aj
 from demo_projects.moonlapse.shared.packets import deserialize_from_server
 from demo_projects.moonlapse.client.protocol import State
 from demo_projects.moonlapse.client import states
+from demo_projects.moonlapse.shared.packets.serverbound import ServerboundPacket
 
 log = logging.getLogger("moonlapse.manager")
 
@@ -30,6 +31,9 @@ class Manager(aj.GameObject):
 
     def get_client_id(self):
         return self.client_id
+
+    def send(self, p: ServerboundPacket) -> None:
+        self.client.send(p.serialize())
 
     def _process_network(self) -> None:
         incoming = self.client.recv()

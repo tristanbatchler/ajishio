@@ -209,7 +209,7 @@ class InGameState(State):
         # Broadcast this player's spawn to everyone
         await self.hub.broadcast(
             cb.EntitySpawn(
-                entity_type=Actor.TYPE, entity_details_blob=self._serialize_actor_details()
+                self.actor.entity_id, entity_type=self.actor.TYPE, entity_details_blob=self._serialize_actor_details()
             )
         )
 
@@ -232,7 +232,7 @@ class InGameState(State):
             },
         )
 
-    async def _handle_move_request(self, p: sb.EntityMoveRequest) -> None:
+    async def _handle_move_request(self, p: sb.MoveRequest) -> None:
         log.info(
             f"move from {self.cid}: ({self.actor.x},{self.actor.y}) → ({p.dx},{p.dy})"
         )
@@ -240,7 +240,7 @@ class InGameState(State):
         self.actor.y += p.dy
         # Broadcast position to everyone (including self)
         await self.hub.broadcast(
-            cb.EntityUpdate(entity_details_blob=self._serialize_actor_details())
+            cb.EntityUpdate(self.actor.entity_id, entity_details_blob=self._serialize_actor_details())
         )
         await self.hub.send_client_ws(self.cid, cb.MoveResponse(ok=True))
 
@@ -251,19 +251,16 @@ class InGameState(State):
 
     @override
     async def handle_packet(self, p: sb.ServerboundPacket) -> State | None:
-        log.info("InGameState got packet: %s", type(p).__name__)
+        log.info(f"InGameState got packet: {type(p).__name__}", type(p).__name__)
         match p:
             case sb.ChatRequest():
-                await self._handle_chat_request(p)
-                return None
-            case sb.EntityMoveRequest():
-                await self._handle_move_request(p)
-                return None
+                return await self._handle_chat_request(p)
+            case sb.MoveRequest():
+                return await self._handle_move_request(p)
             case sb.LogoutRequest():
                 return await self._handle_logout_request(p)
             case _:
-                log.info("reject %s: %s in %s", self.cid, p.TYPE, self.NAME)
+                log.info(f"reject {self.cid}: {type(p).__name__} in self.NAME")
                 await self.hub.send_client_ws(
                     self.cid, cb.ServerError("You can't do that here")
                 )
-                return None

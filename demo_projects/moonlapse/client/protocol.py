@@ -3,14 +3,14 @@ from __future__ import annotations
 import ajishio as aj
 from typing import ClassVar, Protocol
 from abc import ABC, abstractmethod
-import demo_projects.moonlapse.shared.packets.clientbound as clientbound
+from demo_projects.moonlapse.shared.packets.clientbound import ClientboundPacket
+from demo_projects.moonlapse.shared.packets.serverbound import ServerboundPacket
 
 
 class ManagerLike(Protocol):
-    client: aj.GameNetClient
-
     def set_client_id(self, id: int) -> None: ...
     def get_client_id(self) -> int | None: ...
+    def send(self, p: ServerboundPacket) -> None: ...
 
 
 class State(aj.IGameObject, ABC):
@@ -23,4 +23,4 @@ class State(aj.IGameObject, ABC):
     def on_exit(self) -> None: ...
 
     @abstractmethod
-    def handle_packet(self, p: clientbound.ClientboundPacket) -> State | None: ...
+    def handle_packet(self, p: ClientboundPacket) -> State | None: ...

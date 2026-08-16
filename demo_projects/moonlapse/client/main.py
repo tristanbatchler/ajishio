@@ -3,6 +3,7 @@ import logging
 import ajishio as aj
 
 from demo_projects.moonlapse.client.manager import Manager
+from demo_projects.moonlapse.shared.constants import TICKS_PER_SECOND
 
 log = logging.getLogger("moonlapse.client")
 
@@ -16,6 +17,7 @@ async def main() -> None:
     _ = Manager(client=client)
 
     aj.room_set_caption("Moonlapse Client")
+    aj.game_set_speed(TICKS_PER_SECOND)
     await aj.game_start_async()
 
 

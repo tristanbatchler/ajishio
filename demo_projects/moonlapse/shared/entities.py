@@ -1,6 +1,6 @@
 from __future__ import annotations
 from abc import ABC
-from typing import Unpack, ClassVar
+from typing import Unpack, ClassVar, override
 import ajishio as aj
 
 from enum import IntEnum, auto
@@ -40,6 +40,11 @@ class NamedEntity(Entity, ABC):
 
 class Actor(NamedEntity):
     TYPE: ClassVar[EntityType] = EntityType.ACTOR
+
+    @override
+    def draw(self) -> None:
+        super().draw()
+        aj.draw_text(self.x, self.y, self.name, aj.c_fuchsia)
 
 
 class Resource(NamedEntity, ABC):

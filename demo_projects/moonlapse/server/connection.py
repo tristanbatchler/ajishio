@@ -7,6 +7,7 @@ from collections.abc import Set
 import aiosqlite
 from websockets.asyncio.server import ServerConnection
 from demo_projects.moonlapse.shared.packets import clientbound, deserialize_from_client
+from demo_projects.moonlapse.shared.constants import TICKS_PER_SECOND
 from demo_projects.moonlapse.server.client import Client
 from demo_projects.moonlapse.server.states import ConnectedState
 
@@ -18,8 +19,7 @@ class Hub:
         self._next_id: int = 1
         self._clients: dict[int, Client] = {}
         self.db_conn: aiosqlite.Connection = db_conn
-        self.ticks_per_second: int = 20
-        self.tick_rate: float = 1 / self.ticks_per_second
+        self.tick_rate: float = 1 / TICKS_PER_SECOND
 
     @property
     def next_id(self) -> int:

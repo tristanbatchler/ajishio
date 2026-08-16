@@ -13,7 +13,6 @@ class ServerboundPacketType(IntEnum):
     LOGIN_REQUEST = auto()
     LOGOUT_REQUEST = auto()
     REGISTER_REQUEST = auto()
-    ENTITY_MOVE_REQUEST = auto()
 
 
 REGISTRY: dict[ServerboundPacketType, type[ServerboundPacket]] = {}
@@ -90,15 +89,3 @@ class RegisterRequest(ServerboundPacket):
     def get_structure(self):
         return (self.username, self.password)
 
-
-@final
-@register(ServerboundPacketType.ENTITY_MOVE_REQUEST)
-@dataclass(frozen=True)
-class EntityMoveRequest(ServerboundPacket):
-    entity_id: int
-    dx: int
-    dy: int
-
-    @override
-    def get_structure(self):
-        return (self.entity_id, self.dx, self.dy)

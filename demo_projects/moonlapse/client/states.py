@@ -3,7 +3,7 @@ import ajishio as aj
 
 import logging
 import string
-from typing import ClassVar, override, Unpack
+from typing import ClassVar, Literal, overload, override, Unpack
 from base64 import b64decode
 
 
@@ -20,7 +20,6 @@ sb = serverbound
 
 logger = logging.getLogger("moonlapse.states")
 
-
 class ConnectingState(aj.GameObject, State):
     NAME: ClassVar[str] = "connecting"
 
@@ -36,7 +35,7 @@ class ConnectingState(aj.GameObject, State):
 
     @override
     def on_enter(self):
-        logger.info("Waiting for acknowledgement from the server...", aj.c_ltgray)
+        logger.info("Waiting for acknowledgement from the server...")
 
     @override
     def on_exit(self):
@@ -133,13 +132,13 @@ class ConnectedState(aj.GameObject, State):
             return
         if parts[0] == "/login" and len(parts) >= 3:
             pkt = sb.LoginRequest(username=parts[1], password=parts[2])
-            self.mgr.client.send(pkt.serialize())
+            self.mgr.send(pkt)
             self.log(f"Sending login as {parts[1]}", aj.c_lime)
         elif parts[0] == "/who":
             self.log(f"My ID: {self.mgr.get_client_id()}", aj.c_aqua)
         elif parts[0] == "/register" and len(parts) >= 3:
             pkt = sb.RegisterRequest(username=parts[1], password=parts[2])
-            self.mgr.client.send(pkt.serialize())
+            self.mgr.send(pkt)
             self.log("Sending register...", aj.c_yellow)
         else:
             self.log("Must be logged in to send messages.", aj.c_orange)
@@ -195,80 +194,103 @@ class InGameState(aj.GameObject, State):
 
     @override
     def on_enter(self):
-        logger.info("Logged in.", aj.c_lime)
+        logger.info("Logged in.")
 
     @override
     def on_exit(self) -> None:
         aj.instance_destroy(self.world)
 
+    @overload
+    @staticmethod
+    def _get_from_details_blob(
+        entity_type: entities.EntityType, entity_details_blob: str, details_only: Literal[True]
+    ) -> cb.EntityDetails: ...
+
+    @overload
+    @staticmethod
+    def _get_from_details_blob(
+        entity_type: entities.EntityType, entity_details_blob: str, details_only: Literal[False]
+    ) -> entities.Entity: ...
+
+    @staticmethod
+    def _get_from_details_blob(entity_type: entities.EntityType, entity_details_blob: str, details_only: bool) -> cb.EntityDetails | entities.Entity:
+        data = b64decode(entity_details_blob)
+
+        match entity_type:
+            case entities.EntityType.ACTOR:
+                details = cb.ActorDetails.from_bytes(data)
+                return details if details_only else entities.Actor(
+                    name=details.name, x=details.x, y=details.y
+                )
+            case entities.EntityType.TREE:
+                details = cb.TreeDetails.from_bytes(data)
+                return details if details_only else entities.Tree(
+                    level=details.level,
+                    name=details.name,
+                    x=details.x,
+                    y=details.y,
+                )
+            case entities.EntityType.ORE:
+                details= cb.OreDetails.from_bytes(data)
+                return details if details_only else entities.Ore(
+                    x=details.x,
+                    y=details.y,
+                    level=details.level,
+                    name=details.name,
+                )
+            case entities.EntityType.FISH:
+                details = cb.FishDetails.from_bytes(data)
+                return details if details_only else entities.Fish(
+                    x=details.x,
+                    y=details.y,
+                    level=details.level,
+                    name=details.name,
+                )
+            case _:  # pyright: ignore[reportUnnecessaryComparison]
+                raise NotImplementedError(f"Entity spawn for type {entity_type} is unhandled")  # pyright: ignore[reportUnreachable]
+
+
     def _handle_logout_response(self, p: cb.LogoutResponse):
         if not p.ok:
-            logger.warning(f"Can't logout: {p.err}", aj.c_orange)
+            logger.warning(f"Can't logout: {p.err}")
         else:
-            logger.info("Logout success", aj.c_lime)
+            logger.info("Logout success")
             return ConnectedState(self.mgr)
 
     def _handle_chat_response(self, p: cb.ChatResponse):
         if not p.ok:
-            logger.warning(f"Can't send that: {p.err}", aj.c_orange)
+            logger.warning(f"Can't send that: {p.err}")
 
     def _handle_move_response(self, p: cb.MoveResponse):
         if not p.ok:
-            logger.warning(f"Can't move there: {p.err}", aj.c_orange)
+            logger.warning(f"Can't move there: {p.err}")
         else:
-            logger.info("Move successful", aj.c_lime)
+            logger.info("Move successful")
 
     def _handle_announcement(self, p: cb.Announcement):
-        logger.info(p.message, aj.c_yellow)
+        logger.info(p.message)
 
     def _handle_client_disconnected(self, p: cb.ClientDisconnected):
-        logger.info(f"Player {p.client_id} disconnected", aj.c_yellow)
+        logger.info(f"Player {p.client_id} disconnected")
 
     def _handle_player_chat(self, p: cb.PlayerChat):
-        logger.info(f"Player {p.from_client_id} says: '{p.message}'", aj.c_white)
+        logger.info(f"Player {p.from_client_id} says: '{p.message}'")
 
     def _handle_entity_spawn(self, p: cb.EntitySpawn):
-        data = b64decode(p.entity_details_blob)
-        
-        entity_details: cb.EntityDetails | None = None
-        match p.entity_type:
-            case entities.EntityType.ACTOR:
-                entity_details = cb.ActorDetails.from_bytes(data)
-                entity = entities.Actor(
-                    name=entity_details.name, x=entity_details.x, y=entity_details.y
-                )
-            case entities.EntityType.TREE:
-                entity_details = cb.TreeDetails.from_bytes(data)
-                entity = entities.Tree(
-                    level=entity_details.level,
-                    name=entity_details.name,
-                    x=entity_details.x,
-                    y=entity_details.y,
-                )
-            case entities.EntityType.ORE:
-                entity_details= cb.OreDetails.from_bytes(data)
-                entity = entities.Ore(
-                    x=entity_details.x,
-                    y=entity_details.y,
-                    level=entity_details.level,
-                    name=entity_details.name,
-                )
-            case entities.EntityType.FISH:
-                entity_details = cb.FishDetails.from_bytes(data)
-                entity = entities.Fish(
-                    x=entity_details.x,
-                    y=entity_details.y,
-                    level=entity_details.level,
-                    name=entity_details.name,
-                )
-            case _:  # pyright: ignore[reportUnnecessaryComparison]
-                raise NotImplementedError(f"Entity spawn for type {p.entity_type} is unhandled")  # pyright: ignore[reportUnreachable]
-        
-
+        entity = self._get_from_details_blob(p.entity_type, p.entity_details_blob, details_only=False)
         self.world.spawn_entity(entity)
 
     def _handle_entity_destroy(self, p: cb.EntityDestroy):
         self.world.destroy_entity(p.entity_id)
+
+    def _handle_entity_update(self, p: cb.EntityUpdate):
+        entity = self.world.entities.get(p.entity_id)
+        if entity is None:
+            logger.error(f"Can't find entity {p.entity_id} in world to update")
+            return
+
+        entity_details = self._get_from_details_blob(entity.TYPE, p.entity_details_blob, details_only=True)
+        self.world.update_entity(p.entity_id, entity_details)
 
     @override
     def handle_packet(self, p: cb.ClientboundPacket):
@@ -289,9 +311,20 @@ class InGameState(aj.GameObject, State):
                 return self._handle_entity_spawn(p)
             case cb.EntityDestroy():
                 return self._handle_entity_destroy(p)
+            case cb.EntityUpdate():
+                return self._handle_entity_update(p)
+            case cb.ServerError():
+                logger.error(f"Server error: {p.message}")
             case _:
-                logger.warning(f"Unexpected in game: {type(p).__name__}", aj.c_ltgray)
+                logger.warning(f"Unexpected in game: {type(p).__name__}")
 
     @override
     def step(self) -> None:
-        pass
+        super().step()
+        dx = aj.keyboard_check_released(aj.vk_right) - aj.keyboard_check_released(aj.vk_left)
+        dy = aj.keyboard_check_released(aj.vk_down) - aj.keyboard_check_released(aj.vk_up)
+        if dx == dy == 0:
+            return
+        self.mgr.send(sb.MoveRequest(dx, dy))
+        logger.debug("Sent a move request")
+        

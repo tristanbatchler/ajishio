@@ -62,6 +62,7 @@ class Hub:
         finally:
             _ = self.unregister_client(cid)
             await self.broadcast(clientbound.ClientDisconnected(cid))
+            await client.change_state(None)
             log.info(
                 f"disconnected {cid} ({client.ip_address}), total={len(self.get_clients())}"
             )

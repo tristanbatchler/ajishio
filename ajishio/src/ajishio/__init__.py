@@ -120,7 +120,7 @@ else:
 # Populate the lazy context so game_object / game_sound can access the engine.
 _ctx.engine = _engine
 
-# --- Rendering: bound methods on the renderer singleton ---
+# --- Rendering: methods are on the engine, but in turn call methods on either of its renderers ---
 draw_set_color = _engine.draw_set_color
 draw_set_circle_precision = _engine.draw_set_circle_precision
 draw_circle = _engine.draw_circle

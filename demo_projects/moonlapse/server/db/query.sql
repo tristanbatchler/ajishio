@@ -61,6 +61,15 @@ INSERT INTO entities (
 ) VALUES (?, ?, ?, ?)
 RETURNING *;
 
+-- name: UpdateEntityPosition :one
+UPDATE entities
+SET
+    x_position = ?,
+    y_position = ?,
+    last_updated = CURRENT_TIMESTAMP
+WHERE id = ?
+RETURNING *;
+
 /* ACTORS */
 -- name: GetActorByUserId :one
 SELECT

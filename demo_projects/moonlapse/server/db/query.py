@@ -22,6 +22,7 @@ __all__: collections.abc.Sequence[str] = (
     "get_user",
     "get_user_by_username",
     "list_users",
+    "update_entity_position",
     "update_user_last_login",
     "update_user_last_updated",
     "update_user_password_hash",
@@ -137,6 +138,16 @@ INSERT INTO entities (
   x_position,
   y_position
 ) VALUES (?, ?, ?, ?)
+RETURNING id, entity_type, added, last_updated, x_position, y_position, entity_name
+"""
+
+UPDATE_ENTITY_POSITION: typing.Final[str] = """-- name: UpdateEntityPosition :one
+UPDATE entities
+SET
+    x_position = ?,
+    y_position = ?,
+    last_updated = CURRENT_TIMESTAMP
+WHERE id = ?
 RETURNING id, entity_type, added, last_updated, x_position, y_position, entity_name
 """
 
@@ -303,6 +314,13 @@ async def delete_user_lockout_by_user_id(conn: aiosqlite.Connection, *, user_id:
 
 async def create_entity(conn: aiosqlite.Connection, *, entity_type: int, entity_name: str, x_position: int, y_position: int) -> models.Entity | None:
     row = await (await conn.execute(CREATE_ENTITY, (entity_type, entity_name, x_position, y_position))).fetchone()
+    if row is None:
+        return None
+    return models.Entity(id_=row[0], entity_type=row[1], added=row[2], last_updated=row[3], x_position=row[4], y_position=row[5], entity_name=row[6])
+
+
+async def update_entity_position(conn: aiosqlite.Connection, *, x_position: int, y_position: int, id_: int) -> models.Entity | None:
+    row = await (await conn.execute(UPDATE_ENTITY_POSITION, (x_position, y_position, id_))).fetchone()
     if row is None:
         return None
     return models.Entity(id_=row[0], entity_type=row[1], added=row[2], last_updated=row[3], x_position=row[4], y_position=row[5], entity_name=row[6])

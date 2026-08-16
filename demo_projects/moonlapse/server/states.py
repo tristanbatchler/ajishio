@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import ClassVar, override
 from base64 import b64encode
@@ -217,6 +218,7 @@ class InGameState(State):
         self.hub: HubLike = hub
         self.cid: int = self.client.id
         self.actor: Actor = actor
+        self._actor_position_db_sync_task: asyncio.Task[None] | None = None
 
     def _serialize_actor_details(self) -> str:
         return b64encode(cb.ActorDetails.from_entity(self.actor).to_bytes()).decode()
@@ -234,14 +236,32 @@ class InGameState(State):
             )
         )
 
+        self._actor_position_db_sync_task = asyncio.create_task(self._sync_db_actor_position_loop())
+
     @override
     async def on_exit(self) -> None:
+        await self._sync_db_actor_position()
         await self.hub.send_client_ws(
             self.cid, cb.Announcement(f"{self.actor.name} left the game.")
         )
         log.info(f"{self.actor.name} exited in-game state.")
         # Broadcast this player's destroy to everyone
         await self.hub.broadcast(cb.EntityDestroy(entity_id=self.actor.entity_id))
+
+
+    async def _sync_db_actor_position(self):
+        _ = await query.update_entity_position(
+            self.hub.db_conn,
+            x_position=int(self.actor.x),
+            y_position=int(self.actor.y),
+            id_=self.actor.entity_id,
+        )
+        await self.hub.db_conn.commit()
+
+    async def _sync_db_actor_position_loop(self):
+        while True:
+            await asyncio.sleep(5)
+            await self._sync_db_actor_position()
 
     async def _handle_chat_request(self, p: sb.ChatRequest) -> None:
         log.info("chat from %s: %s", self.cid, p.message)

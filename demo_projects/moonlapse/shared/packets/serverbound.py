@@ -88,4 +88,3 @@ class RegisterRequest(ServerboundPacket):
     @override
     def get_structure(self):
         return (self.username, self.password)
-

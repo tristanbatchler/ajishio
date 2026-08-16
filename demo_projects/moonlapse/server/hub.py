@@ -9,7 +9,7 @@ from demo_projects.moonlapse.shared.packets.clientbound import ClientboundPacket
 
 class HubLike(Protocol):
     db_conn: aiosqlite.Connection
-    
+
     @property
     def next_entity_id(self) -> int: ...
 

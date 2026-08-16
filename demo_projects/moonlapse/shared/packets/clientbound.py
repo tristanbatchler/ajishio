@@ -311,4 +311,7 @@ class EntityUpdate(ClientboundPacket):
 
     @override
     def get_structure(self):
-        return (self.entity_id, self.entity_details_blob,)
+        return (
+            self.entity_id,
+            self.entity_details_blob,
+        )

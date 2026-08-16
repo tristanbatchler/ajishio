@@ -53,8 +53,7 @@ class ConnectedState(State):
 
     async def _handle_login_request(self, p: sb.LoginRequest):
         log.info("login from %s: %s", self.cid, p.username)
-        
-        
+
         lockout_period_minutes = 15
         lockout_max_attempts = 5
 
@@ -153,16 +152,27 @@ class ConnectedState(State):
         )
         await self.hub.db_conn.commit()
 
-        actor_entity = await query.get_actor_by_user_id(self.hub.db_conn, user_id=user.id_)
+        actor_entity = await query.get_actor_by_user_id(
+            self.hub.db_conn, user_id=user.id_
+        )
         if actor_entity is None:
             await self.hub.send_client_ws(
                 self.cid,
-                cb.ServerError("Login succeeded, but no player information was found. Please contact support.")
+                cb.ServerError(
+                    "Login succeeded, but no player information was found. Please contact support."
+                ),
             )
             return
 
         new_state = InGameState(
-            self.client, self.hub, Actor(entity_id=self.hub.next_entity_id,name=actor_entity.entity_name, x=actor_entity.x_position, y=actor_entity.y_position)
+            self.client,
+            self.hub,
+            Actor(
+                entity_id=self.hub.next_entity_id,
+                name=actor_entity.entity_name,
+                x=actor_entity.x_position,
+                y=actor_entity.y_position,
+            ),
         )
 
         return new_state
@@ -181,17 +191,34 @@ class ConnectedState(State):
             self.hub.db_conn, username=p.username, password_hash=pw_hash
         )
         if user is None:
-            await self.hub.send_client_ws(self.cid, cb.RegisterResponse(ok=False, err="Registration failed due to an unknown error. Please contact support"))
+            await self.hub.send_client_ws(
+                self.cid,
+                cb.RegisterResponse(
+                    ok=False,
+                    err="Registration failed due to an unknown error. Please contact support",
+                ),
+            )
             return
 
         entity = await query.create_entity(
-            self.hub.db_conn, entity_type=EntityType.ACTOR, entity_name=p.username, x_position=0, y_position=0
+            self.hub.db_conn,
+            entity_type=EntityType.ACTOR,
+            entity_name=p.username,
+            x_position=0,
+            y_position=0,
         )
         if entity is None:
-            await self.hub.send_client_ws(self.cid, cb.ServerError("Registration succeeded, but was unable to create player. Please contact support."))
+            await self.hub.send_client_ws(
+                self.cid,
+                cb.ServerError(
+                    "Registration succeeded, but was unable to create player. Please contact support."
+                ),
+            )
             return
-        
-        _ = await query.create_actor(self.hub.db_conn, entity_id=entity.id_, user_id=user.id_)
+
+        _ = await query.create_actor(
+            self.hub.db_conn, entity_id=entity.id_, user_id=user.id_
+        )
         await self.hub.db_conn.commit()
         await self.hub.send_client_ws(self.cid, cb.RegisterResponse(ok=True))
 
@@ -232,11 +259,15 @@ class InGameState(State):
         # Broadcast this player's spawn to everyone
         await self.hub.broadcast(
             cb.EntitySpawn(
-                self.actor.entity_id, entity_type=self.actor.TYPE, entity_details_blob=self._serialize_actor_details()
+                self.actor.entity_id,
+                entity_type=self.actor.TYPE,
+                entity_details_blob=self._serialize_actor_details(),
             )
         )
 
-        self._actor_position_db_sync_task = asyncio.create_task(self._sync_db_actor_position_loop())
+        self._actor_position_db_sync_task = asyncio.create_task(
+            self._sync_db_actor_position_loop()
+        )
 
     @override
     async def on_exit(self) -> None:
@@ -247,7 +278,6 @@ class InGameState(State):
         log.info(f"{self.actor.name} exited in-game state.")
         # Broadcast this player's destroy to everyone
         await self.hub.broadcast(cb.EntityDestroy(entity_id=self.actor.entity_id))
-
 
     async def _sync_db_actor_position(self):
         _ = await query.update_entity_position(
@@ -281,7 +311,10 @@ class InGameState(State):
         self.actor.y += p.dy
         # Broadcast position to everyone (including self)
         await self.hub.broadcast(
-            cb.EntityUpdate(self.actor.entity_id, entity_details_blob=self._serialize_actor_details())
+            cb.EntityUpdate(
+                self.actor.entity_id,
+                entity_details_blob=self._serialize_actor_details(),
+            )
         )
         await self.hub.send_client_ws(self.cid, cb.MoveResponse(ok=True))
 

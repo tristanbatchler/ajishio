@@ -31,7 +31,9 @@ class World(aj.GameObject):
     def update_entity(self, entity_id: int, entity_details: EntityDetails):
         entity = self.entities.get(entity_id)
         if entity is None:
-            logger.error(f"Can't update entity {entity_id} because it doesn't exist in the world")
+            logger.error(
+                f"Can't update entity {entity_id} because it doesn't exist in the world"
+            )
             return
 
         for field in fields(entity_details):

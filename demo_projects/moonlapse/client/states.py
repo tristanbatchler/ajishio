@@ -20,6 +20,7 @@ sb = serverbound
 
 logger = logging.getLogger("moonlapse.states")
 
+
 class ConnectingState(aj.GameObject, State):
     NAME: ClassVar[str] = "connecting"
 
@@ -203,58 +204,81 @@ class InGameState(aj.GameObject, State):
     @overload
     @staticmethod
     def _get_from_details_blob(
-        entity_type: entities.EntityType, entity_details_blob: str, details_only: Literal[True]
+        entity_type: entities.EntityType,
+        entity_details_blob: str,
+        details_only: Literal[True],
     ) -> cb.EntityDetails: ...
 
     @overload
     @staticmethod
     def _get_from_details_blob(
-        entity_type: entities.EntityType, entity_details_blob: str, details_only: Literal[False]
+        entity_type: entities.EntityType,
+        entity_details_blob: str,
+        details_only: Literal[False],
     ) -> entities.Entity: ...
 
     @staticmethod
-    def _get_from_details_blob(entity_type: entities.EntityType, entity_details_blob: str, details_only: bool) -> cb.EntityDetails | entities.Entity:
+    def _get_from_details_blob(
+        entity_type: entities.EntityType, entity_details_blob: str, details_only: bool
+    ) -> cb.EntityDetails | entities.Entity:
         data = b64decode(entity_details_blob)
 
         match entity_type:
             case entities.EntityType.ACTOR:
                 details = cb.ActorDetails.from_bytes(data)
-                return details if details_only else entities.Actor(
-                    entity_id=details.entity_id,
-                    name=details.name, 
-                    x=details.x, 
-                    y=details.y,
+                return (
+                    details
+                    if details_only
+                    else entities.Actor(
+                        entity_id=details.entity_id,
+                        name=details.name,
+                        x=details.x,
+                        y=details.y,
+                    )
                 )
             case entities.EntityType.TREE:
                 details = cb.TreeDetails.from_bytes(data)
-                return details if details_only else entities.Tree(
-                    entity_id=details.entity_id,
-                    level=details.level,
-                    name=details.name,
-                    x=details.x,
-                    y=details.y,
+                return (
+                    details
+                    if details_only
+                    else entities.Tree(
+                        entity_id=details.entity_id,
+                        level=details.level,
+                        name=details.name,
+                        x=details.x,
+                        y=details.y,
+                    )
                 )
             case entities.EntityType.ORE:
-                details= cb.OreDetails.from_bytes(data)
-                return details if details_only else entities.Ore(
-                    entity_id=details.entity_id,
-                    x=details.x,
-                    y=details.y,
-                    level=details.level,
-                    name=details.name,
+                details = cb.OreDetails.from_bytes(data)
+                return (
+                    details
+                    if details_only
+                    else entities.Ore(
+                        entity_id=details.entity_id,
+                        x=details.x,
+                        y=details.y,
+                        level=details.level,
+                        name=details.name,
+                    )
                 )
             case entities.EntityType.FISH:
                 details = cb.FishDetails.from_bytes(data)
-                return details if details_only else entities.Fish(
-                    entity_id=details.entity_id,
-                    x=details.x,
-                    y=details.y,
-                    level=details.level,
-                    name=details.name,
+                return (
+                    details
+                    if details_only
+                    else entities.Fish(
+                        entity_id=details.entity_id,
+                        x=details.x,
+                        y=details.y,
+                        level=details.level,
+                        name=details.name,
+                    )
                 )
             case _:  # pyright: ignore[reportUnnecessaryComparison]
-                raise NotImplementedError(f"Entity spawn for type {entity_type} is unhandled")  # pyright: ignore[reportUnreachable]
-
+                raise NotImplementedError(
+                    f"Entity spawn for type {entity_type} is unhandled"
+                )  # pyright: ignore[reportUnreachable]
 
     def _handle_logout_response(self, p: cb.LogoutResponse):
         if not p.ok:
@@ -283,7 +307,9 @@ class InGameState(aj.GameObject, State):
         logger.info(f"Player {p.from_client_id} says: '{p.message}'")
 
     def _handle_entity_spawn(self, p: cb.EntitySpawn):
-        entity = self._get_from_details_blob(p.entity_type, p.entity_details_blob, details_only=False)
+        entity = self._get_from_details_blob(
+            p.entity_type, p.entity_details_blob, details_only=False
+        )
         self.world.spawn_entity(entity)
 
     def _handle_entity_destroy(self, p: cb.EntityDestroy):
@@ -295,7 +321,9 @@ class InGameState(aj.GameObject, State):
             logger.error(f"Can't find entity {p.entity_id} in world to update")
             return
 
-        entity_details = self._get_from_details_blob(entity.TYPE, p.entity_details_blob, details_only=True)
+        entity_details = self._get_from_details_blob(
+            entity.TYPE, p.entity_details_blob, details_only=True
+        )
         self.world.update_entity(p.entity_id, entity_details)
 
     @override
@@ -327,10 +355,11 @@ class InGameState(aj.GameObject, State):
     @override
     def step(self) -> None:
         super().step()
-        dx = aj.keyboard_check_pressed(aj.vk_right) - aj.keyboard_check_pressed(aj.vk_left)
+        dx = aj.keyboard_check_pressed(aj.vk_right) - aj.keyboard_check_pressed(
+            aj.vk_left
+        )
         dy = aj.keyboard_check_pressed(aj.vk_down) - aj.keyboard_check_pressed(aj.vk_up)
         if dx == dy == 0:
             return
         self.mgr.send(sb.MoveRequest(dx, dy))
         logger.debug("Sent a move request")
-        

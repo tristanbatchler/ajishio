@@ -51,8 +51,6 @@ def register(packet_type: ClientboundPacketType) -> Callable[[type[T]], type[T]]
 
 @dataclass(frozen=True)
 class ClientboundResponsePacket(ClientboundPacket, ABC):
-    FORMAT_STRING: ClassVar[str] = "?128s"
-
     ok: bool
     err: str | None = None
 
@@ -95,7 +93,6 @@ class RegisterResponse(ClientboundResponsePacket): ...
 @register(ClientboundPacketType.CLIENT_ID)
 @dataclass(frozen=True)
 class ClientId(ClientboundPacket):
-    FORMAT_STRING = "I"
     id: int
 
     @override
@@ -107,7 +104,6 @@ class ClientId(ClientboundPacket):
 @register(ClientboundPacketType.PLAYER_INFO)
 @dataclass(frozen=True)
 class PlayerInfo(ClientboundPacket):
-    FORMAT_STRING = "128sii"
     name: str
     x_pos: int
     y_pos: int
@@ -121,7 +117,6 @@ class PlayerInfo(ClientboundPacket):
 @register(ClientboundPacketType.CLIENT_DISCONNECTED)
 @dataclass(frozen=True)
 class ClientDisconnected(ClientboundPacket):
-    FORMAT_STRING = "I128s"
     client_id: int
     reason: str | None = None
 
@@ -134,7 +129,6 @@ class ClientDisconnected(ClientboundPacket):
 @register(ClientboundPacketType.MOTD)
 @dataclass(frozen=True)
 class Motd(ClientboundPacket):
-    FORMAT_STRING = "512s"
     motd: str
 
     @override
@@ -146,7 +140,6 @@ class Motd(ClientboundPacket):
 @register(ClientboundPacketType.ANNOUNCEMENT)
 @dataclass(frozen=True)
 class Announcement(ClientboundPacket):
-    FORMAT_STRING = "512s"
     message: str
 
     @override
@@ -158,7 +151,6 @@ class Announcement(ClientboundPacket):
 @register(ClientboundPacketType.PLAYER_CHAT)
 @dataclass(frozen=True)
 class PlayerChat(ClientboundPacket):
-    FORMAT_STRING = "I256s"
     from_client_id: int
     message: str
 
@@ -171,7 +163,6 @@ class PlayerChat(ClientboundPacket):
 @register(ClientboundPacketType.SERVER_ERROR)
 @dataclass(frozen=True)
 class ServerError(ClientboundPacket):
-    FORMAT_STRING = "256s"
     message: str
 
     @override
@@ -237,7 +228,6 @@ class EntityDetails(ClientboundPacket, ABC):
 @register(ClientboundPacketType.ACTOR_DETAILS)
 @dataclass(frozen=True)
 class ActorDetails(EntityDetails):
-    FORMAT_STRING = EntityDetails.BASE_FORMAT_STRING + "128s"
     name: str
 
     @override
@@ -259,7 +249,6 @@ class ResourceDetails(EntityDetails, ABC):
 @register(ClientboundPacketType.TREE_DETAILS)
 @dataclass(frozen=True)
 class TreeDetails(ResourceDetails):
-    FORMAT_STRING = ResourceDetails.BASE_FORMAT_STRING + "128s"
     name: str
 
     @override
@@ -271,7 +260,6 @@ class TreeDetails(ResourceDetails):
 @register(ClientboundPacketType.ORE_DETAILS)
 @dataclass(frozen=True)
 class OreDetails(ResourceDetails):
-    FORMAT_STRING = ResourceDetails.BASE_FORMAT_STRING + "128s"
     name: str
 
     @override
@@ -283,7 +271,6 @@ class OreDetails(ResourceDetails):
 @register(ClientboundPacketType.FISH_DETAILS)
 @dataclass(frozen=True)
 class FishDetails(ResourceDetails):
-    FORMAT_STRING = ResourceDetails.BASE_FORMAT_STRING + "128s"
     name: str
 
     @override
@@ -295,7 +282,6 @@ class FishDetails(ResourceDetails):
 @register(ClientboundPacketType.ENTITY_SPAWN)
 @dataclass(frozen=True)
 class EntitySpawn(ClientboundPacket):
-    FORMAT_STRING = "i1024s"
     entity_type: entities.EntityType
     entity_details: bytes
 
@@ -308,7 +294,6 @@ class EntitySpawn(ClientboundPacket):
 @register(ClientboundPacketType.ENTITY_DESTROY)
 @dataclass(frozen=True)
 class EntityDestroy(ClientboundPacket):
-    FORMAT_STRING = "I"
     entity_id: int
 
     @override
@@ -320,7 +305,6 @@ class EntityDestroy(ClientboundPacket):
 @register(ClientboundPacketType.ENTITY_UPDATE)
 @dataclass(frozen=True)
 class EntityUpdate(ClientboundPacket):
-    FORMAT_STRING = "1024s"
     entity_details: bytes
 
     @override

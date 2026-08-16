@@ -9,7 +9,6 @@ from typing import ClassVar, override, Unpack
 from demo_projects.moonlapse.shared import entities
 from demo_projects.moonlapse.client.protocol import ManagerLike, State
 from demo_projects.moonlapse.shared.packets import clientbound, serverbound
-from demo_projects.moonlapse.shared.packets.base import Packet
 from demo_projects.moonlapse.client.util import draw_wrapped_text
 from demo_projects.moonlapse.client.world import World
 
@@ -228,7 +227,7 @@ class InGameState(aj.GameObject, State):
         logger.info(f"Player {p.from_client_id} says: '{p.message}'", aj.c_white)
 
     def _handle_entity_spawn(self, p: cb.EntitySpawn):
-        entity_details = Packet.from_bytes(p.entity_details)
+        entity_details = cb.EntityDetails.from_bytes(p.entity_details)
         entity: entities.Entity | None = None
         match entity_details:
             case cb.ActorDetails():

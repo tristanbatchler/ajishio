@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from typing import ClassVar, override
-from base64 import b64encode
+from base64 import b85encode
 
 from datetime import datetime, timedelta, timezone
 
@@ -251,7 +251,7 @@ class InGameState(State):
 
     @staticmethod
     def _serialize_entity_details(entity: Entity) -> str:
-        return b64encode(cb.EntityDetails.from_entity(entity).to_bytes()).decode()
+        return b85encode(cb.EntityDetails.from_entity(entity).to_bytes()).decode()
 
     @override
     async def on_enter(self) -> None:

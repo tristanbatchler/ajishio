@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from enum import IntEnum, auto
 from typing import Callable, override, final, TypeVar
 from abc import ABC
+from collections.abc import Collection
 
 from demo_projects.moonlapse.shared.packets.base import Packet
 from demo_projects.moonlapse.shared import entities
@@ -21,6 +22,7 @@ class ClientboundPacketType(IntEnum):
     ANNOUNCEMENT = auto()
     PLAYER_CHAT = auto()
     SERVER_ERROR = auto()
+    LEVEL_DETAILS = auto()
     ENTITY_SPAWN = auto()
     ENTITY_DESTROY = auto()
     ENTITY_UPDATE = auto()
@@ -168,6 +170,19 @@ class ServerError(ClientboundPacket):
     @override
     def get_structure(self):
         return (self.message,)
+
+@final
+@register(ClientboundPacketType.LEVEL_DETAILS)
+@dataclass(frozen=True)
+class LevelDetails(ClientboundPacket):
+    width: int
+    height: int
+    name: str
+    background_image_blob: str
+
+    @override
+    def get_structure(self):
+        return (self.width, self.height, self.name, self.background_image_blob)
 
 
 @dataclass(frozen=True)

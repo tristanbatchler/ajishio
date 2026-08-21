@@ -4,7 +4,8 @@ import ajishio as aj
 import logging
 import string
 from typing import ClassVar, Literal, overload, override, Unpack
-from base64 import b64decode
+from base64 import b85decode
+from collections.abc import Collection
 
 
 from demo_projects.moonlapse.shared import entities
@@ -204,7 +205,7 @@ class InGameState(aj.GameObject, State):
 
     @overload
     @staticmethod
-    def _get_from_details_blob(
+    def _get_entity_from_details_blob(
         entity_type: entities.EntityType,
         entity_details_blob: str,
         details_only: Literal[True],
@@ -212,17 +213,17 @@ class InGameState(aj.GameObject, State):
 
     @overload
     @staticmethod
-    def _get_from_details_blob(
+    def _get_entity_from_details_blob(
         entity_type: entities.EntityType,
         entity_details_blob: str,
         details_only: Literal[False],
     ) -> entities.Entity: ...
 
     @staticmethod
-    def _get_from_details_blob(
+    def _get_entity_from_details_blob(
         entity_type: entities.EntityType, entity_details_blob: str, details_only: bool
     ) -> cb.EntityDetails | entities.Entity:
-        data = b64decode(entity_details_blob)
+        data = b85decode(entity_details_blob)
 
         match entity_type:
             case entities.EntityType.ACTOR:
@@ -282,6 +283,11 @@ class InGameState(aj.GameObject, State):
                     f"Entity spawn for type {entity_type} is unhandled"
                 )  # pyright: ignore[reportUnreachable]
 
+    @staticmethod
+    def get_terrain_tile_from_blob(blob: str) -> TerrainTile:
+        data = b85decode(blob)
+        terrain_tiles = cb.TerrainTile.from_bytes(data)
+
     def _handle_logout_response(self, p: cb.LogoutResponse):
         if not p.ok:
             logger.warning(f"Can't logout: {p.err}")
@@ -309,7 +315,7 @@ class InGameState(aj.GameObject, State):
         logger.info(f"Player {p.from_client_id} says: '{p.message}'")
 
     def _handle_entity_spawn(self, p: cb.EntitySpawn):
-        entity = self._get_from_details_blob(
+        entity = self._get_entity_from_details_blob(
             p.entity_type, p.entity_details_blob, details_only=False
         )
         self.world.spawn_entity(entity)
@@ -323,7 +329,7 @@ class InGameState(aj.GameObject, State):
             logger.error(f"Can't find entity {p.entity_id} in world to update")
             return
 
-        entity_details = self._get_from_details_blob(
+        entity_details = self._get_entity_from_details_blob(
             entity.TYPE, p.entity_details_blob, details_only=True
         )
         self.world.update_entity(p.entity_id, entity_details)

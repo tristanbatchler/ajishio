@@ -191,6 +191,8 @@ _LIVE_ENGINE_ATTRS = frozenset(
         "room",
         "mouse_x",
         "mouse_y",
+        "mouse_room_x",
+        "mouse_room_y",
     }
 )
 
@@ -232,6 +234,8 @@ if TYPE_CHECKING:
     window_height: int
     mouse_x: float
     mouse_y: float
+    mouse_room_x: float
+    mouse_room_y: float
 
 
 __all__ = [
@@ -370,4 +374,8 @@ __all__ = [
     "view_current",
     "window_width",
     "window_height",
+    "mouse_x",
+    "mouse_y",
+    "mouse_room_x",
+    "mouse_room_y",
 ]

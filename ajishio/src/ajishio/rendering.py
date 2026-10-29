@@ -98,21 +98,43 @@ class Renderer:
     def set_screen_size(self, w: float, h: float) -> None:
         self._screen = pg.display.set_mode((w, h))
 
-    def draw_display(self) -> None:
+    def _letterbox(self) -> tuple[float, int, int, int, int] | None:
+        """Return (scale, width, height, dst_x, dst_y) for fitting the display to the window.
+
+        Uses the window's *current* size, which can differ from ``view.window_width`` /
+        ``view.window_height`` once the window is resized or made fullscreen.
+        """
         if self._screen is None:
-            return
+            return None
         win_w, win_h = self._screen.get_size()
         disp_w, disp_h = self.display.get_size()
         if disp_w == 0 or disp_h == 0:
-            return
-        sx = win_w / disp_w
-        sy = win_h / disp_h
-        scale = min(sx, sy)
+            return None
+        scale = min(win_w / disp_w, win_h / disp_h)
         w = int(disp_w * scale)
         h = int(disp_h * scale)
+        return scale, w, h, (win_w - w) // 2, (win_h - h) // 2
+
+    def window_to_room(self, x: float, y: float) -> tuple[float, float]:
+        """Convert a window pixel position to room coordinates.
+
+        Inverse of what ``draw_display`` does: undoes the letterbox offset and scale,
+        then applies the view offset (for the world renderer).
+        """
+        fit = self._letterbox()
+        if fit is not None:
+            scale, _, _, dst_x, dst_y = fit
+            x, y = (x - dst_x) / scale, (y - dst_y) / scale
+        if self.use_view_offset:
+            x, y = x - view.offset[0], y - view.offset[1]
+        return x, y
+
+    def draw_display(self) -> None:
+        fit = self._letterbox()
+        if self._screen is None or fit is None:
+            return
+        _, w, h, dst_x, dst_y = fit
         scaled = pg.transform.scale(self.display, (w, h))
-        dst_x = (win_w - w) // 2
-        dst_y = (win_h - h) // 2
         _ = self._screen.blit(scaled, (dst_x, dst_y))
 
     def fit_display(self) -> None:

@@ -19,6 +19,28 @@ This page documents the public `aj.` namespace. All functions and classes listed
     # Alias: `aj.collision_rectangle`
 ::: ajishio.engine.Engine.collision_rectangle_list
     # Alias: `aj.collision_rectangle_list`
+::: ajishio.engine.Engine.draw_circle
+    # Alias: `aj.draw_circle`
+::: ajishio.engine.Engine.draw_ellipse
+    # Alias: `aj.draw_ellipse`
+::: ajishio.engine.Engine.draw_line
+    # Alias: `aj.draw_line`
+::: ajishio.engine.Engine.draw_point
+    # Alias: `aj.draw_point`
+::: ajishio.engine.Engine.draw_rectangle
+    # Alias: `aj.draw_rectangle`
+::: ajishio.engine.Engine.draw_set_circle_precision
+    # Alias: `aj.draw_set_circle_precision`
+::: ajishio.engine.Engine.draw_set_color
+    # Alias: `aj.draw_set_color`
+::: ajishio.engine.Engine.draw_set_font
+    # Alias: `aj.draw_set_font`
+::: ajishio.engine.Engine.draw_sprite
+    # Alias: `aj.draw_sprite`
+::: ajishio.engine.Engine.draw_text
+    # Alias: `aj.draw_text`
+::: ajishio.engine.Engine.draw_triangle
+    # Alias: `aj.draw_triangle`
 ::: ajishio.engine.Engine.game_end
     # Alias: `aj.game_end`
 ::: ajishio.engine.Engine.game_restart
@@ -61,6 +83,10 @@ This page documents the public `aj.` namespace. All functions and classes listed
     # Alias: `aj.room_set_width`
 ::: ajishio.engine.Engine.set_rooms
     # Alias: `aj.set_rooms`
+::: ajishio.engine.Engine.text_height
+    # Alias: `aj.text_height`
+::: ajishio.engine.Engine.text_width
+    # Alias: `aj.text_width`
 ::: ajishio.engine.Engine.view_set_hport
     # Alias: `aj.view_set_hport`
 ::: ajishio.engine.Engine.view_set_wport
@@ -74,36 +100,10 @@ This page documents the public `aj.` namespace. All functions and classes listed
 
 ## Rendering
 
-::: ajishio.rendering.Renderer.draw_circle
-    # Alias: `aj.draw_circle`
-::: ajishio.rendering.Renderer.draw_ellipse
-    # Alias: `aj.draw_ellipse`
-::: ajishio.rendering.Renderer.draw_line
-    # Alias: `aj.draw_line`
-::: ajishio.rendering.Renderer.draw_point
-    # Alias: `aj.draw_point`
-::: ajishio.rendering.Renderer.draw_rectangle
-    # Alias: `aj.draw_rectangle`
-::: ajishio.rendering.Renderer.draw_set_circle_precision
-    # Alias: `aj.draw_set_circle_precision`
-::: ajishio.rendering.Renderer.draw_set_color
-    # Alias: `aj.draw_set_color`
-::: ajishio.rendering.Renderer.draw_set_font
-    # Alias: `aj.draw_set_font`
-::: ajishio.rendering.Renderer.draw_sprite
-    # Alias: `aj.draw_sprite`
-::: ajishio.rendering.Renderer.draw_text
-    # Alias: `aj.draw_text`
-::: ajishio.rendering.Renderer.draw_triangle
-    # Alias: `aj.draw_triangle`
 ::: ajishio.rendering.load_font
     # Alias: `aj.load_font`
 ::: ajishio.rendering.make_color_hsv
     # Alias: `aj.make_color_hsv`
-::: ajishio.rendering.Renderer.text_height
-    # Alias: `aj.text_height`
-::: ajishio.rendering.Renderer.text_width
-    # Alias: `aj.text_width`
 
 ## Input
 
@@ -222,6 +222,10 @@ This page documents the public `aj.` namespace. All functions and classes listed
 ::: ajishio.mb_left
 ::: ajishio.mb_middle
 ::: ajishio.mb_right
+::: ajishio.mouse_room_x
+::: ajishio.mouse_room_y
+::: ajishio.mouse_x
+::: ajishio.mouse_y
 ::: ajishio.room
 ::: ajishio.room_background_color
 ::: ajishio.room_height

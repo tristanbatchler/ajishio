@@ -523,6 +523,16 @@ class Engine:
     def mouse_y(self) -> float:
         return pg.mouse.get_pos()[1]
 
+    @property
+    def mouse_room_x(self) -> float:
+        """Mouse x in room coordinates, accounting for window scaling and the view."""
+        return self.renderer.window_to_room(*pg.mouse.get_pos())[0]
+
+    @property
+    def mouse_room_y(self) -> float:
+        """Mouse y in room coordinates, accounting for window scaling and the view."""
+        return self.renderer.window_to_room(*pg.mouse.get_pos())[1]
+
     def _free_destroyed_objects(self) -> None:
         for obj in self._game_objects_to_destroy:
             try:

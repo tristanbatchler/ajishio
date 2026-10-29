@@ -19,7 +19,8 @@ class GameSound:
             return False
         if self._time_since_started_playing is None:
             return True
-        self._time_since_started_playing += delta_time
+        # delta_time is in seconds; duration is tracked in milliseconds.
+        self._time_since_started_playing += delta_time * 1000
         if self._time_since_started_playing > self.duration_ms:
             self._time_since_started_playing = None
             self.sound.set_volume(1)

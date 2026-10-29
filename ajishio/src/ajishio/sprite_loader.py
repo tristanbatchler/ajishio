@@ -41,16 +41,18 @@ def load_aseprite_sprite(sprite_dir: Path) -> GameSprite:
     sprite_width: int = 0
     sprite_height: int = 0
 
+    # Decode the sheet once rather than once per frame.
+    with open(png_path, "rb") as f:
+        sheet = pg.image.load(f)
+
     for data in frames.values():
         dims: FrameRect = data["frame"]
         x, y = dims["x"], dims["y"]
         frame_width, frame_height = dims["w"], dims["h"]
         sprite_width = max(sprite_width, frame_width)
         sprite_height = max(sprite_height, frame_height)
-        with open(png_path, "rb") as f:
-            images.append(
-                pg.image.load(f).subsurface(pg.Rect(x, y, frame_width, frame_height))
-            )
+        # Copy so each frame is independent of the sheet (draw_sprite sets per-image alpha).
+        images.append(sheet.subsurface(pg.Rect(x, y, frame_width, frame_height)).copy())
 
     return GameSprite(images, sprite_width, sprite_height)
 

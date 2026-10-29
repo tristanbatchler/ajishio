@@ -149,14 +149,7 @@ def _frame_index(ptype: PieceType, colour: Role) -> int:
 
 
 def _mouse_room_position() -> tuple[float, float]:
-    win_w = aj.window_width
-    vp_w = aj.view_wport[aj.view_current]
-    vp_x = aj.view_xport[aj.view_current]
-    scale = vp_w / win_w if win_w > 0 else 1.0
-    return (
-        (aj.mouse_x - vp_x) * scale,
-        (aj.mouse_y - aj.view_yport[aj.view_current]) * scale,
-    )
+    return aj.mouse_room_x, aj.mouse_room_y
 
 
 # ── Board rendering helpers ──────────────────────────────────────────────

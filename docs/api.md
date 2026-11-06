@@ -29,14 +29,20 @@ This page documents the public `aj.` namespace. All functions and classes listed
     # Alias: `aj.draw_point`
 ::: ajishio.engine.Engine.draw_rectangle
     # Alias: `aj.draw_rectangle`
+::: ajishio.engine.Engine.draw_reset_clip
+    # Alias: `aj.draw_reset_clip`
 ::: ajishio.engine.Engine.draw_set_circle_precision
     # Alias: `aj.draw_set_circle_precision`
+::: ajishio.engine.Engine.draw_set_clip
+    # Alias: `aj.draw_set_clip`
 ::: ajishio.engine.Engine.draw_set_color
     # Alias: `aj.draw_set_color`
 ::: ajishio.engine.Engine.draw_set_font
     # Alias: `aj.draw_set_font`
 ::: ajishio.engine.Engine.draw_sprite
     # Alias: `aj.draw_sprite`
+::: ajishio.engine.Engine.draw_surface
+    # Alias: `aj.draw_surface`
 ::: ajishio.engine.Engine.draw_text
     # Alias: `aj.draw_text`
 ::: ajishio.engine.Engine.draw_triangle
@@ -81,12 +87,16 @@ This page documents the public `aj.` namespace. All functions and classes listed
     # Alias: `aj.room_set_size`
 ::: ajishio.engine.Engine.room_set_width
     # Alias: `aj.room_set_width`
+::: ajishio.engine.Engine.room_to_window
+    # Alias: `aj.room_to_window`
 ::: ajishio.engine.Engine.set_rooms
     # Alias: `aj.set_rooms`
 ::: ajishio.engine.Engine.text_height
     # Alias: `aj.text_height`
 ::: ajishio.engine.Engine.text_width
     # Alias: `aj.text_width`
+::: ajishio.engine.Engine.text_wrap
+    # Alias: `aj.text_wrap`
 ::: ajishio.engine.Engine.view_set_hport
     # Alias: `aj.view_set_hport`
 ::: ajishio.engine.Engine.view_set_wport
@@ -95,8 +105,14 @@ This page documents the public `aj.` namespace. All functions and classes listed
     # Alias: `aj.view_set_xport`
 ::: ajishio.engine.Engine.view_set_yport
     # Alias: `aj.view_set_yport`
+::: ajishio.engine.Engine.view_set_zoom
+    # Alias: `aj.view_set_zoom`
+::: ajishio.engine.Engine.window_set_resizable
+    # Alias: `aj.window_set_resizable`
 ::: ajishio.engine.Engine.window_set_size
     # Alias: `aj.window_set_size`
+::: ajishio.engine.Engine.window_to_room
+    # Alias: `aj.window_to_room`
 
 ## Rendering
 
@@ -107,12 +123,18 @@ This page documents the public `aj.` namespace. All functions and classes listed
 
 ## Input
 
+::: ajishio.input.input_activity
+    # Alias: `aj.input_activity`
 ::: ajishio.input.keyboard_check
     # Alias: `aj.keyboard_check`
 ::: ajishio.input.keyboard_check_pressed
     # Alias: `aj.keyboard_check_pressed`
 ::: ajishio.input.keyboard_check_released
     # Alias: `aj.keyboard_check_released`
+::: ajishio.input.keyboard_check_repeat
+    # Alias: `aj.keyboard_check_repeat`
+::: ajishio.input.keyboard_string
+    # Alias: `aj.keyboard_string`
 ::: ajishio.input.mouse_check_button
     # Alias: `aj.mouse_check_button`
 ::: ajishio.input.mouse_check_button_pressed
@@ -199,6 +221,47 @@ This page documents the public `aj.` namespace. All functions and classes listed
     # Alias: `aj.Font`
 ::: ajishio.net.GameNetClient
     # Alias: `aj.GameNetClient`
+::: ajishio.net.HttpResponse
+    # Alias: `aj.HttpResponse`
+::: ajishio.net.http_request
+    # Alias: `aj.http_request`
+::: ajishio.net.run_task
+    # Alias: `aj.run_task`
+::: ajishio.ui.GuiTheme
+    # Alias: `aj.GuiTheme`
+::: ajishio.ui.gui_button
+    # Alias: `aj.gui_button`
+::: ajishio.ui.gui_end_scroll_area
+    # Alias: `aj.gui_end_scroll_area`
+::: ajishio.ui.gui_label
+    # Alias: `aj.gui_label`
+::: ajishio.ui.gui_label_wrapped
+    # Alias: `aj.gui_label_wrapped`
+::: ajishio.ui.gui_mouse_in_rect
+    # Alias: `aj.gui_mouse_in_rect`
+::: ajishio.ui.gui_mouse_over
+    # Alias: `aj.gui_mouse_over`
+::: ajishio.ui.gui_panel
+    # Alias: `aj.gui_panel`
+::: ajishio.ui.gui_progress_bar
+    # Alias: `aj.gui_progress_bar`
+::: ajishio.ui.gui_scroll_area
+    # Alias: `aj.gui_scroll_area`
+::: ajishio.ui.gui_selectable
+    # Alias: `aj.gui_selectable`
+::: ajishio.ui.gui_text_input
+    # Alias: `aj.gui_text_input`
+::: ajishio.gui_theme
+::: pygame.surface.Surface
+    # Alias: `aj.Surface`
+::: ajishio.tilemap.Tilemap
+    # Alias: `aj.Tilemap`
+::: ajishio.browser.browser_query_param
+    # Alias: `aj.browser_query_param`
+::: ajishio.browser.browser_storage_get
+    # Alias: `aj.browser_storage_get`
+::: ajishio.browser.browser_storage_set
+    # Alias: `aj.browser_storage_set`
 ::: ajishio.c_aqua
 ::: ajishio.c_black
 ::: ajishio.c_blue
@@ -219,6 +282,7 @@ This page documents the public `aj.` namespace. All functions and classes listed
 ::: ajishio.c_white
 ::: ajishio.c_yellow
 ::: ajishio.delta_time
+::: ajishio.is_browser
 ::: ajishio.mb_left
 ::: ajishio.mb_middle
 ::: ajishio.mb_right
@@ -237,12 +301,20 @@ This page documents the public `aj.` namespace. All functions and classes listed
 ::: ajishio.view_xport
 ::: ajishio.view_yport
 ::: ajishio.vk_backspace
+::: ajishio.vk_control
+::: ajishio.vk_delete
 ::: ajishio.vk_down
+::: ajishio.vk_end
 ::: ajishio.vk_enter
 ::: ajishio.vk_escape
+::: ajishio.vk_home
 ::: ajishio.vk_left
+::: ajishio.vk_pagedown
+::: ajishio.vk_pageup
 ::: ajishio.vk_right
+::: ajishio.vk_shift
 ::: ajishio.vk_space
+::: ajishio.vk_tab
 ::: ajishio.vk_up
 ::: ajishio.window_height
 ::: ajishio.window_width

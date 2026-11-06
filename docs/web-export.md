@@ -38,6 +38,16 @@ The script takes care of everything so you don't have to think about it:
     - Swaps `aj.game_start()` → `asyncio.run(aj.game_start_async())` so the game loop yields
       to the browser every frame
 
+## Bundling packages
+
+pygbag can only install packages it has a WebAssembly build of. To include a pure-Python package
+it doesn't have, list it in a `web_vendor.txt` beside your `main.py`, one path per line, as it's
+found in `site-packages`:
+
+```text
+google/protobuf
+```
+
 ## Debugging
 
 If you see a blank grey screen, append `?-i` to the URL

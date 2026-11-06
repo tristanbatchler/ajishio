@@ -19,6 +19,7 @@ import ast
 import shutil
 import subprocess
 import sys
+import sysconfig
 from pathlib import Path
 from typing import cast, override
 
@@ -125,6 +126,26 @@ def _resolve_export_logo(project_dir: Path) -> Path | None:
     return None
 
 
+def _bundle_vendored_packages(project_dir: Path, build_dir: Path) -> None:
+    """
+    Copy pure-Python packages pygbag has no wheel for into the build. A project's web_vendor.txt
+    lists them, a path per line, as they're found in site-packages (`google/protobuf`).
+    """
+    vendor_list = project_dir / "web_vendor.txt"
+    if not vendor_list.is_file():
+        return
+    site_packages = Path(sysconfig.get_paths()["purelib"])
+    for line in vendor_list.read_text().splitlines():
+        package = line.strip()
+        if not package:
+            continue
+        _ = shutil.copytree(
+            site_packages / package,
+            build_dir / package,
+            ignore=shutil.ignore_patterns("__pycache__", "*.so", "*.pyi"),
+        )
+
+
 def export(project_dir: Path, extra_args: list[str]) -> None:
     project_dir = project_dir.resolve()
     if not project_dir.is_dir():
@@ -146,7 +167,7 @@ def export(project_dir: Path, extra_args: list[str]) -> None:
         dest = build_dir / item.name
         if item.is_dir():
             _ = shutil.copytree(
-                item, dest, ignore=shutil.ignore_patterns("__pycache__")
+                item, dest, ignore=shutil.ignore_patterns("__pycache__", ".venv", "*.db")
             )
         else:
             _ = shutil.copy2(item, dest)
@@ -170,10 +191,14 @@ def export(project_dir: Path, extra_args: list[str]) -> None:
         _ = shutil.copytree(
             demo_root,
             demo_dest,
-            ignore=shutil.ignore_patterns("__pycache__", "_web_build", "build"),
+            ignore=shutil.ignore_patterns(
+                "__pycache__", "_web_build", "build", ".venv", "*.db"
+            ),
         )
         _ = (build_dir / "demo_projects" / "__init__.py").write_text("")
         _ = (build_dir / "demo_projects" / demo_subdir / "__init__.py").write_text("")
+
+    _bundle_vendored_packages(project_dir, build_dir)
 
     # Patch main.py for pygbag compatibility
     patch_main_py(build_dir / "main.py")

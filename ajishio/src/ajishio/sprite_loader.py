@@ -66,10 +66,20 @@ def load_sprite_from_sheet(
     rows: int = 1,
     offset_x: int = 0,
     offset_y: int = 0,
+    colorkey: pg.Color | None = None,
 ) -> GameSprite:
+    """
+    Slice a grid of images out of a sheet. `offset_x`/`offset_y` is where the first cell starts
+    and `padding` the gap between cells, so a sheet with a 1px gutter all round takes
+    `padding=1, offset_x=1, offset_y=1`. Pixels of `colorkey` come out transparent.
+    """
     images: list[pg.Surface] = []
     with open(sheet_path, "rb") as f:
         sheet = pg.image.load(f)
+        if colorkey is not None:
+            # Subsurfaces inherit the colorkey, so this one call covers every frame.
+            sheet = sheet.convert() if pg.display.get_surface() else sheet.convert(32)
+            sheet.set_colorkey(colorkey)
         for row in range(rows):
             for col in range(columns):
                 x = offset_x + col * (width + padding)

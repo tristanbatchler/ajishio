@@ -1,14 +1,28 @@
 import asyncio
 import json
+import logging
 import socket
 import sys
+import time
 from asyncio import Task
 from collections.abc import Awaitable, Callable, Coroutine
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, cast
 
 if TYPE_CHECKING:
     import js
     from websockets.asyncio.client import ClientConnection
+
+
+_log = logging.getLogger(__name__)
+# Every packet is logged at DEBUG: opt in with logging.getLogger("ajishio.net").setLevel(DEBUG).
+_log.setLevel(logging.INFO)
+logging.getLogger("websockets").setLevel(logging.INFO)
+
+
+def _debug(*args: object) -> None:
+    if _log.isEnabledFor(logging.DEBUG):
+        _log.debug(" ".join(str(arg) for arg in args))
 
 
 # ---------------------------------------------------------------------------
@@ -112,6 +126,9 @@ class Transport:
         self.opened: bool = False
         self.open_error: str | None = None
         self.closed: bool = False
+        # Why the server closed the connection (a WebSocket close code), once it has.
+        self.close_code: int | None = None
+        self.close_reason: str = ""
 
         # Strong references to Python callback functions used by the browser
         # WebSocket event system.
@@ -143,7 +160,7 @@ class Transport:
     # ------------------------------------------------------------------
 
     async def connect(self) -> None:
-        print(f"NET DEBUG: connect() _IS_BROWSER={_IS_BROWSER} url={self.url}")
+        _debug(f"NET DEBUG: connect() _IS_BROWSER={_IS_BROWSER} url={self.url}")
         if _IS_BROWSER:
             await self._connect_browser()
         else:
@@ -169,7 +186,7 @@ class Transport:
                 return bytes(int(part) for part in text.split(","))
 
             if hasattr(js, "WebSocket"):
-                print("NET DEBUG: browser JS WebSocket available")
+                _debug("NET DEBUG: browser JS WebSocket available")
                 self._js_ws = cast(
                     js.WebSocket,
                     js.eval(f"new WebSocket({json.dumps(self.url)})"),
@@ -180,13 +197,13 @@ class Transport:
                 self.closed = False
 
                 def on_open(event: js.Event) -> None:
-                    print("NET DEBUG: JS websocket open", event)
+                    _debug("NET DEBUG: JS websocket open", event)
                     self.opened = True
 
                 def on_message(event: js.MessageEvent) -> None:
-                    print("NET DEBUG: JS websocket message", event)
+                    _debug("NET DEBUG: JS websocket message", event)
                     payload = event.data
-                    print("NET DEBUG: JS websocket onmessage", payload)
+                    _debug("NET DEBUG: JS websocket onmessage", payload)
 
                     if isinstance(payload, str):
                         self.inbox.append(payload.encode("utf-8"))
@@ -194,11 +211,12 @@ class Transport:
                         self.inbox.append(_arraybuffer_to_bytes(payload))
 
                 def on_error(event: js.Event) -> None:
-                    print("NET DEBUG: JS websocket onerror", event)
+                    _debug("NET DEBUG: JS websocket onerror", event)
                     self.open_error = event.type
 
                 def on_close(event: js.Event) -> None:
-                    print("NET DEBUG: JS websocket onclose", event)
+                    _debug("NET DEBUG: JS websocket onclose", event)
+                    self.close_code = int(cast(int, getattr(event, "code", 0))) or None
                     self.closed = True
 
                 # IMPORTANT: retain callback refs
@@ -212,7 +230,7 @@ class Transport:
                 self._js_ws.onerror = self._on_error
                 self._js_ws.onclose = self._on_close
 
-                for _ in range(200):
+                for _ in range(600):
                     if self.opened or self.open_error:
                         break
                     await sleep0()
@@ -222,11 +240,11 @@ class Transport:
                 if not self.opened:
                     raise RuntimeError("JS websocket open timeout")
 
-                print("NET DEBUG: browser JS WebSocket connected")
+                _debug("NET DEBUG: browser JS WebSocket connected")
                 return
 
         except Exception as exc:
-            print("NET DEBUG: JS WebSocket unavailable or failed", exc)
+            _debug("NET DEBUG: JS WebSocket unavailable or failed", exc)
 
         # Fallback: raw TCP socket via pygbag's WebSocket-to-TCP proxy bridge.
         self.sock = socket.socket()
@@ -234,17 +252,17 @@ class Transport:
         if not self.url.startswith("://"):
             # pygbag proxy maps ws port N → TCP port N+20000
             port += 20000
-        print(f"NET DEBUG: browser socket connect host={host} port={port}")
+        _debug(f"NET DEBUG: browser socket connect host={host} port={port}")
         _ = await aio_sock_open(self.sock, host, port)
-        print("NET DEBUG: browser socket connected")
+        _debug("NET DEBUG: browser socket connected")
         _ = run_task(self._reader_browser())
 
     async def _connect_desktop(self) -> None:
         import websockets
 
-        print("NET DEBUG: desktop websocket connect")
+        _debug("NET DEBUG: desktop websocket connect")
         self._desktop_ws = await websockets.connect(self.url)
-        print(f"NET DEBUG: desktop websocket connected: {self._desktop_ws}")
+        _debug(f"NET DEBUG: desktop websocket connected: {self._desktop_ws}")
         _ = run_task(self._reader_desktop())
 
     # ------------------------------------------------------------------
@@ -257,14 +275,26 @@ class Transport:
             return
         try:
             async for msg in self._desktop_ws:
-                print("NET DEBUG: desktop ws msg type=", type(msg), "value=", msg)
+                _debug("NET DEBUG: desktop ws msg type=", type(msg), "value=", msg)
                 # websockets yields str for text frames, bytes for binary frames.
                 if isinstance(msg, bytes):
                     self.inbox.append(msg)
                 else:
                     self.inbox.append(msg.encode("utf-8"))
         except Exception as exc:
-            print("NET DEBUG: desktop websocket reader exception", exc)
+            _debug("NET DEBUG: desktop websocket reader exception", exc)
+        self.close_code = self._desktop_ws.close_code
+        self.close_reason = self._desktop_ws.close_reason or ""
+        self.closed = True
+
+    async def _send_desktop(self, data: str | bytes) -> None:
+        if self._desktop_ws is None:
+            return
+        try:
+            await self._desktop_ws.send(data)
+        except Exception as exc:
+            # The reader sees the same closed connection, and says so through `closed`.
+            _debug("NET DEBUG: desktop websocket send failed", exc)
 
     async def _reader_browser(self) -> None:
         """Pump data from the raw fallback socket into ``inbox``."""
@@ -276,7 +306,7 @@ class Transport:
             try:
                 ready, _, _ = select.select([self.sock], [], [], 0)
             except Exception as exc:
-                print("NET DEBUG: browser select exception", exc)
+                _debug("NET DEBUG: browser select exception", exc)
                 await sleep0()
                 continue
 
@@ -290,14 +320,14 @@ class Transport:
                 await sleep0()
                 continue
             except OSError as exc:
-                print("NET DEBUG: browser recv error", exc)
+                _debug("NET DEBUG: browser recv error", exc)
                 return
 
             if not data:
-                print("NET DEBUG: browser socket closed by peer")
+                _debug("NET DEBUG: browser socket closed by peer")
                 return
 
-            print("NET DEBUG: browser socket recv", data)
+            _debug("NET DEBUG: browser socket recv", data)
             self.inbox.append(data)
 
     # ------------------------------------------------------------------
@@ -305,7 +335,7 @@ class Transport:
     # ------------------------------------------------------------------
 
     def send(self, data: str | bytes) -> None:
-        print(
+        _debug(
             f"NET DEBUG: send() _IS_BROWSER={_IS_BROWSER} len={len(data)} data={data}"
         )
 
@@ -321,32 +351,32 @@ class Transport:
                     else:
                         self._js_ws.send(data)
 
-                    print("NET DEBUG: send() browser JS websocket send complete")
+                    _debug("NET DEBUG: send() browser JS websocket send complete")
                 except Exception as exc:
-                    print("NET DEBUG: send() browser JS websocket error", exc)
+                    _debug("NET DEBUG: send() browser JS websocket error", exc)
                 return
 
             if self.sock is None:
-                print("NET DEBUG: send() socket not open")
+                _debug("NET DEBUG: send() socket not open")
                 return
 
             try:
                 raw = data if isinstance(data, bytes) else data.encode("utf-8")
                 _ = self.sock.send(raw)
-                print("NET DEBUG: send() browser socket send complete")
+                _debug("NET DEBUG: send() browser socket send complete")
             except OSError as exc:
-                print("NET DEBUG: send error:", exc)
+                _debug("NET DEBUG: send error:", exc)
             return
 
         if self._desktop_ws is None:
-            print("NET DEBUG: send() websocket not open")
+            _debug("NET DEBUG: send() websocket not open")
             return
 
-        _ = run_task(self._desktop_ws.send(data))
-        print("NET DEBUG: send() websocket send scheduled")
+        _ = run_task(self._send_desktop(data))
+        _debug("NET DEBUG: send() websocket send scheduled")
 
     def flush(self) -> None:
-        print("NET DEBUG: flush()")
+        _debug("NET DEBUG: flush()")
 
     def recv(self) -> bytes | None:
         if not self.inbox:
@@ -362,7 +392,7 @@ class Transport:
                 try:
                     self.sock.close()
                 except Exception as exc:
-                    print("close error:", exc)
+                    _debug("close error:", exc)
             return
 
         if self._desktop_ws is None:
@@ -386,6 +416,16 @@ class GameNetClient:
         self.transport: Transport = Transport(host)
         self.connected: bool = False
 
+    @property
+    def closed(self) -> bool:
+        """Whether the connection has gone, whichever side ended it."""
+        return self.transport.closed
+
+    @property
+    def close_code(self) -> int | None:
+        """The WebSocket close code the connection ended with, if it has and there was one."""
+        return self.transport.close_code
+
     async def connect(self) -> None:
         await self.transport.connect()
         self.connected = True
@@ -405,3 +445,90 @@ class GameNetClient:
 
     def close(self) -> None:
         self.transport.close()
+
+
+# ---------------------------------------------------------------------------
+# HTTP
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class HttpResponse:
+    status: int
+    body: bytes
+
+
+async def http_request(
+    url: str,
+    method: str = "GET",
+    json_body: object = None,
+    timeout: float = 10.0,
+) -> HttpResponse:
+    """
+    Make an HTTP request without stopping the game: await it from a task (`aj.run_task`).
+    An error status is a response like any other. If the server can't be reached at all, this
+    raises `OSError`, as it does in a browser when the server doesn't allow this page's origin
+    to read the answer.
+
+    In a browser the JSON body goes as `text/plain`, which spares the server a CORS preflight.
+    """
+    if _IS_BROWSER:
+        return await _http_request_browser(url, method, json_body, timeout)
+
+    # (here, not at the top: it's a lot to load, and the browser doesn't need it)
+    import urllib.error
+    import urllib.request
+
+    def blocking() -> HttpResponse:
+        data = None if json_body is None else json.dumps(json_body).encode("utf-8")
+        headers = {} if data is None else {"Content-Type": "application/json"}
+        request = urllib.request.Request(url, data, headers, method=method)
+        try:
+            with urllib.request.urlopen(request, timeout=timeout) as response:  # pyright: ignore[reportAny]
+                return HttpResponse(cast(int, response.status), cast(bytes, response.read()))  # pyright: ignore[reportAny]
+        except urllib.error.HTTPError as error:
+            return HttpResponse(error.code, error.read())
+
+    return await asyncio.to_thread(blocking)
+
+
+_http_requests_made: int = 0
+
+
+async def _http_request_browser(
+    url: str, method: str, json_body: object, timeout: float
+) -> HttpResponse:
+    """The browser's `fetch`, which leaves its answer in a global for the game loop to notice."""
+    import js
+
+    global _http_requests_made
+    _http_requests_made += 1
+    slot = f"__ajishio_http_{_http_requests_made}"
+
+    options: dict[str, str] = {"method": method}
+    if json_body is not None:
+        options["body"] = json.dumps(json_body)
+    _ = js.eval(
+        f"""fetch({json.dumps(url)}, {json.dumps(options)})
+            .then(async r => {{
+                globalThis.{slot} = JSON.stringify({{status: r.status, body: await r.text()}});
+            }})
+            .catch(e => {{ globalThis.{slot} = JSON.stringify({{error: String(e)}}); }});
+            0"""
+    )
+
+    deadline = time.monotonic() + timeout
+    while True:
+        answer = str(js.eval(f"globalThis.{slot} ?? ''"))
+        if answer:
+            break
+        if time.monotonic() > deadline:
+            raise TimeoutError(f"No answer from {url}")
+        await sleep0()
+    _ = js.eval(f"delete globalThis.{slot}")
+
+    parsed = cast(dict[str, object], json.loads(answer))
+    if "error" in parsed:
+        raise OSError(f"{url}: {parsed['error']}")
+    return HttpResponse(cast(int, parsed["status"]), cast(str, parsed["body"]).encode("utf-8"))
+

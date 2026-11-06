@@ -43,6 +43,8 @@ class Engine:
         self.renderer: Renderer = renderer
         self.gui_renderer: Renderer = gui_renderer
         self._active_renderer: Renderer = self.renderer
+        self._window_flags: int = 0
+        self.after_gui_pass: Callable[[], None] | None = None
         self.room_width: float
         self.room_height: float
         self.room_speed: float
@@ -215,9 +217,37 @@ class Engine:
 
     def window_set_size(self, w: int, h: int) -> None:
         view.window_set_size(w, h)
-        self.renderer.set_screen_size(w, h)
+        self.renderer.set_screen_size(w, h, self._window_flags)
+        self.gui_renderer.refresh_screen()
         # viewport was also synced to window by view.window_set_size, so re-create surface
         self.renderer.fit_display()
+
+    def window_set_resizable(self, resizable: bool) -> None:
+        """Let the player resize the window. `aj.window_width` and `aj.window_height` follow."""
+        self._window_flags = pg.RESIZABLE if resizable else 0
+        self.window_set_size(view.window_width, view.window_height)
+
+    def _on_window_resized(self, w: int, h: int) -> None:
+        view.window_set_size(w, h)
+        self.renderer.refresh_screen()
+        self.gui_renderer.refresh_screen()
+
+    def view_set_zoom(self, view_idx: int, zoom: int) -> None:
+        """
+        Draw a view at an exact integer pixel scale, sized to cover the window however it's
+        resized: crisp pixel art, where `view_set_wport` and `view_set_hport` fit the view to the
+        window at whatever scale that takes.
+        """
+        view.view_set_zoom(view_idx, zoom)
+        self.renderer.fit_display()
+
+    def window_to_room(self, x: float, y: float) -> tuple[float, float]:
+        """Where a window position (the mouse, say) is in the room."""
+        return self.renderer.window_to_room(x, y)
+
+    def room_to_window(self, x: float, y: float) -> tuple[float, float]:
+        """Where a room position is in the window: to label it from `draw_gui`, say."""
+        return self.renderer.room_to_window(x, y)
 
     def view_set_wport(self, view_idx: int, w: float) -> None:
         view.view_set_wport(view_idx, w)
@@ -407,6 +437,13 @@ class Engine:
         if any(event.type == pg.QUIT for event in input.events):
             self.game_end()
 
+        if self._window_flags & pg.RESIZABLE:
+            for event in input.events:
+                if event.type == pg.VIDEORESIZE:
+                    self._on_window_resized(
+                        cast(int, event.w), cast(int, event.h)
+                    )
+
         self.delta_time = self._clock.tick(self.room_speed) / 1000
         self.fps_real = self._clock.get_fps()
 
@@ -431,8 +468,6 @@ class Engine:
             for obj in self._game_objects.values():
                 obj.step()
 
-            self.gui_renderer.display = pg.Surface((view.window_width, view.window_height), pg.SRCALPHA)
-
             draw_buffer = sorted(
                 self._game_objects.values(),
                 key=lambda obj: obj.depth,
@@ -446,11 +481,13 @@ class Engine:
             self.renderer.draw_display()
 
             # GUI Draw pass
-            _ = self.gui_renderer.display.fill((0, 0, 0, 0))
+            self.gui_renderer.fit_gui_display()
 
             self._active_renderer = self.gui_renderer
             for obj in draw_buffer:
                 obj.draw_gui()
+            if self.after_gui_pass is not None:
+                self.after_gui_pass()
 
             # self.renderer._screen.blit(self.gui_renderer.display, (0, 0))
             self.gui_renderer.draw_display()
@@ -666,6 +703,18 @@ class Engine:
             color=color,
             alpha=alpha,
         )
+
+    def draw_surface(self, x: float, y: float, surface: pg.Surface) -> None:
+        self._active_renderer.draw_surface(x, y, surface)
+
+    def draw_set_clip(self, x: float, y: float, w: float, h: float) -> None:
+        self._active_renderer.draw_set_clip(x, y, w, h)
+
+    def draw_reset_clip(self) -> None:
+        self._active_renderer.draw_reset_clip()
+
+    def text_wrap(self, string: str, max_width: float) -> list[str]:
+        return self._active_renderer.text_wrap(string, max_width)
 
     def draw_set_font(
         self, font: pg.font.Font, fallbacks: Iterable[pg.font.Font] | None = None

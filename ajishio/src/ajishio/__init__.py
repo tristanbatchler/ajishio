@@ -23,13 +23,23 @@ from ajishio.types import (
 )
 from ajishio.game_sound import GameSound
 from ajishio.rendering import Color, Font
-from ajishio.net import GameNetClient
+from ajishio.net import GameNetClient, HttpResponse, http_request, run_task
+from ajishio.tilemap import Tilemap
+from ajishio.browser import (
+    is_browser,
+    browser_query_param,
+    browser_storage_get,
+    browser_storage_set,
+)
 
 # --- Input ---
 from ajishio.input import (
     keyboard_check,
     keyboard_check_pressed,
     keyboard_check_released,
+    keyboard_check_repeat,
+    keyboard_string,
+    input_activity,
     mouse_check_button,
     mouse_check_button_pressed,
     mouse_check_button_released,
@@ -44,9 +54,35 @@ from ajishio.input import (
     vk_escape,
     vk_enter,
     vk_backspace,
+    vk_tab,
+    vk_delete,
+    vk_home,
+    vk_end,
+    vk_pageup,
+    vk_pagedown,
+    vk_shift,
+    vk_control,
     mb_left,
     mb_middle,
     mb_right,
+)
+
+# --- Immediate-mode GUI (call from draw_gui) ---
+from ajishio.ui import end_frame as _ui_end_frame
+from ajishio.ui import (
+    GuiTheme,
+    gui_theme,
+    gui_panel,
+    gui_button,
+    gui_selectable,
+    gui_label,
+    gui_label_wrapped,
+    gui_progress_bar,
+    gui_text_input,
+    gui_scroll_area,
+    gui_end_scroll_area,
+    gui_mouse_over,
+    gui_mouse_in_rect,
 )
 
 # --- Utils ---
@@ -120,6 +156,10 @@ else:
 # Populate the lazy context so game_object / game_sound can access the engine.
 _ctx.engine = _engine
 
+_engine.after_gui_pass = _ui_end_frame
+
+Surface = _pg.Surface
+
 # --- Rendering: methods are on the engine, but in turn call methods on either of its renderers ---
 draw_set_color = _engine.draw_set_color
 draw_set_circle_precision = _engine.draw_set_circle_precision
@@ -134,13 +174,21 @@ draw_sprite = _engine.draw_sprite
 draw_set_font = _engine.draw_set_font
 text_width = _engine.text_width
 text_height = _engine.text_height
+text_wrap = _engine.text_wrap
+draw_surface = _engine.draw_surface
+draw_set_clip = _engine.draw_set_clip
+draw_reset_clip = _engine.draw_reset_clip
 
 # --- View: bound methods delegated through engine so the renderer stays in sync ---
 view_set_wport = _engine.view_set_wport
 view_set_hport = _engine.view_set_hport
 view_set_xport = _engine.view_set_xport
 view_set_yport = _engine.view_set_yport
+view_set_zoom = _engine.view_set_zoom
 window_set_size = _engine.window_set_size
+window_set_resizable = _engine.window_set_resizable
+window_to_room = _engine.window_to_room
+room_to_window = _engine.room_to_window
 
 # These are mutable dicts — exporting a reference is safe; mutations are shared.
 view_xport = view.view_xport
@@ -250,12 +298,24 @@ __all__ = [
     "GameObjectKwargs",
     "GameSound",
     "GameNetClient",
+    "HttpResponse",
+    "http_request",
+    "run_task",
+    "Tilemap",
+    "is_browser",
+    "browser_query_param",
+    "browser_storage_get",
+    "browser_storage_set",
     "Color",
     "Font",
+    "Surface",
     # Input
     "keyboard_check",
     "keyboard_check_pressed",
     "keyboard_check_released",
+    "keyboard_check_repeat",
+    "keyboard_string",
+    "input_activity",
     "mouse_check_button",
     "mouse_check_button_pressed",
     "mouse_check_button_released",
@@ -270,6 +330,14 @@ __all__ = [
     "vk_escape",
     "vk_enter",
     "vk_backspace",
+    "vk_tab",
+    "vk_delete",
+    "vk_home",
+    "vk_end",
+    "vk_pageup",
+    "vk_pagedown",
+    "vk_shift",
+    "vk_control",
     "mb_left",
     "mb_middle",
     "mb_right",
@@ -319,12 +387,34 @@ __all__ = [
     "draw_set_font",
     "text_width",
     "text_height",
+    "text_wrap",
+    "draw_surface",
+    "draw_set_clip",
+    "draw_reset_clip",
+    # GUI
+    "GuiTheme",
+    "gui_theme",
+    "gui_panel",
+    "gui_button",
+    "gui_selectable",
+    "gui_label",
+    "gui_label_wrapped",
+    "gui_progress_bar",
+    "gui_text_input",
+    "gui_scroll_area",
+    "gui_end_scroll_area",
+    "gui_mouse_over",
+    "gui_mouse_in_rect",
     # View
     "view_set_wport",
     "view_set_hport",
     "view_set_xport",
     "view_set_yport",
+    "view_set_zoom",
     "window_set_size",
+    "window_set_resizable",
+    "window_to_room",
+    "room_to_window",
     "view_xport",
     "view_yport",
     "view_wport",

@@ -12,6 +12,8 @@ import math
 Color = pg.Color
 Font = pg.font.Font
 
+_TEXT_CACHE_SIZE = 2048
+
 
 c_aqua = Color(0, 255, 255)
 c_black = Color(0, 0, 0)
@@ -62,6 +64,16 @@ class Renderer:
         self.draw_circle_precision: int = 24
         self.draw_font: pg.font.Font = pg.font.Font(None, 32)
         self.draw_font_fallbacks: Iterable[pg.font.Font] = []
+        self._text_cache: dict[
+            tuple[
+                pg.font.Font,
+                tuple[bool, bool, bool],
+                tuple[pg.font.Font, ...],
+                str,
+                tuple[int, int, int, int],
+            ],
+            pg.Surface,
+        ] = {}
 
     def _translate_offset(self, x: float, y: float) -> tuple[float, float]:
         if not self.use_view_offset:
@@ -95,56 +107,106 @@ class Renderer:
             )
         self.draw_circle_precision = precision
 
-    def set_screen_size(self, w: float, h: float) -> None:
-        self._screen = pg.display.set_mode((w, h))
+    def set_screen_size(self, w: float, h: float, flags: int = 0) -> None:
+        self._screen = pg.display.set_mode((w, h), flags)
 
-    def _letterbox(self) -> tuple[float, int, int, int, int] | None:
-        """Return (scale, width, height, dst_x, dst_y) for fitting the display to the window.
+    def refresh_screen(self) -> None:
+        """Pick up the window surface again after the OS resized the window."""
+        self._screen = pg.display.get_surface()
 
-        Uses the window's *current* size, which can differ from ``view.window_width`` /
-        ``view.window_height`` once the window is resized or made fullscreen.
+    def display_transform(self) -> tuple[float, int, int]:
+        """
+        How `display` lands in the window: (scale, left, top). It fits the window's current size,
+        or, with a zoom set (`view_set_zoom`), is drawn at exactly that scale.
         """
         if self._screen is None:
-            return None
+            return (1.0, 0, 0)
         win_w, win_h = self._screen.get_size()
         disp_w, disp_h = self.display.get_size()
         if disp_w == 0 or disp_h == 0:
-            return None
-        scale = min(win_w / disp_w, win_h / disp_h)
-        w = int(disp_w * scale)
-        h = int(disp_h * scale)
-        return scale, w, h, (win_w - w) // 2, (win_h - h) // 2
+            return (1.0, 0, 0)
+        zoom = view.view_zoom.get(view.view_current) if self.use_view_offset else None
+        scale: float = zoom if zoom is not None else min(win_w / disp_w, win_h / disp_h)
+        return (
+            scale,
+            (win_w - int(disp_w * scale)) // 2,
+            (win_h - int(disp_h * scale)) // 2,
+        )
 
     def window_to_room(self, x: float, y: float) -> tuple[float, float]:
         """Convert a window pixel position to room coordinates.
 
-        Inverse of what ``draw_display`` does: undoes the letterbox offset and scale,
-        then applies the view offset (for the world renderer).
+        Inverse of what ``draw_display`` does: undoes the letterbox offset and scale (the
+        window's *current* size, which can differ from ``view.window_width`` once the window is
+        resized or made fullscreen), then applies the view offset (for the world renderer).
         """
-        fit = self._letterbox()
-        if fit is not None:
-            scale, _, _, dst_x, dst_y = fit
-            x, y = (x - dst_x) / scale, (y - dst_y) / scale
+        scale, dst_x, dst_y = self.display_transform()
+        x, y = (x - dst_x) / scale, (y - dst_y) / scale
         if self.use_view_offset:
             x, y = x - view.offset[0], y - view.offset[1]
         return x, y
 
+    def room_to_window(self, x: float, y: float) -> tuple[float, float]:
+        """Convert a room position to a window pixel position: the inverse of ``window_to_room``."""
+        if self.use_view_offset:
+            x, y = x + view.offset[0], y + view.offset[1]
+        scale, dst_x, dst_y = self.display_transform()
+        return x * scale + dst_x, y * scale + dst_y
+
     def draw_display(self) -> None:
-        fit = self._letterbox()
-        if self._screen is None or fit is None:
+        if self._screen is None:
             return
-        _, w, h, dst_x, dst_y = fit
-        scaled = pg.transform.scale(self.display, (w, h))
+        disp_w, disp_h = self.display.get_size()
+        if disp_w == 0 or disp_h == 0:
+            return
+        scale, dst_x, dst_y = self.display_transform()
+        if scale == 1.0:
+            _ = self._screen.blit(self.display, (dst_x, dst_y))
+            return
+        scaled = pg.transform.scale(
+            self.display, (int(disp_w * scale), int(disp_h * scale))
+        )
         _ = self._screen.blit(scaled, (dst_x, dst_y))
 
     def fit_display(self) -> None:
         w = int(view.view_wport[view.view_current])
         h = int(view.view_hport[view.view_current])
 
+        current: Surface | None = getattr(self, "display", None)
+        if current is not None and current.get_size() == (w, h):
+            current.set_clip(None)
+            return
+
         self.display: Surface = pg.Surface((w, h))
 
         if self._screen is not None:
             self.display = self.display.convert()
+
+    def fit_gui_display(self) -> None:
+        """Size the GUI layer to the window and clear it, reusing the surface when possible."""
+        size = (view.window_width, view.window_height)
+        current: Surface | None = getattr(self, "display", None)
+        if (
+            current is None
+            or current.get_size() != size
+            or not current.get_flags() & pg.SRCALPHA
+        ):
+            self.display = pg.Surface(size, pg.SRCALPHA)
+        self.display.set_clip(None)
+        _ = self.display.fill((0, 0, 0, 0))
+
+    def draw_set_clip(self, x: float, y: float, w: float, h: float) -> None:
+        """Restrict drawing to a rectangle, until `draw_reset_clip` or the next frame."""
+        x, y = self._translate_offset(x, y)
+        self.display.set_clip(pg.Rect(int(x), int(y), int(w), int(h)))
+
+    def draw_reset_clip(self) -> None:
+        self.display.set_clip(None)
+
+    def draw_surface(self, x: float, y: float, surface: pg.Surface) -> None:
+        """Blit an already-prepared surface as is: the cheapest way to draw anything."""
+        x, y = self._translate_offset(x, y)
+        _ = self.display.blit(surface, (x, y))
 
     def fill_background_color(self, color: pg.Color) -> None:
         _ = self.display.fill(color)
@@ -449,6 +511,21 @@ class Renderer:
         )
         _ = self.display.blit(surface, (x, y))
 
+    def text_wrap(self, string: str, max_width: float) -> list[str]:
+        """Split text into the lines it takes to fit `max_width`, keeping its line breaks."""
+        lines: list[str] = []
+        for paragraph in string.split("\n"):
+            current = ""
+            for word in paragraph.split(" "):
+                candidate = word if not current else f"{current} {word}"
+                if current and self.text_width(candidate) > max_width:
+                    lines.append(current)
+                    current = word
+                else:
+                    current = candidate
+            lines.append(current)
+        return lines
+
     def text_width(self, string: str) -> int:
         return self._render_text_with_fallback(string, self.draw_color).get_width()
 
@@ -506,9 +583,13 @@ class Renderer:
         if x_scale < 0 or y_scale < 0:
             image = pg.transform.flip(image, x_scale < 0, y_scale < 0)
 
-        image.set_alpha(int(alpha * 255))
-        if color != c_white:
-            _ = image.fill(color, special_flags=pg.BLEND_MULT)
+        # Sprites share their images, so anything per-draw must happen on a copy.
+        if color != c_white or alpha != 1.0:
+            if image is sprite_index.images[image_index]:
+                image = image.copy()
+            image.set_alpha(int(alpha * 255))
+            if color != c_white:
+                _ = image.fill(color, special_flags=pg.BLEND_MULT)
 
         _ = self.display.blit(image, (draw_x, draw_y))
 
@@ -531,6 +612,24 @@ class Renderer:
         return self.draw_font
 
     def _render_text_with_fallback(self, string: str, color: pg.Color) -> pg.Surface:
+        key = (
+            self.draw_font,
+            # (a font's style can be changed in place)
+            (self.draw_font.bold, self.draw_font.italic, self.draw_font.underline),
+            tuple(self.draw_font_fallbacks),
+            string,
+            (color.r, color.g, color.b, color.a),
+        )
+        cached = self._text_cache.get(key)
+        if cached is not None:
+            return cached
+        if len(self._text_cache) >= _TEXT_CACHE_SIZE:
+            del self._text_cache[next(iter(self._text_cache))]
+        rendered = self._render_text_uncached(string, color)
+        self._text_cache[key] = rendered
+        return rendered
+
+    def _render_text_uncached(self, string: str, color: pg.Color) -> pg.Surface:
         if not string:
             return pg.Surface((0, 0), flags=pg.SRCALPHA)
 
